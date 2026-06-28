@@ -1,0 +1,9 @@
+{
+  "name": "process-feedback",
+  "version": "1.0.0",
+  "description": "Processes user feedback with CAPTCHA validation, rate limiting, and input sanitization",
+  "main": "index.js",
+  "dependencies": {
+    "node-appwrite": "^20.3.0"
+  }
+}

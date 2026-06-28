@@ -1,0 +1,7 @@
+{
+  "name": "sanitize-text",
+  "version": "1.0.0",
+  "description": "Server-side text sanitization to prevent XSS and injection attacks",
+  "main": "index.js",
+  "dependencies": {}
+}

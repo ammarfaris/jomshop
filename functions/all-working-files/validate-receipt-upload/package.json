@@ -1,0 +1,15 @@
+{
+  "name": "validate-receipt-upload",
+  "version": "1.0.0",
+  "description": "Server-side validation for receipt uploads with limits enforcement",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "node-appwrite": "^20.3.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "redeem-referral-code",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "dependencies": {
+    "node-appwrite": "^20.3.0"
+  }
+}

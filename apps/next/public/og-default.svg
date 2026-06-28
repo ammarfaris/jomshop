@@ -1,0 +1,46 @@
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
+  <!-- Purple gradient background -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#7c3aed;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#6d28d9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5b21b6;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Pattern overlay -->
+    <pattern id="pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="20" height="20" fill="rgba(255,255,255,0.05)"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)"/>
+  <rect width="1200" height="630" fill="url(#pattern)"/>
+  
+  <!-- White content card -->
+  <rect x="80" y="80" width="1040" height="470" rx="24" fill="rgba(255,255,255,0.95)" 
+        filter="drop-shadow(0 10px 30px rgba(0,0,0,0.2))"/>
+  
+  <!-- JomContest Logo/Title -->
+  <text x="600" y="200" font-family="Arial, sans-serif" font-size="72" font-weight="bold" 
+        fill="#7c3aed" text-anchor="middle">JomContest</text>
+  
+  <!-- Tagline -->
+  <text x="600" y="260" font-family="Arial, sans-serif" font-size="32" 
+        fill="#6b7280" text-anchor="middle">Discover Contests in Malaysia</text>
+  
+  <!-- Decorative line -->
+  <line x1="450" y1="300" x2="750" y2="300" stroke="#7c3aed" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- Main message -->
+  <text x="600" y="380" font-family="Arial, sans-serif" font-size="42" font-weight="bold" 
+        fill="#1f2937" text-anchor="middle">Find Amazing Prizes</text>
+  
+  <!-- Sub message -->
+  <text x="600" y="430" font-family="Arial, sans-serif" font-size="28" 
+        fill="#6b7280" text-anchor="middle">Join contests and win big!</text>
+  
+  <!-- Call to action -->
+  <text x="600" y="500" font-family="Arial, sans-serif" font-size="24" font-weight="bold" 
+        fill="#7c3aed" text-anchor="middle">jomcontest.com</text>
+</svg>

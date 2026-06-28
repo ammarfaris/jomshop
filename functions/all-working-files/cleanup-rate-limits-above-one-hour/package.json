@@ -1,0 +1,9 @@
+{
+  "name": "cleanup-rate-limits-above-one-hour",
+  "version": "1.0.0",
+  "description": "Manual cleanup function to purge rate limit entries older than 1 hour.",
+  "main": "index.js",
+  "dependencies": {
+    "node-appwrite": "^20.3.0"
+  }
+}

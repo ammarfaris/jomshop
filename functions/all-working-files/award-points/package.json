@@ -1,0 +1,10 @@
+{
+  "name": "award-points",
+  "version": "1.0.0",
+  "description": "Award points to users. Server-side only. Used for referrals, affiliate purchases, admin grants.",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "node-appwrite": "^20.3.0"
+  }
+}

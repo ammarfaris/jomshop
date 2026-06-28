@@ -1,0 +1,9 @@
+{
+  "name": "get-subscription-tier",
+  "version": "1.0.0",
+  "description": "Get user subscription tier from secure server-controlled collection",
+  "main": "index.js",
+  "dependencies": {
+    "node-appwrite": "^20.3.0"
+  }
+}

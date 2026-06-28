@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "jc-app-aw",
+    "slug": "jc-app-aw",
+    "version": "0.1.0",
+    "scheme": "jcapp",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "bundleIdentifier": "com.jomcontest",
+      "infoPlist": {
+        "UIViewControllerBasedStatusBarAppearance": true,
+        "UIStatusBarHidden": false
+      }
+    },
+    "android": {
+      "package": "com.jomcontest"
+    },
+    "experiments": {
+      "reactCompiler": true
+    },
+    "plugins": ["expo-router", "expo-web-browser"],
+    "userInterfaceStyle": "automatic"
+  }
+}

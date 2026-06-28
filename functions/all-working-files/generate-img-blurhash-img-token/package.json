@@ -1,0 +1,11 @@
+{
+  "name": "generate-img-blurhash-img-token",
+  "version": "1.0.0",
+  "description": "Appwrite Function to either generate BlurHash for uploaded image or create a permanent token for it or both",
+  "main": "index.js",
+  "dependencies": {
+    "node-appwrite": "^20.3.0",
+    "sharp": "0.34.5",
+    "blurhash": "2.0.5"
+  }
+}

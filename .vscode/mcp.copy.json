@@ -1,0 +1,13 @@
+{
+  "servers": {
+    "appwrite": {
+      "command": "uvx",
+      "args": ["mcp-server-appwrite", "--databases", "--users"],
+      "env": {
+        "APPWRITE_PROJECT_ID": "6858b10e0004470bd6d4",
+        "APPWRITE_API_KEY": "xxxxxxxxxxxxxxxxxxxxxxx",
+        "APPWRITE_ENDPOINT": "https://api.jomcontest.com/v1"
+      }
+    }
+  }
+}

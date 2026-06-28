@@ -1,0 +1,9 @@
+{
+  "name": "meilisearch-search",
+  "version": "1.0.0",
+  "description": "Appwrite Function to perform Meilisearch queries securely",
+  "main": "index.js",
+  "dependencies": {
+    "meilisearch": "^0.54.0"
+  }
+}

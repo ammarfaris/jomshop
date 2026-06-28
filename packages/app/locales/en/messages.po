@@ -1,0 +1,2358 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-09-15 04:54+0800\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:107
+msgid "\"Contest discovery made easy, Winning made possible!\""
+msgstr "\"Contest discovery made easy, Winning made possible!\""
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:916
+msgid "(beta phase)"
+msgstr "(beta phase)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:66
+msgid "{balance, plural, one {point} other {points}}"
+msgstr "{balance, plural, one {point} other {points}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:87
+#: packages/app/features/contest/ContestDetailScreen.tsx:1129
+msgid "{daysExpired, plural, one {# day ago} other {# days ago}}"
+msgstr "{daysExpired, plural, one {# day ago} other {# days ago}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:127
+#: packages/app/features/contest/components/ContestBadges.tsx:145
+#: packages/app/features/contest/ContestDetailScreen.tsx:1181
+#: packages/app/features/contest/ContestDetailScreen.tsx:1203
+msgid "{daysUntilEnd, plural, one {in # day} other {in # days}}"
+msgstr "{daysUntilEnd, plural, one {in # day} other {in # days}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1287
+msgid "{diffDays} days"
+msgstr "{diffDays} days"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:100
+msgid "{diffDays}d left"
+msgstr "{diffDays}d left"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:102
+msgid "{diffHours}h left"
+msgstr "{diffHours}h left"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:104
+msgid "{diffMinutes}m left"
+msgstr "{diffMinutes}m left"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:89
+#: packages/app/features/contest/ContestDetailScreen.tsx:1135
+msgid "{hoursExpired, plural, one {# hour ago} other {# hours ago}}"
+msgstr "{hoursExpired, plural, one {# hour ago} other {# hours ago}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:108
+#: packages/app/features/contest/ContestDetailScreen.tsx:1158
+msgid "{hoursUntilEnd, plural, one {in # hour} other {in # hours}}"
+msgstr "{hoursUntilEnd, plural, one {in # hour} other {in # hours}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:191
+msgid "{receiptCount, plural, one {Receipt} other {Receipts}}"
+msgstr "{receiptCount, plural, one {Receipt} other {Receipts}}"
+
+#. js-lingui-generated-id
+#. placeholder {0}: remainingReferrals * 200
+#: packages/app/features/profile/components/ReferralCard.tsx:610
+msgid "{remainingReferrals} referrals remaining • Earn up to {0} more points!"
+msgstr "{remainingReferrals} referrals remaining • Earn up to {0} more points!"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:543
+msgid "{sectionTitle}"
+msgstr "{sectionTitle}"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:299
+msgid "*if sufficient points, if not tier will be lowered accordingly"
+msgstr "*if sufficient points, if not tier will be lowered accordingly"
+
+#. js-lingui-generated-id
+#: packages/app/features/home/screen.tsx:51
+msgid "<0>\"Contest discovery made easy, Winning made possible!\"</0>"
+msgstr "<0>\"Contest discovery made easy, Winning made possible!\"</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:93
+msgid "<0><1>Ended {timeText}</1></0>"
+msgstr "<0><1>Ended {timeText}</1></0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:131
+#: packages/app/features/contest/components/ContestBadges.tsx:149
+msgid "<0><1>Ends {timeText}</1></0>"
+msgstr "<0><1>Ends {timeText}</1></0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:112
+msgid "<0><1>Expiring {timeText}</1></0>"
+msgstr "<0><1>Expiring {timeText}</1></0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1307
+msgid "<0>👥 Eligible Participants</0>"
+msgstr "<0>👥 Eligible Participants</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1347
+msgid "<0>💳 Eligible Purchases & Products 🛍️</0>"
+msgstr "<0>💳 Eligible Purchases & Products 🛍️</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1361
+msgid "<0>🛒 Eligible Stores</0>"
+msgstr "<0>🛒 Eligible Stores</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1724
+#: packages/app/features/contest/ContestDetailScreen.tsx:1757
+msgid "<0>Additional Information</0>"
+msgstr "<0>Additional Information</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1273
+msgid "<0>Contest Period</0>"
+msgstr "<0>Contest Period</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1296
+msgid "<0>Eligibility & Where to buy</0>"
+msgstr "<0>Eligibility & Where to buy</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1410
+msgid "<0>Eligible Stores (with potential to earn JomPoints)</0>"
+msgstr "<0>Eligible Stores (with potential to earn JomPoints)</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1378
+msgid "<0>Eligible Stores<1> (JomPoints)</1></0>"
+msgstr "<0>Eligible Stores<1> (JomPoints)</1></0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1259
+msgid "<0>End Date</0>"
+msgstr "<0>End Date</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1323
+msgid "<0>Exclusions:</0>"
+msgstr "<0>Exclusions:</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1522
+msgid "<0>How to Enter</0>"
+msgstr "<0>How to Enter</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/home/screen.tsx:56
+msgid "<0>Made with 💙 by <1>AAF Digital</1>.</0>"
+msgstr "<0>Made with 💙 by <1>AAF Digital</1>.</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1469
+msgid "<0>Prizes</0>"
+msgstr "<0>Prizes</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1416
+msgid "<0>Shop link(s) provided below are affiliate link(s), depending on the terms and conditions, a purchase coming from the link(s) may or may not be rewarded. If it is rewarded, we will credit a proportion of the reward to you as JomPoints. This feature is still in Beta, and we are not liable for any discrepancies or inaccuracies that may occur.</0>"
+msgstr "<0>Shop link(s) provided below are affiliate link(s), depending on the terms and conditions, a purchase coming from the link(s) may or may not be rewarded. If it is rewarded, we will credit a proportion of the reward to you as JomPoints. This feature is still in Beta, and we are not liable for any discrepancies or inaccuracies that may occur.</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1245
+msgid "<0>Start Date</0>"
+msgstr "<0>Start Date</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/home/screen.tsx:76
+msgid "<0>Start discovering contests now!</0>"
+msgstr "<0>Start discovering contests now!</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/home/screen.tsx:39
+msgid "<0>Welcome to JomContest 👋🏻</0>"
+msgstr "<0>Welcome to JomContest 👋🏻</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1394
+msgid "<0>what is this?</0>"
+msgstr "<0>what is this?</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1636
+#: packages/app/features/contest/ContestDetailScreen.tsx:1659
+msgid "<0>Winners Communication Channel & Timeline</0>"
+msgstr "<0>Winners Communication Channel & Timeline</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1680
+#: packages/app/features/contest/ContestDetailScreen.tsx:1703
+msgid "<0>Winners List & Announcement</0>"
+msgstr "<0>Winners List & Announcement</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1566
+#: packages/app/features/contest/ContestDetailScreen.tsx:1590
+msgid "<0>Winners Selection Method</0>"
+msgstr "<0>Winners Selection Method</0>"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:898
+msgid "💡 Hold camera directly above receipt, keep steady & get closer. If you are not satisfied, use normal camera via \"Add Image Receipt\" button or app like CamScanner."
+msgstr "💡 Hold camera directly above receipt, keep steady & get closer. If you are not satisfied, use normal camera via \"Add Image Receipt\" button or app like CamScanner."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:54
+msgid "1. About JomContest"
+msgstr "1. About JomContest"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:56
+msgid "1. Personal Data We Collect"
+msgstr "1. Personal Data We Collect"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:231
+msgid "10. Contact Us"
+msgstr "10. Contact Us"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:215
+msgid "10. Termination"
+msgstr "10. Termination"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:228
+msgid "11. Governing Law"
+msgstr "11. Governing Law"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:240
+msgid "12. Contact Us"
+msgstr "12. Contact Us"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:84
+msgid "2. Purpose of Data Collection"
+msgstr "2. Purpose of Data Collection"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:68
+msgid "2. User Accounts"
+msgstr "2. User Accounts"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:115
+msgid "3. Consent"
+msgstr "3. Consent"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:82
+msgid "3. Platform Role and Disclaimer"
+msgstr "3. Platform Role and Disclaimer"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:116
+msgid "4. Acceptable Use"
+msgstr "4. Acceptable Use"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:128
+msgid "4. Disclosure of Personal Data"
+msgstr "4. Disclosure of Personal Data"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:155
+msgid "5. Data Security"
+msgstr "5. Data Security"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:147
+msgid "5. Subscription Services"
+msgstr "5. Subscription Services"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:168
+msgid "6. Data Retention"
+msgstr "6. Data Retention"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:162
+msgid "6. Intellectual Property"
+msgstr "6. Intellectual Property"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:175
+msgid "7. Limitation of Liability"
+msgstr "7. Limitation of Liability"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:181
+msgid "7. Your Rights"
+msgstr "7. Your Rights"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:207
+msgid "8. Cookies and Tracking"
+msgstr "8. Cookies and Tracking"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:189
+msgid "8. Indemnification"
+msgstr "8. Indemnification"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:219
+msgid "9. Changes to This Policy"
+msgstr "9. Changes to This Policy"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:202
+msgid "9. Modifications"
+msgstr "9. Modifications"
+
+#. js-lingui-generated-id
+#: apps/next/app/navbar.tsx:27
+msgid "About"
+msgstr "About"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:93
+msgid "About the Company"
+msgstr "About the Company"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:27
+#: packages/app/features/profile/components/GeneralTabContent.tsx:432
+msgid "About Us"
+msgstr "About Us"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:188
+msgid "Access your personal data held by us"
+msgstr "Access your personal data held by us"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:730
+msgid "Action Required"
+msgstr "Action Required"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:650
+#: packages/app/features/search/screen.tsx:789
+msgid "Active"
+msgstr "Active"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:867
+msgid "Add Image"
+msgstr "Add Image"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:772
+msgid "Add New Receipt"
+msgstr "Add New Receipt"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:962
+msgid "Add PDF"
+msgstr "Add PDF"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:140
+msgid "Adjust text size for better readability. Changes apply across the app."
+msgstr "Adjust text size for better readability. Changes apply across the app."
+
+#. js-lingui-generated-id
+#: apps/expo/app/(tabs)/_layout.tsx:137
+#: apps/next/app/navbar.tsx:32
+msgid "Admin"
+msgstr "Admin"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:840
+msgid "Admin Only Contest"
+msgstr "Admin Only Contest"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/screen.tsx:230
+msgid "Alerts"
+msgstr "Alerts"
+
+#. js-lingui-generated-id
+#: packages/app/components/CategoryFilter.tsx:102
+msgid "All"
+msgstr "All"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:542
+msgid "All Free features"
+msgstr "All Free features"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:561
+msgid "All Plus features"
+msgstr "All Plus features"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:742
+msgid "All your saved contests have expired"
+msgstr "All your saved contests have expired"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1038
+msgid "Are you sure you want to delete this receipt? This action cannot be undone."
+msgstr "Are you sure you want to delete this receipt? This action cannot be undone."
+
+#. js-lingui-generated-id
+#. placeholder {0}: contestTitle || 'this contest'
+#. placeholder {0}: contestToUnsave?.title
+#: packages/app/components/SaveButton.tsx:358
+#: packages/app/features/profile/components/SavedTabContent.tsx:780
+msgid "Are you sure you want to remove \"{0}\" from your saved contests? You can always save it again later."
+msgstr "Are you sure you want to remove \"{0}\" from your saved contests? You can always save it again later."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:129
+msgid "Attempt to gain unauthorized access to our systems"
+msgstr "Attempt to gain unauthorized access to our systems"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:195
+msgid "Auto-renew adjusted"
+msgstr "Auto-renew adjusted"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:204
+#: packages/app/features/profile/components/UpgradeModal.tsx:216
+msgid "Auto-renew failed"
+msgstr "Auto-renew failed"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:233
+msgid "Auto-renew with Points"
+msgstr "Auto-renew with Points"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:668
+msgid "Auto-renewal failed"
+msgstr "Auto-renewal failed"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:85
+msgid "Available in English and Bahasa Malaysia"
+msgstr "Available in English and Bahasa Malaysia"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:316
+msgid "Bahasa"
+msgstr "Bahasa"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:49
+msgid "Bigger"
+msgstr "Bigger"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:167
+msgid "Blue"
+msgstr "Blue"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:508
+msgid "Browse Contests"
+msgstr "Browse Contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:62
+msgid "Business Inquiries"
+msgstr "Business Inquiries"
+
+#. js-lingui-generated-id
+#. placeholder {0}: contestHosts[0]?.name || 'Unknown'
+#. placeholder {0}: hostNames[0]
+#. placeholder {0}: hosts[0]?.name || 'Unknown'
+#: packages/app/features/contest/components/ContestCard.tsx:120
+#: packages/app/features/contest/ContestDetailScreen.tsx:1000
+#: packages/app/features/search/screen.tsx:795
+msgid "By {0}"
+msgstr "By {0}"
+
+#. js-lingui-generated-id
+#. placeholder {0}: contestHosts[0]?.name || 'Unknown'
+#. placeholder {0}: hostNames[0]
+#. placeholder {0}: hosts[0]?.name || 'Unknown'
+#. placeholder {1}: contestHosts[1]?.name || 'Unknown'
+#. placeholder {1}: hostNames[1]
+#. placeholder {1}: hosts[1]?.name || 'Unknown'
+#: packages/app/features/contest/components/ContestCard.tsx:122
+#: packages/app/features/contest/ContestDetailScreen.tsx:1002
+#: packages/app/features/search/screen.tsx:798
+msgid "By {0} & {1}"
+msgstr "By {0} & {1}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:132
+#: packages/app/features/contest/ContestDetailScreen.tsx:1013
+#: packages/app/features/search/screen.tsx:807
+msgid "By {allButLast} & {lastHost}"
+msgstr "By {allButLast} & {lastHost}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:119
+#: packages/app/features/contest/ContestDetailScreen.tsx:998
+#: packages/app/features/search/screen.tsx:794
+msgid "By Unknown Host"
+msgstr "By Unknown Host"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:118
+msgid "By using JomContest, you consent to the collection, processing, and use of your personal data as described in this Privacy Policy. You may withdraw your consent at any time by contacting us or deleting your account."
+msgstr "By using JomContest, you consent to the collection, processing, and use of your personal data as described in this Privacy Policy. You may withdraw your consent at any time by contacting us or deleting your account."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:253
+msgid "Camera access blocked for security reasons. Please use HTTPS."
+msgstr "Camera access blocked for security reasons. Please use HTTPS."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:228
+msgid "Camera access denied. Please allow camera access to scan documents."
+msgstr "Camera access denied. Please allow camera access to scan documents."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:174
+#: packages/app/components/DocumentScanner.web.tsx:251
+msgid "Camera access is not supported on this browser."
+msgstr "Camera access is not supported on this browser."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:171
+msgid "Camera access requires HTTPS on mobile browsers. Please use ngrok or deploy to a secure server for mobile testing."
+msgstr "Camera access requires HTTPS on mobile browsers. Please use ngrok or deploy to a secure server for mobile testing."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:167
+msgid "Camera access requires HTTPS. Please use a secure connection (https://)."
+msgstr "Camera access requires HTTPS. Please use a secure connection (https://)."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:249
+msgid "Camera does not support the required settings."
+msgstr "Camera does not support the required settings."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:244
+msgid "Camera is already in use by another application."
+msgstr "Camera is already in use by another application."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:234
+msgid "Camera permission denied. Please allow camera access in your browser settings and reload the page."
+msgstr "Camera permission denied. Please allow camera access in your browser settings and reload the page."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:880
+#: packages/app/components/FeedbackDialog.tsx:441
+#: packages/app/components/SaveButton.tsx:322
+#: packages/app/components/SaveButton.tsx:423
+#: packages/app/components/UpvoteButton.tsx:193
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:683
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1053
+#: packages/app/features/profile/components/SavedTabContent.tsx:796
+msgid "Cancel"
+msgstr "Cancel"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:476
+msgid "Cannot open PDF file"
+msgstr "Cannot open PDF file"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:428
+msgid "CAPTCHA expired. Please verify again."
+msgstr "CAPTCHA expired. Please verify again."
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:421
+msgid "CAPTCHA verification failed. Please try again."
+msgstr "CAPTCHA verification failed. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:892
+msgid "Capture"
+msgstr "Capture"
+
+#. js-lingui-generated-id
+#: packages/app/utils/share.ts:45
+msgid "Check out this contest on JomContest!"
+msgstr "Check out this contest on JomContest!"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:394
+msgid "Clear"
+msgstr "Clear"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:662
+msgid "Clear all"
+msgstr "Clear all"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:733
+msgid "Clear History"
+msgstr "Clear History"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptThumbnail.tsx:107
+msgid "Click on the edit icon to add note"
+msgstr "Click on the edit icon to add note"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:648
+msgid "Click to select, click again to unselect"
+msgstr "Click to select, click again to unselect"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:828
+msgid "Close"
+msgstr "Close"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:72
+msgid "Close share dialog"
+msgstr "Close share dialog"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:86
+msgid "Color Theme"
+msgstr "Color Theme"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:584
+msgid "Coming soon..."
+msgstr "Coming soon..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1007
+msgid "Complete verification to upload receipts"
+msgstr "Complete verification to upload receipts"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:372
+#: packages/app/components/SaveButton.tsx:455
+#: packages/app/features/profile/components/SavedTabContent.tsx:831
+msgid "Confirm Unsave"
+msgstr "Confirm Unsave"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:968
+msgid "Connection Error"
+msgstr "Connection Error"
+
+#. js-lingui-generated-id
+#: apps/next/app/navbar.tsx:28
+msgid "Contact"
+msgstr "Contact"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:32
+#: packages/app/features/profile/components/GeneralTabContent.tsx:445
+msgid "Contact Us"
+msgstr "Contact Us"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:78
+msgid "Contest participation and saved contests"
+msgstr "Contest participation and saved contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1889
+msgid "Contest posting on organiser's social media & website:"
+msgstr "Contest posting on organiser's social media & website:"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1899
+msgid "Contest posting on organiser's social media:"
+msgstr "Contest posting on organiser's social media:"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1894
+msgid "Contest posting on organiser's website:"
+msgstr "Contest posting on organiser's website:"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:204
+msgid "Contest removed from saved list"
+msgstr "Contest removed from saved list"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:100
+msgid "Contest saved, but automatic upvote failed"
+msgstr "Contest saved, but automatic upvote failed"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:170
+msgid "Contest unsaved"
+msgstr "Contest unsaved"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:188
+msgid "Contest unsaved, but receipts cleanup failed. Please contact support if you see issues."
+msgstr "Contest unsaved, but receipts cleanup failed. Please contact support if you see issues."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:535
+msgid "Contests With Receipts"
+msgstr "Contests With Receipts"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:97
+msgid "Control contest rules, prizes, or outcomes"
+msgstr "Control contest rules, prizes, or outcomes"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:182
+msgid "Cool & Professional"
+msgstr "Cool & Professional"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:87
+msgid "Copy contest link to clipboard"
+msgstr "Copy contest link to clipboard"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:90
+msgid "Copy Link"
+msgstr "Copy Link"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:90
+msgid "Copying..."
+msgstr "Copying..."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:191
+msgid "Correct any inaccurate personal data"
+msgstr "Correct any inaccurate personal data"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:185
+msgid "Creative & Vibrant"
+msgstr "Creative & Vibrant"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:73
+msgid "Curated contests from trusted sources"
+msgstr "Curated contests from trusted sources"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:474
+#: packages/app/features/profile/components/UpgradeModal.tsx:480
+msgid "Current"
+msgstr "Current"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:545
+msgid "Custom color themes"
+msgstr "Custom color themes"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ThemeSelector.web.tsx:143
+msgid "Dark"
+msgstr "Dark"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1065
+msgid "Delete"
+msgstr "Delete"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1035
+msgid "Delete Receipt?"
+msgstr "Delete Receipt?"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:75
+msgid "Device information and usage data"
+msgstr "Device information and usage data"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:486
+msgid "Downgrade"
+msgstr "Downgrade"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:293
+msgid "Downgrade to Plus Plan*"
+msgstr "Downgrade to Plus Plan*"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:645
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:794
+msgid "e.g., Entry 1, Receipt for product X"
+msgstr "e.g., Entry 1, Receipt for product X"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:497
+msgid "Earn 200 points per referral"
+msgstr "Earn 200 points per referral"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsTransactionModal.tsx:307
+msgid "Earn points by referring friends, more ways to earn points coming later!"
+msgstr "Earn points by referring friends, more ways to earn points coming later!"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:76
+msgid "Easy search and filtering"
+msgstr "Easy search and filtering"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:49
+msgid "Email"
+msgstr "Email"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:66
+msgid "Email address"
+msgstr "Email address"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1149
+#: packages/app/features/profile/components/SavedTabContent.tsx:670
+#: packages/app/features/search/screen.tsx:789
+msgid "Ended"
+msgstr "Ended"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1195
+#: packages/app/features/contest/ContestDetailScreen.tsx:1217
+msgid "Ends"
+msgstr "Ends"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:427
+msgid "Enter a friend's code who referred you. You can only do this once."
+msgstr "Enter a friend's code who referred you. You can only do this once."
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1317
+msgid "Exclusions"
+msgstr "Exclusions"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:93
+msgid "Expired"
+msgstr "Expired"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:81
+msgid "Expired on {formattedDate}"
+msgstr "Expired on {formattedDate}"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:84
+msgid "Expires on {formattedDate}"
+msgstr "Expires on {formattedDate}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1172
+msgid "Expiring"
+msgstr "Expiring"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:654
+msgid "Failed to capture document. Make sure the entire document is visible in the frame."
+msgstr "Failed to capture document. Make sure the entire document is visible in the frame."
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:40
+msgid "Failed to copy link. Please try again"
+msgstr "Failed to copy link. Please try again"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:447
+msgid "Failed to delete receipt. Please try again."
+msgstr "Failed to delete receipt. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:143
+msgid "Failed to initialize scanner. Please try again."
+msgstr "Failed to initialize scanner. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:140
+msgid "Failed to load points. Tap to retry."
+msgstr "Failed to load points. Tap to retry."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:478
+msgid "Failed to load saved contests"
+msgstr "Failed to load saved contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:480
+msgid "Failed to open PDF file"
+msgstr "Failed to open PDF file"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:55
+msgid "Failed to open share dialog. Please try again"
+msgstr "Failed to open share dialog. Please try again"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:283
+msgid "Failed to open WhatsApp. Please try again."
+msgstr "Failed to open WhatsApp. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:705
+msgid "Failed to resume camera. Please try again."
+msgstr "Failed to resume camera. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareButton.tsx:78
+msgid "Failed to share. Please try again"
+msgstr "Failed to share. Please try again"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:179
+#: packages/app/components/FeedbackDialog.tsx:284
+msgid "Failed to submit feedback. Please try again."
+msgstr "Failed to submit feedback. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:209
+#: packages/app/features/profile/components/SavedTabContent.tsx:205
+msgid "Failed to unsave contest. Please try again."
+msgstr "Failed to unsave contest. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:387
+msgid "Failed to update notes. Please try again."
+msgstr "Failed to update notes. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:284
+msgid "Failed to upload receipt. Please try again."
+msgstr "Failed to upload receipt. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:342
+msgid "Failed to upload scanned receipt. Please try again."
+msgstr "Failed to upload scanned receipt. Please try again."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:76
+msgid "Feedback"
+msgstr "Feedback"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptThumbnail.tsx:92
+msgid "File"
+msgstr "File"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:242
+msgid "File size too large"
+msgstr "File size too large"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:604
+#: packages/app/features/search/screen.tsx:631
+msgid "Filters"
+msgstr "Filters"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:583
+msgid "For each successful referral, you and your friend will both receive 200 points!"
+msgstr "For each successful referral, you and your friend will both receive 200 points!"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:52
+msgid "For general inquiries and support:"
+msgstr "For general inquiries and support:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:226
+msgid "Free Plan"
+msgstr "Free Plan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:179
+msgid "Fresh & Natural"
+msgstr "Fresh & Natural"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/screen.tsx:190
+msgid "General"
+msgstr "General"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:82
+msgid "Get alerts before contests end"
+msgstr "Get alerts before contests end"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:851
+msgid "Go to Home"
+msgstr "Go to Home"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:166
+msgid "Green"
+msgstr "Green"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:94
+msgid "Guarantee the legitimacy of listed contests"
+msgstr "Guarantee the legitimacy of listed contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:424
+msgid "Have a referral code? Earn 200 points!"
+msgstr "Have a referral code? Earn 200 points!"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:101
+msgid "Have any relationship with contest organizers unless stated"
+msgstr "Have any relationship with contest organizers unless stated"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:121
+msgid "History"
+msgstr "History"
+
+#. js-lingui-generated-id
+#: apps/expo/app/(tabs)/_layout.tsx:108
+#: apps/next/app/navbar.tsx:25
+msgid "Home"
+msgstr "Home"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:572
+msgid "How it works"
+msgstr "How it works"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:246
+msgid "How to Earn Points"
+msgstr "How to Earn Points"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:243
+msgid "If you have any questions about these Terms and Conditions, please contact us at:"
+msgstr "If you have any questions about these Terms and Conditions, please contact us at:"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:234
+msgid "If you have any questions about this Privacy Policy or wish to exercise your rights under the PDPA, please contact us at:"
+msgstr "If you have any questions about this Privacy Policy or wish to exercise your rights under the PDPA, please contact us at:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/AlertsTabContent.tsx:18
+msgid "Important and relevant alerts will be shown here. Stay tuned!"
+msgstr "Important and relevant alerts will be shown here. Stay tuned!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:425
+msgid "Info & Legal"
+msgstr "Info & Legal"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:812
+msgid "Initializing scanner..."
+msgstr "Initializing scanner..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:219
+msgid "Insufficient points to renew. Add more points to re-enable."
+msgstr "Insufficient points to renew. Add more points to re-enable."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:65
+msgid "Interested in listing your contest on JomContest or exploring partnership opportunities? We're always open to collaborations that benefit our Malaysian community."
+msgstr "Interested in listing your contest on JomContest or exploring partnership opportunities? We're always open to collaborations that benefit our Malaysian community."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:141
+msgid "Interfere with other users' use of the platform"
+msgstr "Interfere with other users' use of the platform"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:278
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:336
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:384
+msgid "Invalid content detected in notes. Please remove any HTML tags or special characters."
+msgstr "Invalid content detected in notes. Please remove any HTML tags or special characters."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:248
+msgid "Invalid file type"
+msgstr "Invalid file type"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:45
+msgid "JomContest (\"we\", \"us\", or \"our\") is committed to protecting your personal data in accordance with the Personal Data Protection Act 2010 (Act 709) of Malaysia (\"PDPA\"). This Privacy Policy explains how we collect, use, disclose, and protect your personal data when you use our website and mobile application."
+msgstr "JomContest (\"we\", \"us\", or \"our\") is committed to protecting your personal data in accordance with the Personal Data Protection Act 2010 (Act 709) of Malaysia (\"PDPA\"). This Privacy Policy explains how we collect, use, disclose, and protect your personal data when you use our website and mobile application."
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:333
+msgid "JomContest evolves with your input. Share your thoughts and help us improve...."
+msgstr "JomContest evolves with your input. Share your thoughts and help us improve...."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:57
+msgid "JomContest is a contest aggregation platform that collects and displays information about contests, giveaways, and competitions from various sources across Malaysia. We act as an information aggregator and do not organize, host, or manage any of the contests listed on our platform."
+msgstr "JomContest is a contest aggregation platform that collects and displays information about contests, giveaways, and competitions from various sources across Malaysia. We act as an information aggregator and do not organize, host, or manage any of the contests listed on our platform."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:85
+msgid "JomContest is a venue for contest discovery only. We do not:"
+msgstr "JomContest is a venue for contest discovery only. We do not:"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:96
+msgid "JomContest is developed and maintained by AAF Digital, a Malaysian technology company focused on building useful digital products for the local community."
+msgstr "JomContest is developed and maintained by AAF Digital, a Malaysian technology company focused on building useful digital products for the local community."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:36
+msgid "JomContest is Malaysia's premier contest discovery platform. We make it easy for Malaysians to find, track, and participate in contests, giveaways, and competitions across the country."
+msgstr "JomContest is Malaysia's premier contest discovery platform. We make it easy for Malaysians to find, track, and participate in contests, giveaways, and competitions across the country."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:150
+msgid "JomContest offers free and premium subscription tiers. Premium subscriptions provide additional features such as enhanced alerts, receipt storage, and ad-free browsing. Subscription fees are non-refundable unless required by law. You may cancel your subscription at any time, and access will continue until the end of the billing period."
+msgstr "JomContest offers free and premium subscription tiers. Premium subscriptions provide additional features such as enhanced alerts, receipt storage, and ad-free browsing. Subscription fees are non-refundable unless required by law. You may cancel your subscription at any time, and access will continue until the end of the billing period."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:314
+msgid "Language"
+msgstr "Language"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:72
+msgid "Language and app preferences"
+msgstr "Language and app preferences"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:40
+#: packages/app/features/legal/TermsScreen.tsx:40
+msgid "Last updated: February 2026"
+msgstr "Last updated: February 2026"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:147
+msgid "Law enforcement agencies when required by law"
+msgstr "Law enforcement agencies when required by law"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:152
+msgid "Lifetime Earned"
+msgstr "Lifetime Earned"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ThemeSelector.web.tsx:142
+msgid "Light"
+msgstr "Light"
+
+#. js-lingui-generated-id
+#: packages/app/utils/share.ts:44
+msgid "Lihat peraduan ini di JomContest!"
+msgstr "Lihat peraduan ini di JomContest!"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:37
+msgid "Link copied to clipboard"
+msgstr "Link copied to clipboard"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1419
+msgid "Loading more..."
+msgstr "Loading more..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsTransactionModal.tsx:282
+msgid "Loading transactions..."
+msgstr "Loading transactions..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:279
+msgid "Maintain current plan*"
+msgstr "Maintain current plan*"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:297
+msgid "Manage"
+msgstr "Manage"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:441
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:518
+#: packages/app/features/profile/components/SavedTabContent.tsx:813
+msgid "Manage Receipts"
+msgstr "Manage Receipts"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:273
+msgid "Manage your subscription"
+msgstr "Manage your subscription"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:222
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:306
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:565
+msgid "Maximum {maxReceipts} receipts per contest. Upgrade to Pro for more receipts."
+msgstr "Maximum {maxReceipts} receipts per contest. Upgrade to Pro for more receipts."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:63
+msgid "Name and display name"
+msgstr "Name and display name"
+
+#. js-lingui-generated-id
+#. placeholder {0}: option.pointsCost - balance
+#: packages/app/features/profile/components/UpgradeModal.tsx:491
+msgid "Need {0} more"
+msgstr "Need {0} more"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:734
+msgid "No Active Contests"
+msgstr "No Active Contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:570
+msgid "NO Ads"
+msgstr "NO Ads"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/AlertsTabContent.tsx:15
+msgid "No Alerts Yet"
+msgstr "No Alerts Yet"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:239
+msgid "No camera found on this device."
+msgstr "No camera found on this device."
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:823
+msgid "No contests found in this category."
+msgstr "No contests found in this category."
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:636
+msgid "No contests found."
+msgstr "No contests found."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1398
+msgid "No contests found. Try a different search term."
+msgstr "No contests found. Try a different search term."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:736
+msgid "No Contests with Receipts"
+msgstr "No Contests with Receipts"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:738
+msgid "No Ended Contests"
+msgstr "No Ended Contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:718
+msgid "No Receipts Yet"
+msgstr "No Receipts Yet"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:666
+msgid "No referrals yet. Share your code to get started!"
+msgstr "No referrals yet. Share your code to get started!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:498
+msgid "No Saved Contests Yet"
+msgstr "No Saved Contests Yet"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsTransactionModal.tsx:304
+msgid "No transactions yet"
+msgstr "No transactions yet"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:640
+#: packages/app/features/profile/components/ReceiptThumbnail.tsx:104
+msgid "Note"
+msgstr "Note"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:789
+msgid "Note (optional)"
+msgstr "Note (optional)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:374
+msgid "Notes updated successfully"
+msgstr "Notes updated successfully"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareButton.tsx:151
+msgid "Opens share dialog to share this contest"
+msgstr "Opens share dialog to share this contest"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:91
+msgid "Organize or host any contests"
+msgstr "Organize or host any contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:33
+msgid "Our Mission"
+msgstr "Our Mission"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:58
+msgid "Our platform helps you discover new opportunities, save your favorite contests, and never miss a deadline with our alert system."
+msgstr "Our platform helps you discover new opportunities, save your favorite contests, and never miss a deadline with our alert system."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:210
+msgid "Our website uses cookies and similar technologies to enhance your browsing experience and analyze usage patterns. You can manage cookie preferences through your browser settings."
+msgstr "Our website uses cookies and similar technologies to enhance your browsing experience and analyze usage patterns. You can manage cookie preferences through your browser settings."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:179
+msgid "Pay Online"
+msgstr "Pay Online"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:143
+msgid "Payment processors for subscription services"
+msgstr "Payment processors for subscription services"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:211
+msgid "Plan downgraded"
+msgstr "Plan downgraded"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:473
+msgid "Please log in to save contests"
+msgstr "Please log in to save contests"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:215
+msgid "Please log in to upvote contests"
+msgstr "Please log in to upvote contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1456
+msgid "Please sign in or register to use our search function - powered by AI."
+msgstr "Please sign in or register to use our search function - powered by AI."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:314
+msgid "Please sign in to save contests and track your participation!"
+msgstr "Please sign in to save contests and track your participation!"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:185
+msgid "Please sign in to upvote contests and show your support!"
+msgstr "Please sign in to upvote contests and show your support!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/screen.tsx:272
+msgid "Please sign in to view and manage your profile, saved contests, and account settings."
+msgstr "Please sign in to view and manage your profile, saved contests, and account settings."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:406
+msgid "Please type \"Confirm Unsave\" or \"confirm unsave\" exactly"
+msgstr "Please type \"Confirm Unsave\" or \"confirm unsave\" exactly"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:96
+msgid "Plus"
+msgstr "Plus"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:180
+msgid "Plus (1 month)"
+msgstr "Plus (1 month)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:222
+msgid "Plus Plan"
+msgstr "Plus Plan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:99
+msgid "Points Balance"
+msgstr "Points Balance"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsTransactionModal.tsx:374
+msgid "Points History"
+msgstr "Points History"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:619
+msgid "Points redemption gives you 1 month of the selected plan. Earn points by referring friends, more ways to earn points coming later!"
+msgstr "Points redemption gives you 1 month of the selected plan. Earn points by referring friends, more ways to earn points coming later!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:567
+msgid "Priority support"
+msgstr "Priority support"
+
+#. js-lingui-generated-id
+#: apps/next/app/navbar.tsx:29
+msgid "Privacy"
+msgstr "Privacy"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:37
+#: packages/app/features/profile/components/GeneralTabContent.tsx:458
+msgid "Privacy Policy"
+msgstr "Privacy Policy"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:214
+msgid "Pro (1 month)"
+msgstr "Pro (1 month)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:224
+msgid "Pro Plan"
+msgstr "Pro Plan"
+
+#. js-lingui-generated-id
+#: apps/expo/app/(tabs)/_layout.tsx:127
+#: apps/expo/app/(tabs)/profile.tsx:11
+#: apps/next/app/navbar.tsx:31
+#: apps/next/app/navbar.tsx:202
+#: packages/app/features/profile/screen.tsx:165
+#: packages/app/features/profile/screen.tsx:265
+msgid "Profile"
+msgstr "Profile"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:69
+msgid "Profile picture (if provided)"
+msgstr "Profile picture (if provided)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:168
+msgid "Purple"
+msgstr "Purple"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:203
+#: packages/app/features/profile/components/PointsBalance.tsx:237
+msgid "Ready to redeem!"
+msgstr "Ready to redeem!"
+
+#. js-lingui-generated-id
+#. placeholder {0}: index + 1
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:495
+msgid "Receipt {0}"
+msgstr "Receipt {0}"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:442
+msgid "Receipt deleted successfully"
+msgstr "Receipt deleted successfully"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:264
+msgid "Receipt uploaded successfully"
+msgstr "Receipt uploaded successfully"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:543
+msgid "Receipts Per Contest"
+msgstr "Receipts Per Contest"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:725
+msgid "Recent Searches"
+msgstr "Recent Searches"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:461
+msgid "Redeem"
+msgstr "Redeem"
+
+#. js-lingui-generated-id
+#. placeholder {0}: option.pointsCost
+#: packages/app/features/profile/components/UpgradeModal.tsx:493
+msgid "Redeem {0} pts"
+msgstr "Redeem {0} pts"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:171
+msgid "Redeem for Subscription"
+msgstr "Redeem for Subscription"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:554
+msgid "Reduced Ads"
+msgstr "Reduced Ads"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:253
+msgid "Refer a friend: +200 points"
+msgstr "Refer a friend: +200 points"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:494
+msgid "Refer Friends"
+msgstr "Refer Friends"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:642
+msgid "Referral History"
+msgstr "Referral History"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:476
+msgid "Referral Pending"
+msgstr "Referral Pending"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:595
+msgid "Referral Progress"
+msgstr "Referral Progress"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:160
+msgid "Referrals"
+msgstr "Referrals"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:44
+msgid "Regular"
+msgstr "Regular"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:198
+msgid "Renewed at a lower tier due to insufficient points. Add more points to renew at your preferred tier."
+msgstr "Renewed at a lower tier due to insufficient points. Add more points to renew at your preferred tier."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:198
+msgid "Request deletion of your personal data (subject to legal requirements)"
+msgstr "Request deletion of your personal data (subject to legal requirements)"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:917
+msgid "Retake"
+msgstr "Retake"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:927
+msgid "Review before uploading"
+msgstr "Review before uploading"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:243
+#: packages/app/components/SaveButton.tsx:301
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:700
+msgid "Save"
+msgstr "Save"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:79
+msgid "Save and track your favorite contests"
+msgstr "Save and track your favorite contests"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:243
+#: packages/app/components/SaveButton.tsx:301
+#: packages/app/features/profile/screen.tsx:210
+msgid "Saved"
+msgstr "Saved"
+
+#. js-lingui-generated-id
+#. placeholder {0}: diffDays === 1 ? 'day' : 'days'
+#: packages/app/features/contest/components/ContestCard.tsx:114
+msgid "Saved {diffDays} {0} ago"
+msgstr "Saved {diffDays} {0} ago"
+
+#. js-lingui-generated-id
+#. placeholder {0}: diffHours === 1 ? 'hour' : 'hours'
+#: packages/app/features/contest/components/ContestCard.tsx:112
+msgid "Saved {diffHours} {0} ago"
+msgstr "Saved {diffHours} {0} ago"
+
+#. js-lingui-generated-id
+#. placeholder {0}: diffMinutes === 1 ? 'minute' : 'minutes'
+#: packages/app/features/contest/components/ContestCard.tsx:108
+msgid "Saved {diffMinutes} {0} ago"
+msgstr "Saved {diffMinutes} {0} ago"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:106
+msgid "Saved just now"
+msgstr "Saved just now"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:910
+msgid "Scan"
+msgstr "Scan"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:786
+msgid "Scan Document"
+msgstr "Scan Document"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:323
+msgid "Scanned receipt uploaded successfully"
+msgstr "Scanned receipt uploaded successfully"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:358
+msgid "Scanner stopped after 60 seconds for stability. Please capture your receipt or close and restart."
+msgstr "Scanner stopped after 60 seconds for stability. Please capture your receipt or close and restart."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:133
+msgid "Scrape, copy, or reproduce our content without permission"
+msgstr "Scrape, copy, or reproduce our content without permission"
+
+#. js-lingui-generated-id
+#: apps/expo/app/(tabs)/_layout.tsx:117
+#: apps/next/app/navbar.tsx:26
+msgid "Search"
+msgstr "Search"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1440
+#: packages/app/features/search/screen.tsx:1449
+#: packages/app/features/search/screen.tsx:1478
+msgid "Search Contests"
+msgstr "Search Contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:442
+msgid "Search contests..."
+msgstr "Search contests..."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:966
+msgid "Search Service Inactive"
+msgstr "Search Service Inactive"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:972
+msgid "Search Unavailable"
+msgstr "Search Unavailable"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1389
+msgid "Searching for contests..."
+msgstr "Searching for contests..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:979
+msgid "Security Verification"
+msgstr "Security Verification"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:667
+msgid "See results"
+msgstr "See results"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:454
+#: packages/app/components/FeedbackDialog.tsx:470
+msgid "Send"
+msgstr "Send"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:329
+msgid "Send Feedback"
+msgstr "Send Feedback"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:138
+msgid "Service providers who assist in operating our platform"
+msgstr "Service providers who assist in operating our platform"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:970
+msgid "Service Temporarily Down"
+msgstr "Service Temporarily Down"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareButton.tsx:180
+msgid "Share"
+msgstr "Share"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareButton.tsx:150
+msgid "Share contest"
+msgstr "Share contest"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:66
+msgid "Share Contest"
+msgstr "Share Contest"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:563
+msgid "Share Invite"
+msgstr "Share Invite"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:127
+msgid "Share on Facebook"
+msgstr "Share on Facebook"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:155
+msgid "Share on Telegram"
+msgstr "Share on Telegram"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:141
+msgid "Share on Twitter"
+msgstr "Share on Twitter"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:113
+msgid "Share on WhatsApp"
+msgstr "Share on WhatsApp"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:98
+msgid "Share via"
+msgstr "Share via"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:576
+msgid "Share your code with friends"
+msgstr "Share your code with friends"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:342
+msgid "Share your suggestions or report bugs or issues..."
+msgstr "Share your suggestions or report bugs or issues..."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:327
+#: packages/app/components/UpvoteButton.tsx:198
+msgid "Sign In"
+msgstr "Sign In"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:819
+#: packages/app/features/contests/ContestsListScreen.tsx:801
+#: packages/app/features/profile/screen.tsx:285
+#: packages/app/features/search/screen.tsx:1469
+msgid "Sign In / Register"
+msgstr "Sign In / Register"
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:860
+msgid "Sign in or Register"
+msgstr "Sign in or Register"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1733
+msgid "Sign in or register to view additional important information"
+msgstr "Sign in or register to view additional important information"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1575
+msgid "Sign in or register to view winner selection details"
+msgstr "Sign in or register to view winner selection details"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1689
+msgid "Sign in or register to view winners announcement details"
+msgstr "Sign in or register to view winners announcement details"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1645
+msgid "Sign in or register to view winners communication details"
+msgstr "Sign in or register to view winners communication details"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:311
+#: packages/app/components/UpvoteButton.tsx:182
+msgid "Sign In Required"
+msgstr "Sign In Required"
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:792
+msgid "Sign in to see all contests and participate!"
+msgstr "Sign in to see all contests and participate!"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:802
+msgid "Sign in to view this contest"
+msgstr "Sign in to view this contest"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:256
+msgid "Sign up bonus: +100 points"
+msgstr "Sign up bonus: +100 points"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:39
+msgid "Smaller"
+msgstr "Smaller"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:986
+msgid "Something went wrong with the search service. Please try again later."
+msgstr "Something went wrong with the search service. Please try again later."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:486
+#: packages/app/components/UpvoteButton.tsx:228
+msgid "Something went wrong. Please try again"
+msgstr "Something went wrong. Please try again"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:501
+msgid "Start saving contests to build your collection"
+msgstr "Start saving contests to build your collection"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:709
+msgid "Start typing to search for contests..."
+msgstr "Start typing to search for contests..."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:138
+msgid "Submit false or misleading information"
+msgstr "Submit false or misleading information"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ThemeSelector.web.tsx:144
+msgid "System"
+msgstr "System"
+
+#. js-lingui-generated-id
+#: packages/app/components/gallery/GalleryThumbnail.tsx:92
+msgid "TAP TO ZOOM"
+msgstr "TAP TO ZOOM"
+
+#. js-lingui-generated-id
+#: apps/next/app/navbar.tsx:30
+msgid "Terms"
+msgstr "Terms"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:37
+#: packages/app/features/profile/components/GeneralTabContent.tsx:471
+msgid "Terms & Conditions"
+msgstr "Terms & Conditions"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:57
+msgid "Text Size"
+msgstr "Text Size"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:145
+msgid "Thank you for your feedback!"
+msgstr "Thank you for your feedback!"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:165
+msgid "The JomContest name, logo, and platform design are our intellectual property. Contest information displayed on our platform belongs to their respective organizers. You may not use our branding or content without prior written permission."
+msgstr "The JomContest name, logo, and platform design are our intellectual property. Contest information displayed on our platform belongs to their respective organizers. You may not use our branding or content without prior written permission."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:980
+msgid "The search service is currently inactive. This may be due to a configuration issue. Please contact support if this persists."
+msgstr "The search service is currently inactive. This may be due to a configuration issue. Please contact support if this persists."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:984
+msgid "The search service is experiencing issues. Our team has been notified. Please try again in a few minutes."
+msgstr "The search service is experiencing issues. Our team has been notified. Please try again in a few minutes."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ThemeSelector.web.tsx:101
+msgid "Theme"
+msgstr "Theme"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:231
+msgid "These Terms and Conditions are governed by and construed in accordance with the laws of Malaysia. Any disputes shall be subject to the exclusive jurisdiction of the Malaysian courts."
+msgstr "These Terms and Conditions are governed by and construed in accordance with the laws of Malaysia. Any disputes shall be subject to the exclusive jurisdiction of the Malaysian courts."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:579
+msgid "They sign up & upload their first receipt"
+msgstr "They sign up & upload their first receipt"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:847
+msgid "This contest is only visible to administrators."
+msgstr "This contest is only visible to administrators."
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:809
+msgid "This contest requires you to sign in to view the full details."
+msgstr "This contest requires you to sign in to view the full details."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:71
+msgid "To access certain features, you must create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must provide accurate and complete information when creating your account."
+msgstr "To access certain features, you must create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must provide accurate and complete information when creating your account."
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:863
+msgid "to access the full list!"
+msgstr "to access the full list!"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:109
+msgid "To communicate with you about our services"
+msgstr "To communicate with you about our services"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:94
+msgid "To create and manage your account"
+msgstr "To create and manage your account"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:106
+msgid "To improve our services and user experience"
+msgstr "To improve our services and user experience"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:103
+msgid "To process subscription payments"
+msgstr "To process subscription payments"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:97
+msgid "To provide personalized contest recommendations"
+msgstr "To provide personalized contest recommendations"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:100
+msgid "To send contest alerts and notifications"
+msgstr "To send contest alerts and notifications"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:178
+msgid "To the fullest extent permitted by law, JomContest shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our platform, including but not limited to losses related to contest participation, prizes, or reliance on contest information."
+msgstr "To the fullest extent permitted by law, JomContest shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our platform, including but not limited to losses related to contest participation, prizes, or reliance on contest information."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:482
+#: packages/app/features/search/screen.tsx:1015
+msgid "Try Again"
+msgstr "Try Again"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:384
+msgid "Type here..."
+msgstr "Type here..."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:370
+msgid "Type to confirm:"
+msgstr "Type to confirm:"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:982
+msgid "Unable to connect to the search service. Please check your internet connection and try again."
+msgstr "Unable to connect to the search service. Please check your internet connection and try again."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:482
+msgid "Unable to save. Please check your connection and try again"
+msgstr "Unable to save. Please check your connection and try again"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:224
+msgid "Unable to upvote. Please check your connection and try again"
+msgstr "Unable to upvote. Please check your connection and try again"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:184
+msgid "Under the PDPA, you have the right to:"
+msgstr "Under the PDPA, you have the right to:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:597
+msgid "Unlock {featureName} and more premium features"
+msgstr "Unlock {featureName} and more premium features"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:348
+#: packages/app/features/profile/components/SavedTabContent.tsx:770
+msgid "Unsave Contest?"
+msgstr "Unsave Contest?"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:171
+msgid "Unsaving contest..."
+msgstr "Unsaving contest..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:826
+msgid "Unsaving..."
+msgstr "Unsaving..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:566
+msgid "Updating..."
+msgstr "Updating..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:295
+msgid "Upgrade"
+msgstr "Upgrade"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:258
+msgid "Upgrade for more features"
+msgstr "Upgrade for more features"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:109
+msgid "Upgrade to Plus or Pro to unlock custom color themes"
+msgstr "Upgrade to Plus or Pro to unlock custom color themes"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:291
+msgid "Upgrade to Pro Plan*"
+msgstr "Upgrade to Pro Plan*"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:722
+msgid "Upgrade to Pro to continue to add receipts to more contests"
+msgstr "Upgrade to Pro to continue to add receipts to more contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:593
+msgid "Upgrade Your Plan"
+msgstr "Upgrade Your Plan"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:197
+msgid "Upload"
+msgstr "Upload"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:551
+msgid "Upload max 10 receipts per saved contest"
+msgstr "Upload max 10 receipts per saved contest"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:745
+msgid "Upload receipts to see them here"
+msgstr "Upload receipts to see them here"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:548
+msgid "Upload receipts to unlimited contests"
+msgstr "Upload receipts to unlimited contests"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:250
+msgid "Upload receipts: +10 points each"
+msgstr "Upload receipts: +10 points each"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:564
+msgid "Upload unlimited receipts per saved contest"
+msgstr "Upload unlimited receipts per saved contest"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:480
+msgid "Upload your first receipt to complete the referral and earn 200 bonus points!"
+msgstr "Upload your first receipt to complete the referral and earn 200 bonus points!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:737
+msgid "Upload your first receipt to earn 200 points and complete this referral"
+msgstr "Upload your first receipt to earn 200 points and complete this referral"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:727
+msgid "Upload your first receipt to get started"
+msgstr "Upload your first receipt to get started"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:630
+msgid "Uploaded"
+msgstr "Uploaded"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:171
+msgid "Upvote"
+msgstr "Upvote"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:171
+msgid "Upvoted"
+msgstr "Upvoted"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:162
+msgid "Use Points"
+msgstr "Use Points"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:124
+msgid "Use the platform for any illegal or unauthorized purpose"
+msgstr "Use the platform for any illegal or unauthorized purpose"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:922
+msgid "Use This"
+msgstr "Use This"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:107
+msgid "Users participate in contests at their own risk. We recommend verifying contest details directly with the organizer before participating."
+msgstr "Users participate in contests at their own risk. We recommend verifying contest details directly with the organizer before participating."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:793
+msgid "Waiting"
+msgstr "Waiting"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:800
+msgid "Waiting for friend to upload their first receipt (both get 200 points!)"
+msgstr "Waiting for friend to upload their first receipt (both get 200 points!)"
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:848
+msgid "Want to see more contests?"
+msgstr "Want to see more contests?"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:50
+msgid "We aggregate contests from various sources across Malaysia, bringing them all into one convenient platform. Whether you're looking for photo contests, lucky draws, cooking competitions, or creative challenges - we've got you covered."
+msgstr "We aggregate contests from various sources across Malaysia, bringing them all into one convenient platform. Whether you're looking for photo contests, lucky draws, cooking competitions, or creative challenges - we've got you covered."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:611
+msgid "We are working hard on this, you can opt for points redemption for now..."
+msgstr "We are working hard on this, you can opt for points redemption for now..."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:131
+msgid "We do not sell your personal data. We may share your data with:"
+msgstr "We do not sell your personal data. We may share your data with:"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:158
+msgid "We implement appropriate technical and organizational security measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction. This includes encryption, secure servers, and access controls."
+msgstr "We implement appropriate technical and organizational security measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction. This includes encryption, secure servers, and access controls."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:59
+msgid "We may collect the following types of personal data:"
+msgstr "We may collect the following types of personal data:"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:218
+msgid "We may suspend or terminate your account at any time for violation of these terms or for any other reason at our discretion. Upon termination, your right to use the platform will immediately cease."
+msgstr "We may suspend or terminate your account at any time for violation of these terms or for any other reason at our discretion. Upon termination, your right to use the platform will immediately cease."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:222
+msgid "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on our platform with an updated effective date."
+msgstr "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on our platform with an updated effective date."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:205
+msgid "We reserve the right to modify these Terms and Conditions at any time. Changes will be effective upon posting to our platform. Continued use of JomContest after changes constitutes acceptance of the modified terms."
+msgstr "We reserve the right to modify these Terms and Conditions at any time. Changes will be effective upon posting to our platform. Continued use of JomContest after changes constitutes acceptance of the modified terms."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:171
+msgid "We retain your personal data only for as long as necessary to fulfill the purposes for which it was collected, or as required by law. When you delete your account, we will delete or anonymize your personal data within a reasonable timeframe."
+msgstr "We retain your personal data only for as long as necessary to fulfill the purposes for which it was collected, or as required by law. When you delete your account, we will delete or anonymize your personal data within a reasonable timeframe."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:90
+msgid "We typically respond within 1-2 business days. Thank you for your patience!"
+msgstr "We typically respond within 1-2 business days. Thank you for your patience!"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:38
+msgid "We'd love to hear from you! Whether you have questions, feedback, or partnership inquiries, feel free to reach out to us."
+msgstr "We'd love to hear from you! Whether you have questions, feedback, or partnership inquiries, feel free to reach out to us."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:45
+msgid "Welcome to JomContest. By accessing or using our website and mobile application, you agree to be bound by these Terms and Conditions. Please read them carefully before using our services."
+msgstr "Welcome to JomContest. By accessing or using our website and mobile application, you agree to be bound by these Terms and Conditions. Please read them carefully before using our services."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:47
+msgid "What We Do"
+msgstr "What We Do"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:119
+msgid "When using JomContest, you agree not to:"
+msgstr "When using JomContest, you agree not to:"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:69
+msgid "Why JomContest?"
+msgstr "Why JomContest?"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:194
+msgid "Withdraw consent for data processing"
+msgstr "Withdraw consent for data processing"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1488
+msgid "Worth:"
+msgstr "Worth:"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:192
+msgid "You agree to indemnify and hold harmless JomContest, its affiliates, and their respective officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the platform or violation of these terms."
+msgstr "You agree to indemnify and hold harmless JomContest, its affiliates, and their respective officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the platform or violation of these terms."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1024
+msgid "You can still browse contests from the home page"
+msgstr "You can still browse contests from the home page"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:808
+msgid "You had reached your referral limit when this was processed"
+msgstr "You had reached your referral limit when this was processed"
+
+#. js-lingui-generated-id
+#. placeholder {0}: contestTitle || 'this contest'
+#. placeholder {0}: contestToUnsave?.title
+#: packages/app/components/SaveButton.tsx:352
+#: packages/app/features/profile/components/SavedTabContent.tsx:774
+msgid "You have uploaded receipt(s) for \"{0}\". Your receipts will be removed from your profile. Are you sure you want to proceed?"
+msgstr "You have uploaded receipt(s) for \"{0}\". Your receipts will be removed from your profile. Are you sure you want to proceed?"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:700
+msgid "You Were Referred By:"
+msgstr "You Were Referred By:"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:205
+msgid "You will be directed to Whatsapp. Thank you 🙏🏻"
+msgstr "You will be directed to Whatsapp. Thank you 🙏🏻"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:477
+msgid "You've already saved this contest"
+msgstr "You've already saved this contest"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:219
+msgid "You've already upvoted this contest"
+msgstr "You've already upvoted this contest"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:758
+msgid "You've reached the end"
+msgstr "You've reached the end"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:215
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:299
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:555
+msgid "You've reached the limit of {maxContests} contests with receipts. Upgrade to Pro for unlimited contests."
+msgstr "You've reached the limit of {maxContests} contests with receipts. Upgrade to Pro for unlimited contests."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:624
+msgid "You've reached the maximum referrals!"
+msgstr "You've reached the maximum referrals!"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:79
+msgid "Your feedback helps us improve! If you have suggestions on how we can make JomContest better, please don't hesitate to share your thoughts with us."
+msgstr "Your feedback helps us improve! If you have suggestions on how we can make JomContest better, please don't hesitate to share your thoughts with us."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:87
+msgid "Your personal data is collected and processed for the following purposes:"
+msgstr "Your personal data is collected and processed for the following purposes:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:247
+msgid "Your plan will attempt to auto-renew when it expires"
+msgstr "Your plan will attempt to auto-renew when it expires"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:251
+msgid "Your plan will NOT attempt to auto-renew when it expires"
+msgstr "Your plan will NOT attempt to auto-renew when it expires"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:505
+msgid "Your Referral Code"
+msgstr "Your Referral Code"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:765
+msgid "Your Referral:"
+msgstr "Your Referral:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:748
+msgid "Your saved contests are still active"
+msgstr "Your saved contests are still active"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:671
+msgid "Your subscription expired due to insufficient points. Add more points to renew."
+msgstr "Your subscription expired due to insufficient points. Add more points to renew."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:594
+msgid "Your uploaded digital receipts are private and are mainly for references only. Contest organizers may require your original receipts for verification purposes. We are not liable for any loss or damage to your uploaded receipts."
+msgstr "Your uploaded digital receipts are private and are mainly for references only. Contest organizers may require your original receipts for verification purposes. We are not liable for any loss or damage to your uploaded receipts."

@@ -1,0 +1,43 @@
+{
+  "name": "jc-app-aw",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@lingui/cli": "^5.5.0",
+    "@types/react": "~19.2.2",
+    "eslint": "^9.26.0",
+    "turbo": "^2.5.3",
+    "typescript": "~5.8.3"
+  },
+  "scripts": {
+    "native": "cd apps/expo && yarn start",
+    "web": "cd apps/next && yarn dev",
+    "build": "cd apps/next && yarn build",
+    "extract": "lingui extract --clean",
+    "extract-orig": "lingui extract",
+    "compile": "lingui compile --typescript"
+  },
+  "packageManager": "yarn@4.14.1",
+  "resolutions": {
+    "react-native-appwrite/react-native": "0.83.6",
+    "react-native-appwrite/expo-file-system": "~55.0.17"
+  },
+  "eslintConfig": {
+    "extends": "next",
+    "settings": {
+      "next": {
+        "rootDir": "apps/next/"
+      }
+    },
+    "root": true
+  },
+  "prettier": {
+    "semi": false,
+    "useTabs": false,
+    "tabWidth": 2,
+    "singleQuote": true
+  }
+}

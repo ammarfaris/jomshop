@@ -1,0 +1,9 @@
+{
+  "name": "update-auto-renew",
+  "version": "1.0.0",
+  "description": "Update user's auto-renew preference for subscription renewal with points",
+  "main": "index.js",
+  "dependencies": {
+    "node-appwrite": "^20.3.0"
+  }
+}

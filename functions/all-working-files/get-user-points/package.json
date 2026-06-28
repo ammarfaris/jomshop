@@ -1,0 +1,10 @@
+{
+  "name": "get-user-points",
+  "version": "1.0.0",
+  "description": "Get user points balance and transaction history. Can be called by authenticated users or server functions.",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "node-appwrite": "^20.3.0"
+  }
+}

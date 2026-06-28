@@ -1,0 +1,15 @@
+import { Stack } from 'expo-router'
+
+export default function Layout() {
+  return (
+    <>
+      <Stack.Screen
+        options={{
+          headerShown: true,
+          title: 'Sign In / Register',
+        }}
+      />
+      <Stack />
+    </>
+  )
+}

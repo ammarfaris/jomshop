@@ -1,0 +1,2358 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2025-09-15 04:54+0800\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: ms\n"
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Plural-Forms: \n"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:107
+msgid "\"Contest discovery made easy, Winning made possible!\""
+msgstr "\"Penemuan peraduan dipermudahkan, Kemenangan dimungkinkan!\""
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:916
+msgid "(beta phase)"
+msgstr "(fasa cubaan)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:66
+msgid "{balance, plural, one {point} other {points}}"
+msgstr "{balance, plural, one {poin} other {poin}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:87
+#: packages/app/features/contest/ContestDetailScreen.tsx:1129
+msgid "{daysExpired, plural, one {# day ago} other {# days ago}}"
+msgstr "{daysExpired, plural, one {# hari yang lalu} other {# hari yang lalu}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:127
+#: packages/app/features/contest/components/ContestBadges.tsx:145
+#: packages/app/features/contest/ContestDetailScreen.tsx:1181
+#: packages/app/features/contest/ContestDetailScreen.tsx:1203
+msgid "{daysUntilEnd, plural, one {in # day} other {in # days}}"
+msgstr "{daysUntilEnd, plural, one {dalam # hari} other {dalam # hari}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1287
+msgid "{diffDays} days"
+msgstr "{diffDays} hari"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:100
+msgid "{diffDays}d left"
+msgstr "{diffDays}h baki"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:102
+msgid "{diffHours}h left"
+msgstr "{diffHours}j baki"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:104
+msgid "{diffMinutes}m left"
+msgstr "{diffMinutes}m baki"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:89
+#: packages/app/features/contest/ContestDetailScreen.tsx:1135
+msgid "{hoursExpired, plural, one {# hour ago} other {# hours ago}}"
+msgstr "{hoursExpired, plural, one {# jam yang lalu} other {# jam yang lalu}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:108
+#: packages/app/features/contest/ContestDetailScreen.tsx:1158
+msgid "{hoursUntilEnd, plural, one {in # hour} other {in # hours}}"
+msgstr "{hoursUntilEnd, plural, one {dalam # jam} other {dalam # jam}}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:191
+msgid "{receiptCount, plural, one {Receipt} other {Receipts}}"
+msgstr "{receiptCount, plural, one {Resit} other {Resit}}"
+
+#. js-lingui-generated-id
+#. placeholder {0}: remainingReferrals * 200
+#: packages/app/features/profile/components/ReferralCard.tsx:610
+msgid "{remainingReferrals} referrals remaining • Earn up to {0} more points!"
+msgstr "{remainingReferrals} rujukan tinggal • Dapatkan sehingga {0} poin lagi!"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:543
+msgid "{sectionTitle}"
+msgstr "{sectionTitle}"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:299
+msgid "*if sufficient points, if not tier will be lowered accordingly"
+msgstr "*Jika poin mencukupi, jika tidak pelan akan diturunkan sewajarnya"
+
+#. js-lingui-generated-id
+#: packages/app/features/home/screen.tsx:51
+msgid "<0>\"Contest discovery made easy, Winning made possible!\"</0>"
+msgstr "<0>\"Pencarian peraduan jadi lebih mudah, Kemenangan jadi lebih mungkin!\"</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:93
+msgid "<0><1>Ended {timeText}</1></0>"
+msgstr "<0><1>Tamat {timeText}</1></0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:131
+#: packages/app/features/contest/components/ContestBadges.tsx:149
+msgid "<0><1>Ends {timeText}</1></0>"
+msgstr "<0><1>Berakhir {timeText}</1></0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestBadges.tsx:112
+msgid "<0><1>Expiring {timeText}</1></0>"
+msgstr "<0><1>Akan Tamat {timeText}</1></0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1307
+msgid "<0>👥 Eligible Participants</0>"
+msgstr "<0>👥 Peserta Yang Layak</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1347
+msgid "<0>💳 Eligible Purchases & Products 🛍️</0>"
+msgstr "<0>💳 Pembelian & Produk Yang Layak 🛍️</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1361
+msgid "<0>🛒 Eligible Stores</0>"
+msgstr "<0>🛒 Kedai Yang Layak</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1724
+#: packages/app/features/contest/ContestDetailScreen.tsx:1757
+msgid "<0>Additional Information</0>"
+msgstr "<0>Maklumat Tambahan</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1273
+msgid "<0>Contest Period</0>"
+msgstr "<0>Tempoh Peraduan</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1296
+msgid "<0>Eligibility & Where to buy</0>"
+msgstr "<0>Kelayakan & Di Mana Membeli</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1410
+msgid "<0>Eligible Stores (with potential to earn JomPoints)</0>"
+msgstr "<0>Kedai Yang Layak (dengan potensi untuk dapatkan JomPoints)</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1378
+msgid "<0>Eligible Stores<1> (JomPoints)</1></0>"
+msgstr "<0>Kedai Yang Layak<1> (JomPoints)</1></0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1259
+msgid "<0>End Date</0>"
+msgstr "<0>Tarikh Tutup</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1323
+msgid "<0>Exclusions:</0>"
+msgstr "<0>Pengecualian:</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1522
+msgid "<0>How to Enter</0>"
+msgstr "<0>Cara Menyertai</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/home/screen.tsx:56
+msgid "<0>Made with 💙 by <1>AAF Digital</1>.</0>"
+msgstr "<0>Dibangunkan dengan 💙 oleh <1>AAF Digital</1>.</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1469
+msgid "<0>Prizes</0>"
+msgstr "<0>Hadiah</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1416
+msgid "<0>Shop link(s) provided below are affiliate link(s), depending on the terms and conditions, a purchase coming from the link(s) may or may not be rewarded. If it is rewarded, we will credit a proportion of the reward to you as JomPoints. This feature is still in Beta, and we are not liable for any discrepancies or inaccuracies that may occur.</0>"
+msgstr "<0>Pautan kedai yang disediakan di bawah ini adalah pautan afiliasi (affiliate), bergantung kepada terma dan syarat, pembelian melalui pautan ini mungkin diberi atau mungkin tidak diberi ganjaran. Jika diberi ganjaran, kami akan mengkreditkan sebahagian daripada ganjaran kepada anda sebagai JomPoints. Ciri ini masih dalam Beta, dan kami tidak bertanggungjawab terhadap sebarang percanggahan atau ketidaktepatan yang mungkin berlaku.</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1245
+msgid "<0>Start Date</0>"
+msgstr "<0>Tarikh Mula</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/home/screen.tsx:76
+msgid "<0>Start discovering contests now!</0>"
+msgstr "<0>Mula cari peraduan sekarang!</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/home/screen.tsx:39
+msgid "<0>Welcome to JomContest 👋🏻</0>"
+msgstr "<0>Selamat Datang ke JomContest 👋🏻</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1394
+msgid "<0>what is this?</0>"
+msgstr "<0>apa ini?</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1636
+#: packages/app/features/contest/ContestDetailScreen.tsx:1659
+msgid "<0>Winners Communication Channel & Timeline</0>"
+msgstr "<0>Saluran Komunikasi & Garis Masa Pemenang</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1680
+#: packages/app/features/contest/ContestDetailScreen.tsx:1703
+msgid "<0>Winners List & Announcement</0>"
+msgstr "<0>Senarai & Pengumuman Pemenang</0>"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1566
+#: packages/app/features/contest/ContestDetailScreen.tsx:1590
+msgid "<0>Winners Selection Method</0>"
+msgstr "<0>Kaedah Pemilihan Pemenang</0>"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:898
+msgid "💡 Hold camera directly above receipt, keep steady & get closer. If you are not satisfied, use normal camera via \"Add Image Receipt\" button or app like CamScanner."
+msgstr "💡 Pegang kamera terus di atas resit, kekal stabil & lebih dekat. Jika tidak berpuas hati, guna kamera biasa melalui butang \"Tambah Resit Imej\" atau aplikasi seperti CamScanner."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:54
+msgid "1. About JomContest"
+msgstr "1. Tentang JomContest"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:56
+msgid "1. Personal Data We Collect"
+msgstr "1. Data Peribadi Yang Kami Kumpul"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:231
+msgid "10. Contact Us"
+msgstr "10. Hubungi Kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:215
+msgid "10. Termination"
+msgstr "10. Penamatan"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:228
+msgid "11. Governing Law"
+msgstr "11. Undang-Undang Yang Mengawal"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:240
+msgid "12. Contact Us"
+msgstr "12. Hubungi Kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:84
+msgid "2. Purpose of Data Collection"
+msgstr "2. Tujuan Pengumpulan Data"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:68
+msgid "2. User Accounts"
+msgstr "2. Akaun Pengguna"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:115
+msgid "3. Consent"
+msgstr "3. Persetujuan"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:82
+msgid "3. Platform Role and Disclaimer"
+msgstr "3. Peranan Platform dan Penafian"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:116
+msgid "4. Acceptable Use"
+msgstr "4. Penggunaan Yang Diterima"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:128
+msgid "4. Disclosure of Personal Data"
+msgstr "4. Pendedahan Data Peribadi"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:155
+msgid "5. Data Security"
+msgstr "5. Keselamatan Data"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:147
+msgid "5. Subscription Services"
+msgstr "5. Perkhidmatan Langganan"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:168
+msgid "6. Data Retention"
+msgstr "6. Penyimpanan Data"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:162
+msgid "6. Intellectual Property"
+msgstr "6. Harta Intelek"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:175
+msgid "7. Limitation of Liability"
+msgstr "7. Had Liabiliti"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:181
+msgid "7. Your Rights"
+msgstr "7. Hak Anda"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:207
+msgid "8. Cookies and Tracking"
+msgstr "8. Kuki dan Penjejakan"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:189
+msgid "8. Indemnification"
+msgstr "8. Ganti Rugi"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:219
+msgid "9. Changes to This Policy"
+msgstr "9. Perubahan Pada Polisi Ini"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:202
+msgid "9. Modifications"
+msgstr "9. Pengubahsuaian"
+
+#. js-lingui-generated-id
+#: apps/next/app/navbar.tsx:27
+msgid "About"
+msgstr "Tentang"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:93
+msgid "About the Company"
+msgstr "Tentang Syarikat"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:27
+#: packages/app/features/profile/components/GeneralTabContent.tsx:432
+msgid "About Us"
+msgstr "Tentang Kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:188
+msgid "Access your personal data held by us"
+msgstr "Akses data peribadi anda yang disimpan oleh kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:730
+msgid "Action Required"
+msgstr "Tindakan Diperlukan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:650
+#: packages/app/features/search/screen.tsx:789
+msgid "Active"
+msgstr "Aktif"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:867
+msgid "Add Image"
+msgstr "Tambah Imej"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:772
+msgid "Add New Receipt"
+msgstr "Tambah Resit Baharu"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:962
+msgid "Add PDF"
+msgstr "Tambah PDF"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:140
+msgid "Adjust text size for better readability. Changes apply across the app."
+msgstr "Laraskan saiz teks untuk kebolehbacaan yang lebih baik. Perubahan digunakan di seluruh aplikasi."
+
+#. js-lingui-generated-id
+#: apps/expo/app/(tabs)/_layout.tsx:137
+#: apps/next/app/navbar.tsx:32
+msgid "Admin"
+msgstr "Admin"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:840
+msgid "Admin Only Contest"
+msgstr "Peraduan Hanya Untuk Admin"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/screen.tsx:230
+msgid "Alerts"
+msgstr "Notifikasi"
+
+#. js-lingui-generated-id
+#: packages/app/components/CategoryFilter.tsx:102
+msgid "All"
+msgstr "Semua"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:542
+msgid "All Free features"
+msgstr "Semua ciri Percuma"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:561
+msgid "All Plus features"
+msgstr "Semua ciri Plus"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:742
+msgid "All your saved contests have expired"
+msgstr "Semua peraduan yang disimpan telah tamat"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1038
+msgid "Are you sure you want to delete this receipt? This action cannot be undone."
+msgstr "Adakah anda pasti untuk memadamkan resit ini? Tindakan ini tidak boleh dikembalikan kepada keadaan asal."
+
+#. js-lingui-generated-id
+#. placeholder {0}: contestTitle || 'this contest'
+#. placeholder {0}: contestToUnsave?.title
+#: packages/app/components/SaveButton.tsx:358
+#: packages/app/features/profile/components/SavedTabContent.tsx:780
+msgid "Are you sure you want to remove \"{0}\" from your saved contests? You can always save it again later."
+msgstr "Adakah anda pasti untuk keluarkan \"{0}\" daripada senarai peraduan yang disimpan? Anda boleh simpan semula kemudian."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:129
+msgid "Attempt to gain unauthorized access to our systems"
+msgstr "Cuba mendapatkan akses tanpa kebenaran ke sistem kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:195
+msgid "Auto-renew adjusted"
+msgstr "Pembaharuan automatik diselaraskan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:204
+#: packages/app/features/profile/components/UpgradeModal.tsx:216
+msgid "Auto-renew failed"
+msgstr "Pembaharuan automatik gagal"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:233
+msgid "Auto-renew with Points"
+msgstr "Pembaharuan automatik dengan Poin"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:668
+msgid "Auto-renewal failed"
+msgstr "Pembaharuan automatik gagal"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:85
+msgid "Available in English and Bahasa Malaysia"
+msgstr "Tersedia dalam Bahasa Inggeris dan Bahasa Malaysia"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:316
+msgid "Bahasa"
+msgstr "Bahasa"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:49
+msgid "Bigger"
+msgstr "Lebih Besar"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:167
+msgid "Blue"
+msgstr "Biru"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:508
+msgid "Browse Contests"
+msgstr "Lihat Peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:62
+msgid "Business Inquiries"
+msgstr "Pertanyaan Perniagaan"
+
+#. js-lingui-generated-id
+#. placeholder {0}: contestHosts[0]?.name || 'Unknown'
+#. placeholder {0}: hostNames[0]
+#. placeholder {0}: hosts[0]?.name || 'Unknown'
+#: packages/app/features/contest/components/ContestCard.tsx:120
+#: packages/app/features/contest/ContestDetailScreen.tsx:1000
+#: packages/app/features/search/screen.tsx:795
+msgid "By {0}"
+msgstr "Oleh {0}"
+
+#. js-lingui-generated-id
+#. placeholder {0}: contestHosts[0]?.name || 'Unknown'
+#. placeholder {0}: hostNames[0]
+#. placeholder {0}: hosts[0]?.name || 'Unknown'
+#. placeholder {1}: contestHosts[1]?.name || 'Unknown'
+#. placeholder {1}: hostNames[1]
+#. placeholder {1}: hosts[1]?.name || 'Unknown'
+#: packages/app/features/contest/components/ContestCard.tsx:122
+#: packages/app/features/contest/ContestDetailScreen.tsx:1002
+#: packages/app/features/search/screen.tsx:798
+msgid "By {0} & {1}"
+msgstr "Oleh {0} & {1}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:132
+#: packages/app/features/contest/ContestDetailScreen.tsx:1013
+#: packages/app/features/search/screen.tsx:807
+msgid "By {allButLast} & {lastHost}"
+msgstr "Oleh {allButLast} & {lastHost}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:119
+#: packages/app/features/contest/ContestDetailScreen.tsx:998
+#: packages/app/features/search/screen.tsx:794
+msgid "By Unknown Host"
+msgstr "Oleh Penganjur Tidak Diketahui"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:118
+msgid "By using JomContest, you consent to the collection, processing, and use of your personal data as described in this Privacy Policy. You may withdraw your consent at any time by contacting us or deleting your account."
+msgstr "Dengan menggunakan JomContest, anda bersetuju dengan pengumpulan, pemprosesan, dan penggunaan data peribadi anda seperti yang diterangkan dalam Polisi Privasi ini. Anda boleh menarik balik persetujuan anda pada bila-bila masa dengan menghubungi kami atau memadamkan akaun anda."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:253
+msgid "Camera access blocked for security reasons. Please use HTTPS."
+msgstr "Akses kamera disekat atas sebab keselamatan. Sila guna HTTPS."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:228
+msgid "Camera access denied. Please allow camera access to scan documents."
+msgstr "Akses kamera ditolak. Sila benarkan akses kamera untuk mengimbas dokumen."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:174
+#: packages/app/components/DocumentScanner.web.tsx:251
+msgid "Camera access is not supported on this browser."
+msgstr "Akses kamera tidak disokong pada pelayar ini."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:171
+msgid "Camera access requires HTTPS on mobile browsers. Please use ngrok or deploy to a secure server for mobile testing."
+msgstr "Akses kamera memerlukan HTTPS pada pelayar mudah alih. Sila guna ngrok atau deploy ke pelayan selamat untuk ujian mudah alih."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:167
+msgid "Camera access requires HTTPS. Please use a secure connection (https://)."
+msgstr "Akses kamera memerlukan HTTPS. Sila guna sambungan selamat (https://)."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:249
+msgid "Camera does not support the required settings."
+msgstr "Kamera tidak menyokong tetapan yang diperlukan."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:244
+msgid "Camera is already in use by another application."
+msgstr "Kamera sedang digunakan oleh aplikasi lain."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:234
+msgid "Camera permission denied. Please allow camera access in your browser settings and reload the page."
+msgstr "Kebenaran kamera ditolak. Sila benarkan akses kamera dalam tetapan pelayar anda dan muat semula halaman."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:880
+#: packages/app/components/FeedbackDialog.tsx:441
+#: packages/app/components/SaveButton.tsx:322
+#: packages/app/components/SaveButton.tsx:423
+#: packages/app/components/UpvoteButton.tsx:193
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:683
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1053
+#: packages/app/features/profile/components/SavedTabContent.tsx:796
+msgid "Cancel"
+msgstr "Batal"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:476
+msgid "Cannot open PDF file"
+msgstr "Tidak dapat membuka fail PDF"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:428
+msgid "CAPTCHA expired. Please verify again."
+msgstr "CAPTCHA tamat tempoh. Sila sahkan semula."
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:421
+msgid "CAPTCHA verification failed. Please try again."
+msgstr "Pengesahan CAPTCHA gagal. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:892
+msgid "Capture"
+msgstr "Tangkap"
+
+#. js-lingui-generated-id
+#: packages/app/utils/share.ts:45
+msgid "Check out this contest on JomContest!"
+msgstr "Lihat peraduan ini di JomContest!"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:394
+msgid "Clear"
+msgstr "Padam"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:662
+msgid "Clear all"
+msgstr "Padam semua"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:733
+msgid "Clear History"
+msgstr "Padam Sejarah"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptThumbnail.tsx:107
+msgid "Click on the edit icon to add note"
+msgstr "Klik pada ikon edit untuk tambah nota"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:648
+msgid "Click to select, click again to unselect"
+msgstr "Klik untuk pilih, klik lagi untuk nyahpilih"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:828
+msgid "Close"
+msgstr "Tutup"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:72
+msgid "Close share dialog"
+msgstr "Tutup dialog kongsi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:86
+msgid "Color Theme"
+msgstr "Tema Warna"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:584
+msgid "Coming soon..."
+msgstr "Akan datang..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1007
+msgid "Complete verification to upload receipts"
+msgstr "Lengkapkan pengesahan untuk muat naik resit"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:372
+#: packages/app/components/SaveButton.tsx:455
+#: packages/app/features/profile/components/SavedTabContent.tsx:831
+msgid "Confirm Unsave"
+msgstr "Sahkan Nyahsimpan"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:968
+msgid "Connection Error"
+msgstr "Ralat Sambungan"
+
+#. js-lingui-generated-id
+#: apps/next/app/navbar.tsx:28
+msgid "Contact"
+msgstr "Hubungi"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:32
+#: packages/app/features/profile/components/GeneralTabContent.tsx:445
+msgid "Contact Us"
+msgstr "Hubungi Kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:78
+msgid "Contest participation and saved contests"
+msgstr "Penyertaan peraduan dan peraduan yang disimpan"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1889
+msgid "Contest posting on organiser's social media & website:"
+msgstr "Siaran peraduan di media sosial & laman web penganjur:"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1899
+msgid "Contest posting on organiser's social media:"
+msgstr "Siaran peraduan di media sosial penganjur:"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1894
+msgid "Contest posting on organiser's website:"
+msgstr "Siaran peraduan di laman web penganjur:"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:204
+msgid "Contest removed from saved list"
+msgstr "Peraduan dikeluarkan dari senarai tersimpan"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:100
+msgid "Contest saved, but automatic upvote failed"
+msgstr "Peraduan disimpan, tetapi undi automatik gagal"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:170
+msgid "Contest unsaved"
+msgstr "Peraduan dinyahsimpan"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:188
+msgid "Contest unsaved, but receipts cleanup failed. Please contact support if you see issues."
+msgstr "Peraduan dinyahsimpan, tetapi pembersihan resit gagal. Sila hubungi sokongan jika anda menghadapi masalah."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:535
+msgid "Contests With Receipts"
+msgstr "Peraduan Dengan Resit"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:97
+msgid "Control contest rules, prizes, or outcomes"
+msgstr "Mengawal peraturan peraduan, hadiah, atau keputusan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:182
+msgid "Cool & Professional"
+msgstr "Sejuk & Profesional"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:87
+msgid "Copy contest link to clipboard"
+msgstr "Salin pautan peraduan ke papan keratan"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:90
+msgid "Copy Link"
+msgstr "Salin Pautan"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:90
+msgid "Copying..."
+msgstr "Menyalin..."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:191
+msgid "Correct any inaccurate personal data"
+msgstr "Membetulkan sebarang data peribadi yang tidak tepat"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:185
+msgid "Creative & Vibrant"
+msgstr "Kreatif & Menarik"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:73
+msgid "Curated contests from trusted sources"
+msgstr "Peraduan terpilih dari sumber yang dipercayai"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:474
+#: packages/app/features/profile/components/UpgradeModal.tsx:480
+msgid "Current"
+msgstr "Semasa"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:545
+msgid "Custom color themes"
+msgstr "Tema warna pilihan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ThemeSelector.web.tsx:143
+msgid "Dark"
+msgstr "Gelap"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1065
+msgid "Delete"
+msgstr "Padam"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:1035
+msgid "Delete Receipt?"
+msgstr "Padam Resit?"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:75
+msgid "Device information and usage data"
+msgstr "Maklumat peranti dan data penggunaan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:486
+msgid "Downgrade"
+msgstr "Turun Taraf"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:293
+msgid "Downgrade to Plus Plan*"
+msgstr "Turun taraf ke Pelan Plus*"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:645
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:794
+msgid "e.g., Entry 1, Receipt for product X"
+msgstr "cth., Penyertaan 1, Resit untuk produk X"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:497
+msgid "Earn 200 points per referral"
+msgstr "Dapatkan 200 poin setiap rujukan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsTransactionModal.tsx:307
+msgid "Earn points by referring friends, more ways to earn points coming later!"
+msgstr "Dapatkan poin dengan merujuk rakan, lebih banyak cara untuk mendapatkan poin akan datang kemudian!"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:76
+msgid "Easy search and filtering"
+msgstr "Carian dan penapisan yang mudah"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:49
+msgid "Email"
+msgstr "E-mel"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:66
+msgid "Email address"
+msgstr "Alamat e-mel"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1149
+#: packages/app/features/profile/components/SavedTabContent.tsx:670
+#: packages/app/features/search/screen.tsx:789
+msgid "Ended"
+msgstr "Tamat"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1195
+#: packages/app/features/contest/ContestDetailScreen.tsx:1217
+msgid "Ends"
+msgstr "Berakhir"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:427
+msgid "Enter a friend's code who referred you. You can only do this once."
+msgstr "Masukkan kod rakan yang merujuk anda. Anda hanya boleh lakukan ini sekali."
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1317
+msgid "Exclusions"
+msgstr "Pengecualian"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:93
+msgid "Expired"
+msgstr "Tamat"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:81
+msgid "Expired on {formattedDate}"
+msgstr "Tamat pada {formattedDate}"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:84
+msgid "Expires on {formattedDate}"
+msgstr "Tamat pada {formattedDate}"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1172
+msgid "Expiring"
+msgstr "Akan Tamat"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:654
+msgid "Failed to capture document. Make sure the entire document is visible in the frame."
+msgstr "Gagal menangkap dokumen. Pastikan keseluruhan dokumen kelihatan dalam bingkai."
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:40
+msgid "Failed to copy link. Please try again"
+msgstr "Gagal menyalin pautan. Sila cuba lagi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:447
+msgid "Failed to delete receipt. Please try again."
+msgstr "Gagal memadamkan resit. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:143
+msgid "Failed to initialize scanner. Please try again."
+msgstr "Gagal memulakan pengimbas. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:140
+msgid "Failed to load points. Tap to retry."
+msgstr "Gagal memuatkan poin. Ketik untuk cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:478
+msgid "Failed to load saved contests"
+msgstr "Gagal memuatkan peraduan yang disimpan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:480
+msgid "Failed to open PDF file"
+msgstr "Gagal membuka fail PDF"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:55
+msgid "Failed to open share dialog. Please try again"
+msgstr "Gagal membuka dialog kongsi. Sila cuba lagi"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:283
+msgid "Failed to open WhatsApp. Please try again."
+msgstr "Gagal membuka WhatsApp. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:705
+msgid "Failed to resume camera. Please try again."
+msgstr "Gagal menyambung semula kamera. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareButton.tsx:78
+msgid "Failed to share. Please try again"
+msgstr "Gagal berkongsi. Sila cuba lagi"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:179
+#: packages/app/components/FeedbackDialog.tsx:284
+msgid "Failed to submit feedback. Please try again."
+msgstr "Gagal menghantar maklum balas. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:209
+#: packages/app/features/profile/components/SavedTabContent.tsx:205
+msgid "Failed to unsave contest. Please try again."
+msgstr "Gagal menyahsimpan peraduan. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:387
+msgid "Failed to update notes. Please try again."
+msgstr "Gagal mengemaskini nota. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:284
+msgid "Failed to upload receipt. Please try again."
+msgstr "Gagal memuat naik resit. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:342
+msgid "Failed to upload scanned receipt. Please try again."
+msgstr "Gagal memuat naik resit yang diimbas. Sila cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:76
+msgid "Feedback"
+msgstr "Maklum Balas"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptThumbnail.tsx:92
+msgid "File"
+msgstr "Fail"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:242
+msgid "File size too large"
+msgstr "Saiz fail terlalu besar"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:604
+#: packages/app/features/search/screen.tsx:631
+msgid "Filters"
+msgstr "Penapis"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:583
+msgid "For each successful referral, you and your friend will both receive 200 points!"
+msgstr "Untuk setiap rujukan yang berjaya, anda dan rakan anda akan menerima 200 mata masing-masing!"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:52
+msgid "For general inquiries and support:"
+msgstr "Untuk pertanyaan umum dan sokongan:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:226
+msgid "Free Plan"
+msgstr "Pelan Percuma"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:179
+msgid "Fresh & Natural"
+msgstr "Segar & Semulajadi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/screen.tsx:190
+msgid "General"
+msgstr "Umum"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:82
+msgid "Get alerts before contests end"
+msgstr "Dapatkan makluman sebelum peraduan tamat"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:851
+msgid "Go to Home"
+msgstr "Ke Halaman Utama"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:166
+msgid "Green"
+msgstr "Hijau"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:94
+msgid "Guarantee the legitimacy of listed contests"
+msgstr "Menjamin kesahihan peraduan yang disenaraikan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:424
+msgid "Have a referral code? Earn 200 points!"
+msgstr "Ada kod rujukan? Dapatkan 200 poin!"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:101
+msgid "Have any relationship with contest organizers unless stated"
+msgstr "Mempunyai sebarang hubungan dengan penganjur peraduan kecuali dinyatakan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:121
+msgid "History"
+msgstr "Sejarah"
+
+#. js-lingui-generated-id
+#: apps/expo/app/(tabs)/_layout.tsx:108
+#: apps/next/app/navbar.tsx:25
+msgid "Home"
+msgstr "Utama"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:572
+msgid "How it works"
+msgstr "Cara Ia Berfungsi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:246
+msgid "How to Earn Points"
+msgstr "Cara Mendapat Poin"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:243
+msgid "If you have any questions about these Terms and Conditions, please contact us at:"
+msgstr "Jika anda mempunyai sebarang soalan tentang Terma dan Syarat ini, sila hubungi kami di:"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:234
+msgid "If you have any questions about this Privacy Policy or wish to exercise your rights under the PDPA, please contact us at:"
+msgstr "Jika anda mempunyai sebarang soalan tentang Polisi Privasi ini atau ingin menggunakan hak anda di bawah PDPA, sila hubungi kami di:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/AlertsTabContent.tsx:18
+msgid "Important and relevant alerts will be shown here. Stay tuned!"
+msgstr "Makluman penting dan berkaitan akan dipaparkan di sini. Nantikan!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:425
+msgid "Info & Legal"
+msgstr "Info & Undang-Undang"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:812
+msgid "Initializing scanner..."
+msgstr "Memulakan pengimbas..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:219
+msgid "Insufficient points to renew. Add more points to re-enable."
+msgstr "Poin tidak mencukupi untuk memperbaharui. Tambah lebih banyak poin untuk mengaktifkan semula."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:65
+msgid "Interested in listing your contest on JomContest or exploring partnership opportunities? We're always open to collaborations that benefit our Malaysian community."
+msgstr "Berminat untuk menyenaraikan peraduan anda di JomContest atau meneroka peluang perkongsian? Kami sentiasa terbuka untuk kerjasama yang memberi manfaat kepada komuniti Malaysia."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:141
+msgid "Interfere with other users' use of the platform"
+msgstr "Mengganggu penggunaan platform oleh pengguna lain"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:278
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:336
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:384
+msgid "Invalid content detected in notes. Please remove any HTML tags or special characters."
+msgstr "Kandungan tidak sah dikesan dalam nota. Sila buang sebarang tag HTML atau aksara khas."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:248
+msgid "Invalid file type"
+msgstr "Jenis fail tidak sah"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:45
+msgid "JomContest (\"we\", \"us\", or \"our\") is committed to protecting your personal data in accordance with the Personal Data Protection Act 2010 (Act 709) of Malaysia (\"PDPA\"). This Privacy Policy explains how we collect, use, disclose, and protect your personal data when you use our website and mobile application."
+msgstr "JomContest (\"kami\") komited untuk melindungi data peribadi anda selaras dengan Akta Perlindungan Data Peribadi 2010 (Akta 709) Malaysia (\"PDPA\"). Polisi Privasi ini menerangkan bagaimana kami mengumpul, menggunakan, mendedahkan, dan melindungi data peribadi anda apabila anda menggunakan laman web dan aplikasi mudah alih kami."
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:333
+msgid "JomContest evolves with your input. Share your thoughts and help us improve...."
+msgstr "JomContest bertambah baik dengan input anda. Kongsikan pendapat anda dan bantu kami untuk membuat penambahbaikan...."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:57
+msgid "JomContest is a contest aggregation platform that collects and displays information about contests, giveaways, and competitions from various sources across Malaysia. We act as an information aggregator and do not organize, host, or manage any of the contests listed on our platform."
+msgstr "JomContest adalah platform pengagregatan peraduan yang mengumpul dan memaparkan maklumat tentang peraduan, hadiah, dan pertandingan dari pelbagai sumber di seluruh Malaysia. Kami bertindak sebagai pengagregat maklumat dan tidak menganjurkan, mengehoskan, atau menguruskan mana-mana peraduan yang disenaraikan di platform kami."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:85
+msgid "JomContest is a venue for contest discovery only. We do not:"
+msgstr "JomContest adalah tempat untuk penemuan peraduan sahaja. Kami tidak:"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:96
+msgid "JomContest is developed and maintained by AAF Digital, a Malaysian technology company focused on building useful digital products for the local community."
+msgstr "JomContest dibangunkan dan diselenggarakan oleh AAF Digital, sebuah syarikat teknologi Malaysia yang fokus membina produk digital yang berguna untuk komuniti tempatan."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:36
+msgid "JomContest is Malaysia's premier contest discovery platform. We make it easy for Malaysians to find, track, and participate in contests, giveaways, and competitions across the country."
+msgstr "JomContest adalah platform penemuan peraduan terkemuka Malaysia. Kami memudahkan rakyat Malaysia untuk mencari, menjejaki, dan menyertai peraduan, hadiah, dan pertandingan di seluruh negara."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:150
+msgid "JomContest offers free and premium subscription tiers. Premium subscriptions provide additional features such as enhanced alerts, receipt storage, and ad-free browsing. Subscription fees are non-refundable unless required by law. You may cancel your subscription at any time, and access will continue until the end of the billing period."
+msgstr "JomContest menawarkan peringkat langganan percuma dan premium. Langganan premium menyediakan ciri tambahan seperti makluman yang dipertingkatkan, penyimpanan resit, dan pelayaran tanpa iklan. Yuran langganan tidak boleh dikembalikan kecuali dikehendaki oleh undang-undang. Anda boleh membatalkan langganan anda pada bila-bila masa, dan akses akan berterusan sehingga akhir tempoh bil."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:314
+msgid "Language"
+msgstr "Language"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:72
+msgid "Language and app preferences"
+msgstr "Bahasa dan keutamaan aplikasi"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:40
+#: packages/app/features/legal/TermsScreen.tsx:40
+msgid "Last updated: February 2026"
+msgstr "Kemaskini terakhir: Februari 2026"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:147
+msgid "Law enforcement agencies when required by law"
+msgstr "Agensi penguatkuasaan undang-undang apabila dikehendaki oleh undang-undang"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:152
+msgid "Lifetime Earned"
+msgstr "Perolehan Seumur Hidup"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ThemeSelector.web.tsx:142
+msgid "Light"
+msgstr "Terang"
+
+#. js-lingui-generated-id
+#: packages/app/utils/share.ts:44
+msgid "Lihat peraduan ini di JomContest!"
+msgstr "Lihat peraduan ini di JomContest!"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:37
+msgid "Link copied to clipboard"
+msgstr "Pautan disalin ke papan keratan"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1419
+msgid "Loading more..."
+msgstr "Memuatkan lagi..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsTransactionModal.tsx:282
+msgid "Loading transactions..."
+msgstr "Memuatkan transaksi..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:279
+msgid "Maintain current plan*"
+msgstr "Kekalkan pelan semasa*"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:297
+msgid "Manage"
+msgstr "Urus"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:441
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:518
+#: packages/app/features/profile/components/SavedTabContent.tsx:813
+msgid "Manage Receipts"
+msgstr "Urus Resit"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:273
+msgid "Manage your subscription"
+msgstr "Urus langganan anda"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:222
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:306
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:565
+msgid "Maximum {maxReceipts} receipts per contest. Upgrade to Pro for more receipts."
+msgstr "Maksimum {maxReceipts} resit setiap peraduan. Naik taraf ke Pro untuk lebih banyak resit."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:63
+msgid "Name and display name"
+msgstr "Nama dan nama paparan"
+
+#. js-lingui-generated-id
+#. placeholder {0}: option.pointsCost - balance
+#: packages/app/features/profile/components/UpgradeModal.tsx:491
+msgid "Need {0} more"
+msgstr "Perlu {0} lagi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:734
+msgid "No Active Contests"
+msgstr "Tiada Peraduan Aktif"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:570
+msgid "NO Ads"
+msgstr "TIADA Iklan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/AlertsTabContent.tsx:15
+msgid "No Alerts Yet"
+msgstr "Tiada Notifikasi Lagi"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:239
+msgid "No camera found on this device."
+msgstr "Tiada kamera dijumpai pada peranti ini."
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:823
+msgid "No contests found in this category."
+msgstr "Tiada peraduan ditemui dalam kategori ini."
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:636
+msgid "No contests found."
+msgstr "Tiada peraduan dijumpai."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1398
+msgid "No contests found. Try a different search term."
+msgstr "Tiada peraduan dijumpai. Cuba istilah carian yang berbeza."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:736
+msgid "No Contests with Receipts"
+msgstr "Tiada Peraduan Dengan Resit"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:738
+msgid "No Ended Contests"
+msgstr "Tiada Peraduan Tamat"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:718
+msgid "No Receipts Yet"
+msgstr "Tiada Resit Lagi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:666
+msgid "No referrals yet. Share your code to get started!"
+msgstr "Tiada rujukan lagi. Kongsi kod anda untuk bermula!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:498
+msgid "No Saved Contests Yet"
+msgstr "Tiada Peraduan Disimpan Lagi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsTransactionModal.tsx:304
+msgid "No transactions yet"
+msgstr "Tiada transaksi lagi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:640
+#: packages/app/features/profile/components/ReceiptThumbnail.tsx:104
+msgid "Note"
+msgstr "Nota"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:789
+msgid "Note (optional)"
+msgstr "Nota (tidak wajib)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:374
+msgid "Notes updated successfully"
+msgstr "Nota berjaya dikemaskini"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareButton.tsx:151
+msgid "Opens share dialog to share this contest"
+msgstr "Membuka dialog kongsi untuk berkongsi peraduan ini"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:91
+msgid "Organize or host any contests"
+msgstr "Menganjurkan atau mengehoskan sebarang peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:33
+msgid "Our Mission"
+msgstr "Misi Kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:58
+msgid "Our platform helps you discover new opportunities, save your favorite contests, and never miss a deadline with our alert system."
+msgstr "Platform kami membantu anda menemui peluang baru, menyimpan peraduan kegemaran anda, dan tidak pernah terlepas tarikh akhir dengan sistem makluman kami."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:210
+msgid "Our website uses cookies and similar technologies to enhance your browsing experience and analyze usage patterns. You can manage cookie preferences through your browser settings."
+msgstr "Laman web kami menggunakan kuki dan teknologi serupa untuk meningkatkan pengalaman pelayaran anda dan menganalisis corak penggunaan. Anda boleh mengurus keutamaan kuki melalui tetapan pelayar anda."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:179
+msgid "Pay Online"
+msgstr "Bayar Dalam Talian"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:143
+msgid "Payment processors for subscription services"
+msgstr "Pemproses pembayaran untuk perkhidmatan langganan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:211
+msgid "Plan downgraded"
+msgstr "Pelan diturunkan"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:473
+msgid "Please log in to save contests"
+msgstr "Sila log masuk untuk menyimpan peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:215
+msgid "Please log in to upvote contests"
+msgstr "Sila log masuk untuk memberi undi peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1456
+msgid "Please sign in or register to use our search function - powered by AI."
+msgstr "Sila log masuk atau daftar untuk menggunakan fungsi carian kami - dikuasakan oleh AI."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:314
+msgid "Please sign in to save contests and track your participation!"
+msgstr "Sila log masuk untuk menyimpan peraduan dan menjejak penyertaan anda!"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:185
+msgid "Please sign in to upvote contests and show your support!"
+msgstr "Sila log masuk untuk memberi undi peraduan dan tunjukkan sokongan anda!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/screen.tsx:272
+msgid "Please sign in to view and manage your profile, saved contests, and account settings."
+msgstr "Sila log masuk untuk melihat dan mengurus profil anda, peraduan yang disimpan, dan tetapan akaun."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:406
+msgid "Please type \"Confirm Unsave\" or \"confirm unsave\" exactly"
+msgstr "Sila taip \"Sahkan Nyahsimpan\" atau \"sahkan nyahsimpan\" dengan tepat"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:96
+msgid "Plus"
+msgstr "Plus"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:180
+msgid "Plus (1 month)"
+msgstr "Plus (1 bulan)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:222
+msgid "Plus Plan"
+msgstr "Pelan Plus"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:99
+msgid "Points Balance"
+msgstr "Baki Poin"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsTransactionModal.tsx:374
+msgid "Points History"
+msgstr "Sejarah Poin"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:619
+msgid "Points redemption gives you 1 month of the selected plan. Earn points by referring friends, more ways to earn points coming later!"
+msgstr "Penebusan poin memberi anda 1 bulan pelan yang dipilih. Dapatkan poin dengan merujuk rakan, lebih banyak cara untuk mendapatkan poin akan datang kemudian!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:567
+msgid "Priority support"
+msgstr "Sokongan utama (perkhidmatan pelanggan)"
+
+#. js-lingui-generated-id
+#: apps/next/app/navbar.tsx:29
+msgid "Privacy"
+msgstr "Privasi"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:37
+#: packages/app/features/profile/components/GeneralTabContent.tsx:458
+msgid "Privacy Policy"
+msgstr "Polisi Privasi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:214
+msgid "Pro (1 month)"
+msgstr "Pro (1 bulan)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:224
+msgid "Pro Plan"
+msgstr "Pelan Pro"
+
+#. js-lingui-generated-id
+#: apps/expo/app/(tabs)/_layout.tsx:127
+#: apps/expo/app/(tabs)/profile.tsx:11
+#: apps/next/app/navbar.tsx:31
+#: apps/next/app/navbar.tsx:202
+#: packages/app/features/profile/screen.tsx:165
+#: packages/app/features/profile/screen.tsx:265
+msgid "Profile"
+msgstr "Profil"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:69
+msgid "Profile picture (if provided)"
+msgstr "Gambar profil (jika disediakan)"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:168
+msgid "Purple"
+msgstr "Ungu"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:203
+#: packages/app/features/profile/components/PointsBalance.tsx:237
+msgid "Ready to redeem!"
+msgstr "Siap untuk ditukar!"
+
+#. js-lingui-generated-id
+#. placeholder {0}: index + 1
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:495
+msgid "Receipt {0}"
+msgstr "Resit {0}"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:442
+msgid "Receipt deleted successfully"
+msgstr "Resit berjaya dipadam"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:264
+msgid "Receipt uploaded successfully"
+msgstr "Resit berjaya dimuat naik"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:543
+msgid "Receipts Per Contest"
+msgstr "Resit Setiap Peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:725
+msgid "Recent Searches"
+msgstr "Carian Terkini"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:461
+msgid "Redeem"
+msgstr "Tebus"
+
+#. js-lingui-generated-id
+#. placeholder {0}: option.pointsCost
+#: packages/app/features/profile/components/UpgradeModal.tsx:493
+msgid "Redeem {0} pts"
+msgstr "Tukar {0} pts"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:171
+msgid "Redeem for Subscription"
+msgstr "Tukar untuk Langganan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:554
+msgid "Reduced Ads"
+msgstr "Kurang Iklan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:253
+msgid "Refer a friend: +200 points"
+msgstr "Ajak rakan: +200 poin"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:494
+msgid "Refer Friends"
+msgstr "Ajak Rakan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:642
+msgid "Referral History"
+msgstr "Sejarah Rujukan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:476
+msgid "Referral Pending"
+msgstr "Rujukan Menunggu"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:595
+msgid "Referral Progress"
+msgstr "Kemajuan Rujukan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:160
+msgid "Referrals"
+msgstr "Rujukan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:44
+msgid "Regular"
+msgstr "Biasa"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:198
+msgid "Renewed at a lower tier due to insufficient points. Add more points to renew at your preferred tier."
+msgstr "Diperbaharui pada tahap lebih rendah kerana poin tidak mencukupi. Tambah lebih banyak poin untuk memperbaharui pada tahap pilihan anda."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:198
+msgid "Request deletion of your personal data (subject to legal requirements)"
+msgstr "Meminta pemadaman data peribadi anda (tertakluk kepada keperluan undang-undang)"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:917
+msgid "Retake"
+msgstr "Ambil Semula"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:927
+msgid "Review before uploading"
+msgstr "Semak sebelum muat naik"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:243
+#: packages/app/components/SaveButton.tsx:301
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:700
+msgid "Save"
+msgstr "Simpan"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:79
+msgid "Save and track your favorite contests"
+msgstr "Simpan dan jejaki peraduan kegemaran anda"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:243
+#: packages/app/components/SaveButton.tsx:301
+#: packages/app/features/profile/screen.tsx:210
+msgid "Saved"
+msgstr "Disimpan"
+
+#. js-lingui-generated-id
+#. placeholder {0}: diffDays === 1 ? 'day' : 'days'
+#: packages/app/features/contest/components/ContestCard.tsx:114
+msgid "Saved {diffDays} {0} ago"
+msgstr "Disimpan {diffDays} hari yang lalu"
+
+#. js-lingui-generated-id
+#. placeholder {0}: diffHours === 1 ? 'hour' : 'hours'
+#: packages/app/features/contest/components/ContestCard.tsx:112
+msgid "Saved {diffHours} {0} ago"
+msgstr "Disimpan {diffHours} jam yang lalu"
+
+#. js-lingui-generated-id
+#. placeholder {0}: diffMinutes === 1 ? 'minute' : 'minutes'
+#: packages/app/features/contest/components/ContestCard.tsx:108
+msgid "Saved {diffMinutes} {0} ago"
+msgstr "Disimpan {diffMinutes} minit yang lalu"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:106
+msgid "Saved just now"
+msgstr "Disimpan baru sahaja"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:910
+msgid "Scan"
+msgstr "Imbas"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:786
+msgid "Scan Document"
+msgstr "Imbas Dokumen"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:323
+msgid "Scanned receipt uploaded successfully"
+msgstr "Resit yang diimbas berjaya dimuat naik"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:358
+msgid "Scanner stopped after 60 seconds for stability. Please capture your receipt or close and restart."
+msgstr "Pengimbas dihentikan selepas 60 saat untuk kestabilan. Sila tangkap resit anda atau tutup dan mulakan semula."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:133
+msgid "Scrape, copy, or reproduce our content without permission"
+msgstr "Mengikis, menyalin, atau menghasilkan semula kandungan kami tanpa kebenaran"
+
+#. js-lingui-generated-id
+#: apps/expo/app/(tabs)/_layout.tsx:117
+#: apps/next/app/navbar.tsx:26
+msgid "Search"
+msgstr "Cari"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1440
+#: packages/app/features/search/screen.tsx:1449
+#: packages/app/features/search/screen.tsx:1478
+msgid "Search Contests"
+msgstr "Cari Peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:442
+msgid "Search contests..."
+msgstr "Cari peraduan..."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:966
+msgid "Search Service Inactive"
+msgstr "Perkhidmatan Carian Tidak Aktif"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:972
+msgid "Search Unavailable"
+msgstr "Carian Tidak Tersedia"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1389
+msgid "Searching for contests..."
+msgstr "Mencari peraduan..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:979
+msgid "Security Verification"
+msgstr "Pengesahan Keselamatan"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:667
+msgid "See results"
+msgstr "Lihat hasil"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:454
+#: packages/app/components/FeedbackDialog.tsx:470
+msgid "Send"
+msgstr "Hantar"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:329
+msgid "Send Feedback"
+msgstr "Hantar Maklum Balas"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:138
+msgid "Service providers who assist in operating our platform"
+msgstr "Pembekal perkhidmatan yang membantu mengendalikan platform kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:970
+msgid "Service Temporarily Down"
+msgstr "Perkhidmatan Tidak Tersedia Sementara"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareButton.tsx:180
+msgid "Share"
+msgstr "Kongsi"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareButton.tsx:150
+msgid "Share contest"
+msgstr "Kongsi peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:66
+msgid "Share Contest"
+msgstr "Kongsi Peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:563
+msgid "Share Invite"
+msgstr "Kongsi Jemputan"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:127
+msgid "Share on Facebook"
+msgstr "Kongsi di Facebook"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:155
+msgid "Share on Telegram"
+msgstr "Kongsi di Telegram"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:141
+msgid "Share on Twitter"
+msgstr "Kongsi di Twitter"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:113
+msgid "Share on WhatsApp"
+msgstr "Kongsi di WhatsApp"
+
+#. js-lingui-generated-id
+#: packages/app/components/ShareModal.web.tsx:98
+msgid "Share via"
+msgstr "Kongsi melalui"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:576
+msgid "Share your code with friends"
+msgstr "Kongsi kod anda dengan rakan"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:342
+msgid "Share your suggestions or report bugs or issues..."
+msgstr "Kongsikan cadangan anda atau laporkan masalah..."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:327
+#: packages/app/components/UpvoteButton.tsx:198
+msgid "Sign In"
+msgstr "Log Masuk"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:819
+#: packages/app/features/contests/ContestsListScreen.tsx:801
+#: packages/app/features/profile/screen.tsx:285
+#: packages/app/features/search/screen.tsx:1469
+msgid "Sign In / Register"
+msgstr "Log Masuk / Daftar"
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:860
+msgid "Sign in or Register"
+msgstr "Log Masuk atau Daftar"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1733
+msgid "Sign in or register to view additional important information"
+msgstr "Log masuk atau daftar untuk melihat maklumat tambahan yang penting"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1575
+msgid "Sign in or register to view winner selection details"
+msgstr "Log masuk atau daftar untuk melihat butiran pemilihan pemenang"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1689
+msgid "Sign in or register to view winners announcement details"
+msgstr "Log masuk atau daftar untuk melihat butiran pengumuman pemenang"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1645
+msgid "Sign in or register to view winners communication details"
+msgstr "Log masuk atau daftar untuk melihat butiran komunikasi pemenang"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:311
+#: packages/app/components/UpvoteButton.tsx:182
+msgid "Sign In Required"
+msgstr "Log Masuk Diperlukan"
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:792
+msgid "Sign in to see all contests and participate!"
+msgstr "Log masuk untuk melihat semua peraduan dan menyertai!"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:802
+msgid "Sign in to view this contest"
+msgstr "Log masuk untuk melihat peraduan ini"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:256
+msgid "Sign up bonus: +100 points"
+msgstr "Bonus daftar masuk: +100 poin"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:39
+msgid "Smaller"
+msgstr "Lebih Kecil"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:986
+msgid "Something went wrong with the search service. Please try again later."
+msgstr "Sesuatu tidak kena dengan perkhidmatan carian. Sila cuba lagi kemudian."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:486
+#: packages/app/components/UpvoteButton.tsx:228
+msgid "Something went wrong. Please try again"
+msgstr "Sesuatu tidak kena. Sila cuba lagi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:501
+msgid "Start saving contests to build your collection"
+msgstr "Mula simpan peraduan untuk membina koleksi anda"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:709
+msgid "Start typing to search for contests..."
+msgstr "Mula taip untuk mencari peraduan..."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:138
+msgid "Submit false or misleading information"
+msgstr "Menghantar maklumat palsu atau mengelirukan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ThemeSelector.web.tsx:144
+msgid "System"
+msgstr "Sistem"
+
+#. js-lingui-generated-id
+#: packages/app/components/gallery/GalleryThumbnail.tsx:92
+msgid "TAP TO ZOOM"
+msgstr "TEKAN UNTUK ZUM"
+
+#. js-lingui-generated-id
+#: apps/next/app/navbar.tsx:30
+msgid "Terms"
+msgstr "Terma"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:37
+#: packages/app/features/profile/components/GeneralTabContent.tsx:471
+msgid "Terms & Conditions"
+msgstr "Terma & Syarat"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/TextScaleSelector.tsx:57
+msgid "Text Size"
+msgstr "Saiz Teks"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:145
+msgid "Thank you for your feedback!"
+msgstr "Terima kasih atas maklum balas anda!"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:165
+msgid "The JomContest name, logo, and platform design are our intellectual property. Contest information displayed on our platform belongs to their respective organizers. You may not use our branding or content without prior written permission."
+msgstr "Nama JomContest, logo, dan reka bentuk platform adalah harta intelek kami. Maklumat peraduan yang dipaparkan di platform kami adalah milik penganjur masing-masing. Anda tidak boleh menggunakan penjenamaan atau kandungan kami tanpa kebenaran bertulis terlebih dahulu."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:980
+msgid "The search service is currently inactive. This may be due to a configuration issue. Please contact support if this persists."
+msgstr "Perkhidmatan carian tidak aktif pada masa ini. Ini mungkin disebabkan oleh masalah konfigurasi. Sila hubungi sokongan jika masalah ini berterusan."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:984
+msgid "The search service is experiencing issues. Our team has been notified. Please try again in a few minutes."
+msgstr "Perkhidmatan carian mengalami masalah. Pasukan kami telah dimaklumkan. Sila cuba lagi dalam beberapa minit."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ThemeSelector.web.tsx:101
+msgid "Theme"
+msgstr "Tema"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:231
+msgid "These Terms and Conditions are governed by and construed in accordance with the laws of Malaysia. Any disputes shall be subject to the exclusive jurisdiction of the Malaysian courts."
+msgstr "Terma dan Syarat ini ditadbir dan ditafsirkan selaras dengan undang-undang Malaysia. Sebarang pertikaian hendaklah tertakluk kepada bidang kuasa eksklusif mahkamah Malaysia."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:579
+msgid "They sign up & upload their first receipt"
+msgstr "Mereka daftar masuk & muat naik resit pertama mereka"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:847
+msgid "This contest is only visible to administrators."
+msgstr "Peraduan ini hanya boleh dilihat oleh pentadbir."
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:809
+msgid "This contest requires you to sign in to view the full details."
+msgstr "Peraduan ini memerlukan anda log masuk untuk melihat butiran penuh."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:71
+msgid "To access certain features, you must create an account. You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must provide accurate and complete information when creating your account."
+msgstr "Untuk mengakses ciri tertentu, anda mesti membuat akaun. Anda bertanggungjawab untuk mengekalkan kerahsiaan kelayakan akaun anda dan untuk semua aktiviti yang berlaku di bawah akaun anda. Anda mesti memberikan maklumat yang tepat dan lengkap semasa membuat akaun anda."
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:863
+msgid "to access the full list!"
+msgstr "untuk melihat senarai penuh!"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:109
+msgid "To communicate with you about our services"
+msgstr "Untuk berkomunikasi dengan anda tentang perkhidmatan kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:94
+msgid "To create and manage your account"
+msgstr "Untuk membuat dan menguruskan akaun anda"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:106
+msgid "To improve our services and user experience"
+msgstr "Untuk meningkatkan perkhidmatan dan pengalaman pengguna kami"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:103
+msgid "To process subscription payments"
+msgstr "Untuk memproses pembayaran langganan"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:97
+msgid "To provide personalized contest recommendations"
+msgstr "Untuk memberikan cadangan peraduan yang diperibadikan"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:100
+msgid "To send contest alerts and notifications"
+msgstr "Untuk menghantar makluman dan pemberitahuan peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:178
+msgid "To the fullest extent permitted by law, JomContest shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our platform, including but not limited to losses related to contest participation, prizes, or reliance on contest information."
+msgstr "Setakat yang dibenarkan oleh undang-undang, JomContest tidak bertanggungjawab untuk sebarang kerosakan tidak langsung, sampingan, khas, berbangkit, atau punitif yang timbul daripada penggunaan platform kami oleh anda, termasuk tetapi tidak terhad kepada kerugian berkaitan penyertaan peraduan, hadiah, atau pergantungan pada maklumat peraduan."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:482
+#: packages/app/features/search/screen.tsx:1015
+msgid "Try Again"
+msgstr "Cuba Lagi"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:384
+msgid "Type here..."
+msgstr "Taip di sini..."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:370
+msgid "Type to confirm:"
+msgstr "Taip untuk mengesahkan:"
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:982
+msgid "Unable to connect to the search service. Please check your internet connection and try again."
+msgstr "Tidak dapat menyambung ke perkhidmatan carian. Sila semak sambungan internet anda dan cuba lagi."
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:482
+msgid "Unable to save. Please check your connection and try again"
+msgstr "Tidak dapat menyimpan. Sila semak sambungan internet anda dan cuba lagi"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:224
+msgid "Unable to upvote. Please check your connection and try again"
+msgstr "Tidak dapat memberi undi. Sila semak sambungan internet anda dan cuba lagi"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:184
+msgid "Under the PDPA, you have the right to:"
+msgstr "Di bawah APDP, anda mempunyai hak untuk:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:597
+msgid "Unlock {featureName} and more premium features"
+msgstr "Buka kunci {featureName} dan lebih banyak ciri premium"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:348
+#: packages/app/features/profile/components/SavedTabContent.tsx:770
+msgid "Unsave Contest?"
+msgstr "Nyahsimpan Peraduan?"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:171
+msgid "Unsaving contest..."
+msgstr "Menyahsimpan peraduan..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:826
+msgid "Unsaving..."
+msgstr "Menyahsimpan..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:566
+msgid "Updating..."
+msgstr "Mengemaskini..."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:295
+msgid "Upgrade"
+msgstr "Naik Taraf"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/GeneralTabContent.tsx:258
+msgid "Upgrade for more features"
+msgstr "Naik taraf untuk lebih banyak ciri"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ColorThemeSelector.tsx:109
+msgid "Upgrade to Plus or Pro to unlock custom color themes"
+msgstr "Naik taraf ke Plus atau Pro untuk membuka kunci tema warna pilihan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:291
+msgid "Upgrade to Pro Plan*"
+msgstr "Naik taraf ke Pelan Pro*"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:722
+msgid "Upgrade to Pro to continue to add receipts to more contests"
+msgstr "Naik taraf ke Pro untuk terus menambah resit ke lebih banyak peraduan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:593
+msgid "Upgrade Your Plan"
+msgstr "Naik Taraf Pelan Anda"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/components/ContestCard.tsx:197
+msgid "Upload"
+msgstr "Muat Naik"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:551
+msgid "Upload max 10 receipts per saved contest"
+msgstr "Muat naik maksimum 10 resit setiap peraduan yang disimpan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:745
+msgid "Upload receipts to see them here"
+msgstr "Muat naik resit untuk melihatnya di sini"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:548
+msgid "Upload receipts to unlimited contests"
+msgstr "Muat naik resit ke peraduan tanpa had"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/PointsBalance.tsx:250
+msgid "Upload receipts: +10 points each"
+msgstr "Muat naik resit: +10 poin setiap satu"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:564
+msgid "Upload unlimited receipts per saved contest"
+msgstr "Muat naik resit tanpa had setiap peraduan yang disimpan"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:480
+msgid "Upload your first receipt to complete the referral and earn 200 bonus points!"
+msgstr "Muat naik resit pertama anda untuk melengkapkan rujukan dan dapatkan 200 mata bonus!"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:737
+msgid "Upload your first receipt to earn 200 points and complete this referral"
+msgstr "Muat naik resit pertama anda untuk dapatkan 200 poin dan lengkapkan rujukan ini"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:727
+msgid "Upload your first receipt to get started"
+msgstr "Muat naik resit pertama anda untuk bermula"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:630
+msgid "Uploaded"
+msgstr "Dimuat Naik"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:171
+msgid "Upvote"
+msgstr "Beri Undi"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:171
+msgid "Upvoted"
+msgstr "Undi Diberi"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:162
+msgid "Use Points"
+msgstr "Guna Poin"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:124
+msgid "Use the platform for any illegal or unauthorized purpose"
+msgstr "Menggunakan platform untuk sebarang tujuan haram atau tidak dibenarkan"
+
+#. js-lingui-generated-id
+#: packages/app/components/DocumentScanner.web.tsx:922
+msgid "Use This"
+msgstr "Guna Ini"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:107
+msgid "Users participate in contests at their own risk. We recommend verifying contest details directly with the organizer before participating."
+msgstr "Pengguna menyertai peraduan atas risiko sendiri. Kami mengesyorkan untuk mengesahkan butiran peraduan secara langsung dengan penganjur sebelum menyertai."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:793
+msgid "Waiting"
+msgstr "Menunggu"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:800
+msgid "Waiting for friend to upload their first receipt (both get 200 points!)"
+msgstr "Menunggu rakan memuat naik resit pertama mereka (kedua-dua dapat 200 mata!)"
+
+#. js-lingui-generated-id
+#: packages/app/features/contests/ContestsListScreen.tsx:848
+msgid "Want to see more contests?"
+msgstr "Ingin melihat lebih banyak peraduan?"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:50
+msgid "We aggregate contests from various sources across Malaysia, bringing them all into one convenient platform. Whether you're looking for photo contests, lucky draws, cooking competitions, or creative challenges - we've got you covered."
+msgstr "Kami mengumpulkan peraduan dari pelbagai sumber di seluruh Malaysia, membawa semuanya ke dalam satu platform yang mudah. Sama ada anda mencari peraduan foto, cabutan bertuah, pertandingan memasak, atau cabaran kreatif - kami sediakan semuanya untuk anda."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:611
+msgid "We are working hard on this, you can opt for points redemption for now..."
+msgstr "Kami sedang berusaha keras untuk ini, anda boleh pilih penebusan poin buat masa ini..."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:131
+msgid "We do not sell your personal data. We may share your data with:"
+msgstr "Kami tidak menjual data peribadi anda. Kami mungkin berkongsi data anda dengan:"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:158
+msgid "We implement appropriate technical and organizational security measures to protect your personal data against unauthorized access, alteration, disclosure, or destruction. This includes encryption, secure servers, and access controls."
+msgstr "Kami melaksanakan langkah keselamatan teknikal dan organisasi yang sesuai untuk melindungi data peribadi anda daripada akses, perubahan, pendedahan, atau pemusnahan yang tidak dibenarkan. Ini termasuk penyulitan, pelayan selamat, dan kawalan akses."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:59
+msgid "We may collect the following types of personal data:"
+msgstr "Kami mungkin mengumpul jenis data peribadi berikut:"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:218
+msgid "We may suspend or terminate your account at any time for violation of these terms or for any other reason at our discretion. Upon termination, your right to use the platform will immediately cease."
+msgstr "Kami boleh menggantung atau menamatkan akaun anda pada bila-bila masa kerana pelanggaran terma ini atau atas sebab lain mengikut budi bicara kami. Selepas penamatan, hak anda untuk menggunakan platform akan terhenti serta-merta."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:222
+msgid "We may update this Privacy Policy from time to time. We will notify you of any material changes by posting the new policy on our platform with an updated effective date."
+msgstr "Kami mungkin mengemas kini Dasar Privasi ini dari semasa ke semasa. Kami akan memaklumkan anda tentang sebarang perubahan material dengan memaparkan dasar baharu di platform kami dengan tarikh berkuatkuasa yang dikemas kini."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:205
+msgid "We reserve the right to modify these Terms and Conditions at any time. Changes will be effective upon posting to our platform. Continued use of JomContest after changes constitutes acceptance of the modified terms."
+msgstr "Kami berhak untuk mengubah suai Terma dan Syarat ini pada bila-bila masa. Perubahan akan berkuatkuasa selepas dipaparkan di platform kami. Penggunaan berterusan JomContest selepas perubahan merupakan penerimaan terma yang diubah suai."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:171
+msgid "We retain your personal data only for as long as necessary to fulfill the purposes for which it was collected, or as required by law. When you delete your account, we will delete or anonymize your personal data within a reasonable timeframe."
+msgstr "Kami menyimpan data peribadi anda hanya selama yang diperlukan untuk memenuhi tujuan ia dikumpulkan, atau seperti yang dikehendaki oleh undang-undang. Apabila anda memadamkan akaun anda, kami akan memadamkan atau menamakan data peribadi anda dalam tempoh masa yang munasabah."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:90
+msgid "We typically respond within 1-2 business days. Thank you for your patience!"
+msgstr "Kami biasanya membalas dalam 1-2 hari bekerja. Terima kasih atas kesabaran anda!"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:38
+msgid "We'd love to hear from you! Whether you have questions, feedback, or partnership inquiries, feel free to reach out to us."
+msgstr "Kami ingin mendengar daripada anda! Sama ada anda mempunyai soalan, maklum balas, atau pertanyaan kerjasama, sila hubungi kami."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:45
+msgid "Welcome to JomContest. By accessing or using our website and mobile application, you agree to be bound by these Terms and Conditions. Please read them carefully before using our services."
+msgstr "Selamat datang ke JomContest. Dengan mengakses atau menggunakan laman web dan aplikasi mudah alih kami, anda bersetuju untuk terikat dengan Terma dan Syarat ini. Sila baca dengan teliti sebelum menggunakan perkhidmatan kami."
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:47
+msgid "What We Do"
+msgstr "Apa Yang Kami Lakukan"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:119
+msgid "When using JomContest, you agree not to:"
+msgstr "Semasa menggunakan JomContest, anda bersetuju untuk tidak:"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/AboutScreen.tsx:69
+msgid "Why JomContest?"
+msgstr "Kenapa JomContest?"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:194
+msgid "Withdraw consent for data processing"
+msgstr "Menarik balik persetujuan untuk pemprosesan data"
+
+#. js-lingui-generated-id
+#: packages/app/features/contest/ContestDetailScreen.tsx:1488
+msgid "Worth:"
+msgstr "Bernilai:"
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/TermsScreen.tsx:192
+msgid "You agree to indemnify and hold harmless JomContest, its affiliates, and their respective officers, directors, employees, and agents from any claims, damages, losses, or expenses arising from your use of the platform or violation of these terms."
+msgstr "Anda bersetuju untuk menanggung rugi dan membebaskan JomContest, sekutunya, dan pegawai, pengarah, pekerja, dan ejen masing-masing daripada sebarang tuntutan, kerosakan, kerugian, atau perbelanjaan yang timbul daripada penggunaan platform oleh anda atau pelanggaran terma ini."
+
+#. js-lingui-generated-id
+#: packages/app/features/search/screen.tsx:1024
+msgid "You can still browse contests from the home page"
+msgstr "Anda masih boleh melihat peraduan dari halaman utama"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:808
+msgid "You had reached your referral limit when this was processed"
+msgstr "Anda telah mencapai had rujukan apabila ini diproses"
+
+#. js-lingui-generated-id
+#. placeholder {0}: contestTitle || 'this contest'
+#. placeholder {0}: contestToUnsave?.title
+#: packages/app/components/SaveButton.tsx:352
+#: packages/app/features/profile/components/SavedTabContent.tsx:774
+msgid "You have uploaded receipt(s) for \"{0}\". Your receipts will be removed from your profile. Are you sure you want to proceed?"
+msgstr "Anda telah memuat naik resit untuk \"{0}\". Resit anda akan dikeluarkan dari profil anda. Adakah anda pasti untuk meneruskan?"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:700
+msgid "You Were Referred By:"
+msgstr "Anda Dirujuk Oleh:"
+
+#. js-lingui-generated-id
+#: packages/app/components/FeedbackDialog.tsx:205
+msgid "You will be directed to Whatsapp. Thank you 🙏🏻"
+msgstr "Anda akan diarahkan ke Whatsapp. Terima kasih 🙏🏻"
+
+#. js-lingui-generated-id
+#: packages/app/components/SaveButton.tsx:477
+msgid "You've already saved this contest"
+msgstr "Anda sudah menyimpan peraduan ini"
+
+#. js-lingui-generated-id
+#: packages/app/components/UpvoteButton.tsx:219
+msgid "You've already upvoted this contest"
+msgstr "Anda sudah memberi undi untuk peraduan ini"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:758
+msgid "You've reached the end"
+msgstr "Anda telah sampai ke penghujung"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:215
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:299
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:555
+msgid "You've reached the limit of {maxContests} contests with receipts. Upgrade to Pro for unlimited contests."
+msgstr "Anda telah mencapai had {maxContests} peraduan dengan resit. Naik taraf ke Pro untuk peraduan tanpa had."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:624
+msgid "You've reached the maximum referrals!"
+msgstr "Anda telah mencapai maksimum rujukan!"
+
+#. js-lingui-generated-id
+#: packages/app/features/info/ContactScreen.tsx:79
+msgid "Your feedback helps us improve! If you have suggestions on how we can make JomContest better, please don't hesitate to share your thoughts with us."
+msgstr "Maklum balas anda membantu kami meningkatkan mutu! Jika anda mempunyai cadangan tentang bagaimana kami boleh menjadikan JomContest lebih baik, jangan teragak-agak untuk berkongsi pendapat anda dengan kami."
+
+#. js-lingui-generated-id
+#: packages/app/features/legal/PrivacyScreen.tsx:87
+msgid "Your personal data is collected and processed for the following purposes:"
+msgstr "Data peribadi anda dikumpul dan diproses untuk tujuan berikut:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:247
+msgid "Your plan will attempt to auto-renew when it expires"
+msgstr "Pelan anda akan cuba diperbaharui secara automatik apabila tamat tempoh"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:251
+msgid "Your plan will NOT attempt to auto-renew when it expires"
+msgstr "Pelan anda TIDAK akan cuba diperbaharui secara automatik apabila tamat tempoh"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:505
+msgid "Your Referral Code"
+msgstr "Kod Rujukan Anda"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReferralCard.tsx:765
+msgid "Your Referral:"
+msgstr "Rujukan Anda:"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/SavedTabContent.tsx:748
+msgid "Your saved contests are still active"
+msgstr "Peraduan yang disimpan masih aktif"
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/UpgradeModal.tsx:671
+msgid "Your subscription expired due to insufficient points. Add more points to renew."
+msgstr "Langganan anda tamat kerana poin tidak mencukupi. Tambahkan lebih banyak poin untuk memperbaharui."
+
+#. js-lingui-generated-id
+#: packages/app/features/profile/components/ReceiptManagerModal.tsx:594
+msgid "Your uploaded digital receipts are private and are mainly for references only. Contest organizers may require your original receipts for verification purposes. We are not liable for any loss or damage to your uploaded receipts."
+msgstr "Resit digital yang dimuat naik adalah sulit dan hanya untuk rujukan sahaja. Penganjur peraduan mungkin memerlukan resit asal anda untuk tujuan pengesahan. Kami tidak bertanggungjawab terhadap sebarang kehilangan atau kerosakan pada resit yang dimuat naik."
