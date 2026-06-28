@@ -10,7 +10,7 @@ export default function IconWrapper({
   variant, // "solid" or "outline"
   colorInverted = true, // default color follow theme mode, if dark (color is black) and vice versa
   strokeWidth,
-  className = '', // NOTE: className only works for WEB STYLING FOR NOW (maybe due to the need to use cssInterop for nativewind integration with native)
+  className = '', // Web: forwarded to the DOM SVG (Tailwind via react-native-web). Native: color comes from the resolved stroke/fill props below.
 }: {
   Icon: React.ComponentType<any> & {
     isSolidIcon?: boolean

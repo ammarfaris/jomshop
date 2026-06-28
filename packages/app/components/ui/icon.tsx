@@ -21,10 +21,10 @@ type IconProps = {
 }
 
 /**
- * A wrapper component for custom icons-svg with Nativewind `className` support.
+ * A wrapper component for custom icons-svg with Tailwind `className` support.
  *
  * This component allows you to render any icon from the icons-svg system while applying
- * utility classes using `nativewind`. It integrates with IconWrapper for proper theming.
+ * Tailwind utility classes. It integrates with IconWrapper for proper theming.
  *
  * @component
  * @example
@@ -36,7 +36,7 @@ type IconProps = {
  * ```
  *
  * @param {IconComponentType} as - The icon component from icons-svg to render.
- * @param {string} className - Utility classes to style the icon using Nativewind (web only).
+ * @param {string} className - Utility classes to style the icon (primarily web; native color is driven by the resolved stroke/fill).
  * @param {number} size - Icon size (defaults to 14).
  * @param {string} color - Custom color for the icon (overrides theme).
  * @param {string} fillColor - Custom fill color for solid icons.
