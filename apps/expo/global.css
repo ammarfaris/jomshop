@@ -6,3 +6,20 @@
 
 /* Shared design tokens (light + dark). Uniwind provides the light/dark variants. */
 @import '../../packages/app/styles/tokens.css';
+
+/* Expo web only: stop iOS Safari from zooming the viewport when focusing inputs
+   inside dialogs (FeedbackDialog uses `.no-zoom-on-focus`). No-op on native.
+   Mirrors the rule in apps/next/app/globals.css. */
+.no-zoom-on-focus input:focus,
+.no-zoom-on-focus textarea:focus,
+.no-zoom-on-focus input,
+.no-zoom-on-focus textarea,
+.no-zoom-on-focus select:focus,
+.no-zoom-on-focus select {
+  font-size: 16px !important;
+  -webkit-transform: scale(1) !important;
+  transform: scale(1) !important;
+  -webkit-text-size-adjust: 100% !important;
+  -webkit-appearance: none !important;
+  touch-action: manipulation !important;
+}

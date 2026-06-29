@@ -54,6 +54,16 @@ export function ColorThemeProvider({
     initializeTheme()
   }, [])
 
+  // Apply the active accent to the web <html> whenever it changes (all backends).
+  // Kept as its own effect so the Appwrite sync effect below does NOT depend on
+  // `colorTheme` — otherwise every local accent change re-fetches prefs and can
+  // revert the selection mid-write.
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      applyColorThemeToDocument(colorTheme)
+    }
+  }, [colorTheme])
+
   // Load color theme preference from Appwrite on mount or when user changes (background sync)
   useEffect(() => {
     const loadColorTheme = async () => {
@@ -62,11 +72,9 @@ export function ColorThemeProvider({
         return
       }
 
-      // Supabase spike has no preferences table yet; keep localStorage as source of truth.
+      // Supabase spike has no preferences table yet; keep localStorage as source
+      // of truth. The dedicated effect above applies it to the document.
       if (BACKEND !== 'appwrite') {
-        if (Platform.OS === 'web' && typeof document !== 'undefined') {
-          applyColorThemeToDocument(colorTheme)
-        }
         return
       }
 
@@ -107,7 +115,7 @@ export function ColorThemeProvider({
     }
 
     loadColorTheme()
-  }, [user, isInitialized, isAuthLoading, colorTheme])
+  }, [user, isInitialized, isAuthLoading])
 
   // Clear local storage when user logs out
   useEffect(() => {

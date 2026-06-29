@@ -104,7 +104,11 @@ const withWebpack = {
 const withTurbopack = {
   turbopack: {
     resolveAlias: {
-      'react-native': 'react-native-web',
+      // NOTE: bare `react-native` is intentionally NOT aliased to
+      // react-native-web here (mirrors the webpack config above). Uniwind's
+      // import rewrite only runs under webpack, so aliasing react-native for
+      // Turbopack would bypass Uniwind and silently drop classNames under
+      // `next dev --turbo`. Dev/build run on webpack; Turbopack is unsupported.
       'react-native/Libraries/EventEmitter/RCTDeviceEventEmitter$':
         'react-native-web/dist/vendor/react-native/NativeEventEmitter/RCTDeviceEventEmitter',
       'react-native/Libraries/vendor/emitter/EventEmitter$':
