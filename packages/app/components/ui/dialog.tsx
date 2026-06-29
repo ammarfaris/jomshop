@@ -79,7 +79,7 @@ function DialogContent({
       <DialogOverlay>
         <DialogPrimitive.Content
           className={cn(
-            'bg-background border-border z-50 mx-auto flex w-full max-w-[calc(100%-1rem)] flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 sm:max-w-xl overflow-visible',
+            'bg-background border-border z-50 mx-auto flex w-full max-w-[95vw] flex-col gap-4 rounded-lg border p-6 shadow-lg shadow-black/5 sm:max-w-xl overflow-visible',
             Platform.select({
               // Remove transform-based zoom animations on web to prevent iOS Safari input zoom
               web: 'animate-in fade-in-0 duration-200 transform-none',

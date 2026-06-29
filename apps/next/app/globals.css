@@ -4,6 +4,9 @@
  * react-native-web's generated atomic classes.
  */
 @import 'tailwindcss' important;
+/* Uniwind web runtime CSS (variants/themes). Must come with the Tailwind import
+ * and is processed by uniwind-plugin-next/postcss. */
+@import 'uniwind';
 
 /* App uses class-based theming (next-themes attribute="class"), not media query. */
 @custom-variant dark (&:where(.dark, .dark *));

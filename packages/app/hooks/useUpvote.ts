@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'app/contexts/AuthContext'
+import { BACKEND } from 'app/lib/backend'
 import {
   checkUserUpvote,
   getUpvoteCount,
@@ -16,8 +17,12 @@ export function useUpvoteStatus(contestId: string) {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['upvote', 'status', contestId, user?.$id],
+    queryKey: ['upvote', 'status', BACKEND, contestId, user?.$id],
     queryFn: async () => {
+      if (BACKEND !== 'appwrite') {
+        return false
+      }
+
       // If user is not authenticated, return false
       if (!user?.$id) {
         return false
@@ -25,7 +30,7 @@ export function useUpvoteStatus(contestId: string) {
       return checkUserUpvote(contestId, user.$id)
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!contestId, // Only run query if contestId exists
+    enabled: !!contestId && BACKEND === 'appwrite', // Supabase upvote is not migrated yet
   })
 }
 
@@ -38,12 +43,12 @@ export function useUpvoteCount(contestId: string) {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['upvote', 'count', contestId],
-    queryFn: () => getUpvoteCount(contestId),
+    queryKey: ['upvote', 'count', BACKEND, contestId],
+    queryFn: () => (BACKEND === 'appwrite' ? getUpvoteCount(contestId) : 0),
     staleTime: 1 * 60 * 1000, // 1 minute
     // Only run query if contestId exists AND user is authenticated
     // For anonymous users, the initialCount prop will be used instead
-    enabled: !!contestId && !!user,
+    enabled: !!contestId && !!user && BACKEND === 'appwrite',
   })
 }
 
@@ -58,6 +63,10 @@ export function useUpvoteActions(contestId: string) {
 
   const upvoteMutation = useMutation({
     mutationFn: async () => {
+      if (BACKEND !== 'appwrite') {
+        throw new Error('Upvote is not migrated to Supabase yet')
+      }
+
       if (!user?.$id) {
         throw new Error('User not authenticated')
       }
@@ -124,6 +133,10 @@ export function useUpvoteActions(contestId: string) {
 
   const removeUpvoteMutation = useMutation({
     mutationFn: async () => {
+      if (BACKEND !== 'appwrite') {
+        throw new Error('Upvote is not migrated to Supabase yet')
+      }
+
       if (!user?.$id) {
         throw new Error('User not authenticated')
       }

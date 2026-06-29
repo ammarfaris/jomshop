@@ -17,6 +17,8 @@ import { BellAlertSolid } from 'app/components/icons-svg/BellAlertSolid'
 import { useAuth } from 'app/contexts/AuthContext'
 import { usePoints } from 'app/contexts/PointsContext'
 import { account } from 'app/provider/appwrite/api'
+import { BACKEND } from 'app/lib/backend'
+import { supabaseSignOut } from 'app/lib/supabase/auth'
 import { activateLocale, locales } from 'app/lib/lingui/i18n'
 import {
   Tabs,
@@ -87,7 +89,11 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     setIsLoggingOut(true)
     try {
-      await account.deleteSession('current')
+      if (BACKEND === 'supabase') {
+        await supabaseSignOut()
+      } else {
+        await account.deleteSession('current')
+      }
       await refreshUser()
     } finally {
       setIsLoggingOut(false)

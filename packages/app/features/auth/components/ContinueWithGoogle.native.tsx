@@ -4,6 +4,8 @@ import { OAuthProvider } from 'app/lib/appwrite-universal'
 import { useRouter } from 'app/lib/router-universal'
 
 import { account } from 'app/provider/appwrite/api'
+import { BACKEND } from 'app/lib/backend'
+import { getSupabase } from 'app/lib/supabase/client'
 import { ButtonIconAndText } from 'app/components/ButtonIconAndText'
 import { GoogleSolid } from 'app/components/icons-svg/GoogleSolid'
 import { useAuth } from 'app/contexts/AuthContext'
@@ -22,6 +24,55 @@ export function ContinueWithGoogle({
 
   const signInUpWithGoogleMobile = async () => {
     try {
+      if (BACKEND === 'supabase') {
+        // Dev/standalone builds resolve to the app scheme
+        // (jomshop://auth-callback); Expo Go resolves to an exp:// URL with the
+        // current LAN IP. Whichever it logs MUST be added to Supabase Auth →
+        // URL Configuration → Redirect URLs, otherwise Supabase ignores it and
+        // falls back to the project's Site URL (the localhost:3000 default).
+        const redirectTo = makeRedirectUri({
+          scheme: 'jomshop',
+          path: 'auth-callback',
+        })
+        console.log('[Native Auth][Supabase] redirectTo:', redirectTo)
+        // Supabase auth rejects redirect URLs that contain a raw IP address
+        // (supabase/auth#2039) regardless of the allow-list, and silently falls
+        // back to the Site URL (localhost). Expo Go produces exp://<LAN-IP>:...,
+        // which triggers this. Use a dev build (jomshop://auth-callback) or run
+        // `expo start --tunnel` so the redirect is host-based instead.
+        if (/\/\/(\d{1,3}\.){3}\d{1,3}/.test(redirectTo)) {
+          console.warn(
+            '[Native Auth][Supabase] redirectTo contains a LAN IP — Supabase ' +
+              'will ignore it and fall back to the Site URL (localhost). ' +
+              'Use a dev build (jomshop://) or run Expo with --tunnel.',
+          )
+        }
+        const { data, error } = await getSupabase().auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo, skipBrowserRedirect: true },
+        })
+        if (error || !data?.url) {
+          console.warn('[Native Auth][Supabase] signInWithOAuth error:', error)
+          return false
+        }
+
+        const result = await WebBrowser.openAuthSessionAsync(
+          data.url,
+          redirectTo,
+        )
+        if (result.type === 'success' && result.url) {
+          const code = new URL(result.url).searchParams.get('code')
+          if (code) {
+            const { error: exErr } =
+              await getSupabase().auth.exchangeCodeForSession(code)
+            if (exErr) return false
+            await refreshUser()
+            return true
+          }
+        }
+        return false
+      }
+
       // NOTE: We no longer delete the existing session first
       // This was causing race conditions and session loss on Android
       // Appwrite will handle existing sessions automatically

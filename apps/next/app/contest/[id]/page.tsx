@@ -26,6 +26,18 @@ type Contest = {
   language?: string
 }
 
+function isSupabaseBackend() {
+  return process.env.NEXT_PUBLIC_BACKEND === 'supabase'
+}
+
+function humanizeSlug(slug: string) {
+  return slug
+    .split('-')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ')
+}
+
 // Helper function to sanitize metadata text
 function sanitizeForMetadata(text: string | undefined | null): string {
   if (!text) return ''
@@ -90,6 +102,35 @@ export async function generateMetadata({
   }
 
   try {
+    if (isSupabaseBackend()) {
+      const title = humanizeSlug(id)
+
+      return {
+        title: `${title} | JomContest`,
+        description: 'Discover contests in Malaysia',
+        openGraph: {
+          title,
+          description: 'Discover contests in Malaysia',
+          url: `${baseUrl}/contest/${id}`,
+          type: 'website',
+          images: [
+            {
+              url: `${baseUrl}/og-default.png`,
+              width: 1200,
+              height: 630,
+              alt: title,
+            },
+          ],
+        },
+        twitter: {
+          card: 'summary_large_image',
+          title,
+          description: 'Discover contests in Malaysia',
+          images: [`${baseUrl}/og-default.png`],
+        },
+      }
+    }
+
     // Fetch contest data
     const contest = await fetchContestData(id)
 

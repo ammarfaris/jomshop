@@ -11,6 +11,7 @@ import { functions } from 'app/provider/appwrite/api'
 import { ExecutionMethod } from 'app/lib/appwrite-universal'
 import { useAuth } from 'app/contexts/AuthContext'
 import { GET_SUBSCRIPTION_TIER_FUNCTION_ID } from 'app/provider/appwrite/constants'
+import { BACKEND } from 'app/lib/backend'
 
 /**
  * Subscription Tier Types
@@ -187,6 +188,22 @@ export function SubscriptionProvider({
    * This is the ONLY source of truth for subscription status
    */
   const refreshSubscription = useCallback(async () => {
+    if (BACKEND !== 'appwrite') {
+      setTier('free')
+      setSource('none')
+      setFeatures(TIER_FEATURES.free)
+      setExpiresAt(null)
+      setDaysRemaining(null)
+      setExpiringSoon(false)
+      setAutoRenew(false)
+      setAutoRenewFailedAt(null)
+      setAutoRenewFailedDismissed(false)
+      setAutoRenewAdjustedAt(null)
+      setAutoRenewAdjustedDismissed(false)
+      setIsLoading(false)
+      return
+    }
+
     if (!user) {
       setTier('free')
       setSource('none')

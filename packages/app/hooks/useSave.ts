@@ -5,6 +5,7 @@ import {
   useInfiniteQuery,
 } from '@tanstack/react-query'
 import { useAuth } from 'app/contexts/AuthContext'
+import { BACKEND } from 'app/lib/backend'
 import {
   checkUserSave,
   removeSave,
@@ -22,8 +23,12 @@ export function useSaveStatus(contestId: string) {
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['save', 'status', contestId, user?.$id],
+    queryKey: ['save', 'status', BACKEND, contestId, user?.$id],
     queryFn: async () => {
+      if (BACKEND !== 'appwrite') {
+        return false
+      }
+
       // If user is not authenticated, return false
       if (!user?.$id) {
         return false
@@ -31,7 +36,7 @@ export function useSaveStatus(contestId: string) {
       return checkUserSave(contestId, user.$id)
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!contestId, // Only run query if contestId exists
+    enabled: !!contestId && BACKEND === 'appwrite', // Supabase save is not migrated yet
   })
 }
 
@@ -47,6 +52,10 @@ export function useSaveActions(contestId: string) {
 
   const saveMutation = useMutation({
     mutationFn: async (): Promise<SaveWithAutoUpvoteResult> => {
+      if (BACKEND !== 'appwrite') {
+        throw new Error('Save is not migrated to Supabase yet')
+      }
+
       if (!user?.$id) {
         throw new Error('User not authenticated')
       }
@@ -118,6 +127,10 @@ export function useSaveActions(contestId: string) {
 
   const removeSaveMutation = useMutation({
     mutationFn: async () => {
+      if (BACKEND !== 'appwrite') {
+        throw new Error('Save is not migrated to Supabase yet')
+      }
+
       if (!user?.$id) {
         throw new Error('User not authenticated')
       }
@@ -197,8 +210,12 @@ export function useUserSavedContests() {
   const { user } = useAuth()
 
   return useInfiniteQuery({
-    queryKey: ['saves', 'user', user?.$id],
+    queryKey: ['saves', 'user', BACKEND, user?.$id],
     queryFn: async ({ pageParam = 0 }) => {
+      if (BACKEND !== 'appwrite') {
+        return []
+      }
+
       if (!user?.$id) {
         return []
       }
@@ -218,6 +235,6 @@ export function useUserSavedContests() {
     initialPageParam: 0,
     staleTime: 30 * 1000, // 30 seconds - refetch more often to ensure fresh data
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    enabled: !!user?.$id, // Only run query if user is authenticated
+    enabled: !!user?.$id && BACKEND === 'appwrite', // Supabase save is not migrated yet
   })
 }

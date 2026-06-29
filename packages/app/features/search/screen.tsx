@@ -40,6 +40,8 @@ import { account, functions } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
 import { useRouter } from 'app/lib/router-universal'
 import { useQuery } from '@tanstack/react-query'
+import { BACKEND } from 'app/lib/backend'
+import { searchContestsSupabase } from 'app/lib/supabase/contests'
 
 // ===== SEARCH CONFIGURATION =====
 /**
@@ -239,6 +241,9 @@ async function searchViaDirectMeilisearch(
 async function searchContests(
   params: SearchParams = {},
 ): Promise<SearchResult> {
+  if (BACKEND === 'supabase') {
+    return searchContestsSupabase(params)
+  }
   if (USE_DIRECT_MEILISEARCH) {
     return searchViaDirectMeilisearch(params)
   } else {
@@ -1074,8 +1079,10 @@ export default function SearchScreen() {
 
   // Language preference via Appwrite Account Preferences
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
-    queryKey: ['user-language-preference'],
+    queryKey: ['user-language-preference', BACKEND],
     queryFn: async () => {
+      if (BACKEND !== 'appwrite') return 'en'
+
       try {
         const prefs = await account.getPrefs()
         const lang = (prefs as any)?.language || 'en'
@@ -1084,7 +1091,7 @@ export default function SearchScreen() {
         return 'en'
       }
     },
-    enabled: !!user,
+    enabled: !!user && BACKEND === 'appwrite',
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   })
@@ -1197,7 +1204,7 @@ export default function SearchScreen() {
     const initializeJwt = async () => {
       if (Platform.OS === 'android') {
         // Only create JWT for authenticated users
-        if (user && !authLoading) {
+        if (BACKEND === 'appwrite' && user && !authLoading) {
           try {
             const { jwt: token } = await account.createJWT()
             setJwt(token)

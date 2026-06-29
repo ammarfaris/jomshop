@@ -3,6 +3,7 @@ import { account } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
 import { Platform } from 'react-native'
 import { Storage, COLOR_THEME_STORAGE_KEY } from 'app/lib/storage'
+import { BACKEND } from 'app/lib/backend'
 
 export type ColorTheme = 'green' | 'blue' | 'purple'
 
@@ -61,6 +62,14 @@ export function ColorThemeProvider({
         return
       }
 
+      // Supabase spike has no preferences table yet; keep localStorage as source of truth.
+      if (BACKEND !== 'appwrite') {
+        if (Platform.OS === 'web' && typeof document !== 'undefined') {
+          applyColorThemeToDocument(colorTheme)
+        }
+        return
+      }
+
       // If no user after auth loaded, keep the theme from localStorage (don't reset)
       if (!user) {
         return
@@ -98,7 +107,7 @@ export function ColorThemeProvider({
     }
 
     loadColorTheme()
-  }, [user, isInitialized, isAuthLoading])
+  }, [user, isInitialized, isAuthLoading, colorTheme])
 
   // Clear local storage when user logs out
   useEffect(() => {
@@ -131,7 +140,7 @@ export function ColorThemeProvider({
       await Storage.setItem(COLOR_THEME_STORAGE_KEY, theme)
 
       // Save to Appwrite preferences if user is logged in (background sync)
-      if (user) {
+      if (BACKEND === 'appwrite' && user) {
         const currentPrefs = await account.getPrefs()
         await account.updatePrefs({ ...currentPrefs, colorTheme: theme })
       }

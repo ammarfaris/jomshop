@@ -6,6 +6,11 @@ import {
 } from 'app/provider/appwrite/constants'
 import { tablesDB } from 'app/provider/appwrite/api'
 import { Query, Models } from 'app/lib/appwrite-universal'
+import { BACKEND } from 'app/lib/backend'
+import {
+  fetchPublicContestsSupabase,
+  fetchPublicContestBySlugSupabase,
+} from 'app/lib/supabase/contests'
 
 /**
  * Public contest document from publicContests collection
@@ -134,11 +139,17 @@ export function usePublicContests(options: UsePublicContestsOptions = {}) {
   const { limit = 20, enabled = true } = options
 
   return useQuery({
-    queryKey: ['public-contests', limit],
+    queryKey: ['public-contests', BACKEND, limit],
     enabled,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {
+      // Supabase path (Phase 0 spike): read contests via anon RLS — no sync needed.
+      if (BACKEND === 'supabase') {
+        const rows = await fetchPublicContestsSupabase(limit)
+        return rows as unknown as EnrichedPublicContest[]
+      }
+
       const response = await tablesDB.listRows({
         databaseId: DATABASE_ID,
         tableId: PUBLIC_CONTESTS_COLLECTION_ID,
@@ -167,11 +178,21 @@ export function usePublicContestBySlug(
   const { enabled = true } = options
 
   return useQuery({
-    queryKey: ['public-contest', slug],
+    queryKey: ['public-contest', BACKEND, slug],
     enabled: enabled && !!slug,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {
+      // Supabase path (Phase 0 spike): single contest via anon RLS.
+      if (BACKEND === 'supabase') {
+        const contest = await fetchPublicContestBySlugSupabase(slug)
+        if (!contest) throw new Error('Contest not found')
+        return {
+          contest: contest as unknown as EnrichedPublicContest,
+          translations: [] as PublicContestTranslation[],
+        }
+      }
+
       // Fetch contest by slug
       const contestResponse = await tablesDB.listRows({
         databaseId: DATABASE_ID,

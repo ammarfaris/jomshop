@@ -7,6 +7,7 @@ import { useRouter } from 'app/lib/router-universal'
 import { Text } from 'app/components/ui/text'
 import { ButtonIconAndText } from 'app/components/ButtonIconAndText'
 import { HomeOutline } from 'app/components/icons-svg/HomeOutline'
+import { BACKEND } from 'app/lib/backend'
 
 export default function NotFound() {
   const router = useRouter()
@@ -15,6 +16,11 @@ export default function NotFound() {
   useEffect(() => {
     // Load locale preference on client side only
     const loadLocale = async () => {
+      if (BACKEND !== 'appwrite') {
+        setCurrentLocale('en')
+        return
+      }
+
       try {
         const { account } = await import('app/provider/appwrite/api')
         const prefs = await account.getPrefs()
@@ -34,7 +40,7 @@ export default function NotFound() {
   }
 
   return (
-    <View className="flex-1 justify-center items-center dark:bg-black bg-white px-4">
+    <View className="min-h-screen justify-center items-center dark:bg-black bg-white px-4 pt-16">
       <View className="max-w-md w-full text-center">
         <Text className="text-6xl font-bold text-main mb-4 text-center">
           404

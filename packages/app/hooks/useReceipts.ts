@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'app/contexts/AuthContext'
+import { BACKEND } from 'app/lib/backend'
 import {
   getContestReceipts,
   getUserReceiptStats,
@@ -19,12 +20,13 @@ export function useContestReceipts(contestId: string) {
   const { user } = useAuth()
 
   return useQuery<Receipt[]>({
-    queryKey: ['receipts', 'contest', contestId, user?.$id],
+    queryKey: ['receipts', 'contest', BACKEND, contestId, user?.$id],
     queryFn: async () => {
+      if (BACKEND !== 'appwrite') return []
       if (!user?.$id) throw new Error('User not authenticated')
       return getContestReceipts(user.$id, contestId)
     },
-    enabled: !!user?.$id && !!contestId,
+    enabled: !!user?.$id && !!contestId && BACKEND === 'appwrite',
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
   })
@@ -37,12 +39,18 @@ export function useReceiptStats() {
   const { user } = useAuth()
 
   return useQuery<ReceiptStats>({
-    queryKey: ['receipts', 'stats', user?.$id],
+    queryKey: ['receipts', 'stats', BACKEND, user?.$id],
     queryFn: async () => {
+      if (BACKEND !== 'appwrite') {
+        return {
+          totalContestsWithReceipts: 0,
+          contestsWithReceipts: [],
+        } as ReceiptStats
+      }
       if (!user?.$id) throw new Error('User not authenticated')
       return getUserReceiptStats(user.$id)
     },
-    enabled: !!user?.$id,
+    enabled: !!user?.$id && BACKEND === 'appwrite',
     staleTime: 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes
   })
@@ -55,12 +63,13 @@ export function useContestReceiptCount(contestId: string) {
   const { user } = useAuth()
 
   return useQuery<number>({
-    queryKey: ['receipts', 'count', contestId, user?.$id],
+    queryKey: ['receipts', 'count', BACKEND, contestId, user?.$id],
     queryFn: async () => {
+      if (BACKEND !== 'appwrite') return 0
       if (!user?.$id) return 0
       return getContestReceiptCount(user.$id, contestId)
     },
-    enabled: !!user?.$id && !!contestId,
+    enabled: !!user?.$id && !!contestId && BACKEND === 'appwrite',
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
   })

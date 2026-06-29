@@ -87,3 +87,8 @@ mcpconfig.json
 
 # secret environment variables
 *.secrets.env
+.env*.local
+
+# Supabase CLI local artifacts (keep migrations/seed/config tracked)
+supabase/.branches
+supabase/.temp

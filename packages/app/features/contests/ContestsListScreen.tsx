@@ -40,6 +40,7 @@ import { Skeleton } from 'app/components/ui/skeleton'
 import { useReceiptStats } from 'app/hooks/useReceipts'
 import ReceiptManagerModal from 'app/features/profile/components/ReceiptManagerModal'
 import { usePublicContests } from 'app/hooks/usePublicContests'
+import { BACKEND } from 'app/lib/backend'
 import {
   CategoryFilter,
   type FilterCategory,
@@ -126,6 +127,12 @@ export default function ContestsListScreen({
   const { user, isLoading: isLoadingUser } = useAuth()
   const { isAdmin, isLoading: isLoadingAdmin } = useIsAdmin()
 
+  // Spike: only the public (RLS) Supabase path is migrated, so under Supabase we
+  // treat everyone as anonymous for DATA fetching (signed-in users still browse
+  // via the public path). Auth state / UI prompts keep using `user`.
+  // NOTE: dataUser === user under Appwrite, so this is a no-op for that backend.
+  const dataUser = BACKEND === 'supabase' ? null : user
+
   // Category filter state
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
@@ -134,7 +141,7 @@ export default function ContestsListScreen({
   // Fetch prize and winner_selection type categories for the filter bar (authenticated users only)
   const { data: authFilterCategories = [] } = useQuery<FilterCategory[]>({
     queryKey: ['filter-categories'],
-    enabled: !!user, // Only run for authenticated users
+    enabled: !!dataUser, // Only run for authenticated users
     queryFn: async () => {
       // Fetch prize (🏆 Cash, 💻 Macbook, etc.) and winner_selection (🎟️ Entry Rank, etc.) types
       const res = await tablesDB.listRows({
@@ -160,12 +167,12 @@ export default function ContestsListScreen({
     refetch: refetchPublicContests,
   } = usePublicContests({
     limit: 10, // Show up to 10 public contests for anonymous users
-    enabled: !user && !isLoadingUser, // Only run when user is NOT authenticated
+    enabled: !dataUser && !isLoadingUser, // Only run when user is NOT authenticated
   })
 
   // Extract filter categories from public contests for anonymous users
   const publicFilterCategories = useMemo(() => {
-    if (user || !publicContestsData) return []
+    if (dataUser || !publicContestsData) return []
     const categoriesMap = new Map<string, FilterCategory>()
     publicContestsData.forEach((contest: any) => {
       ;(contest.categories || []).forEach((cat: any) => {
@@ -188,7 +195,9 @@ export default function ContestsListScreen({
   }, [user, publicContestsData])
 
   // Unified filter categories (authenticated or anonymous)
-  const filterCategories = user ? authFilterCategories : publicFilterCategories
+  const filterCategories = dataUser
+    ? authFilterCategories
+    : publicFilterCategories
 
   // MAIN LIST QUERY (for authenticated users) with infinite scroll --------------------------------------
   const {
@@ -201,7 +210,7 @@ export default function ContestsListScreen({
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['contests', isAdmin],
-    enabled: !!user && !isLoadingAdmin,
+    enabled: !!dataUser && !isLoadingAdmin,
     initialPageParam: undefined as string | undefined,
     queryFn: async ({ pageParam }) => {
       // Admin users see all contests (any, users, admin visibility)
@@ -243,7 +252,7 @@ export default function ContestsListScreen({
 
   // Unified contests list (public or authenticated)
   const allContests = useMemo(() => {
-    if (user) {
+    if (dataUser) {
       return authContests
     }
     // publicContestsData is EnrichedPublicContest[] directly
@@ -320,11 +329,11 @@ export default function ContestsListScreen({
   ])
 
   // Unified loading state
-  const isLoadingContests = user
+  const isLoadingContests = dataUser
     ? isLoadingAuthContests || isLoadingAdmin
     : isLoadingPublicContests
-  const isErrorContests = user ? isErrorAuthContests : isErrorPublicContests
-  const refetchContests = user ? refetchAuthContests : refetchPublicContests
+  const isErrorContests = dataUser ? isErrorAuthContests : isErrorPublicContests
+  const refetchContests = dataUser ? refetchAuthContests : refetchPublicContests
 
   // Fetch all host docs referenced by ALL contests (batch) --------------------------------
   // Use allContests (pre-filter) so switching category chips doesn't trigger re-fetches
@@ -338,7 +347,7 @@ export default function ContestsListScreen({
   // For anonymous users, hosts are already included in publicContestsData
   const { data: authHosts = [] } = useQuery<Host[]>({
     queryKey: ['contest-hosts', allHostIds.sort().join(',')],
-    enabled: !!user && allHostIds.length > 0,
+    enabled: !!dataUser && allHostIds.length > 0,
     queryFn: async () => {
       const res = await tablesDB.listRows({
         databaseId: DATABASE_ID,
@@ -355,7 +364,7 @@ export default function ContestsListScreen({
 
   // Unified hosts list
   const allHosts = useMemo(() => {
-    if (user) {
+    if (dataUser) {
       return authHosts
     }
     // Extract hosts from each public contest's embedded hosts
@@ -397,7 +406,7 @@ export default function ContestsListScreen({
   // For anonymous users, categories are already included in publicContestsData
   const { data: authCategories = [] } = useQuery<Category[]>({
     queryKey: ['contest-categories', allCategoryIds.sort().join(',')],
-    enabled: !!user && allCategoryIds.length > 0,
+    enabled: !!dataUser && allCategoryIds.length > 0,
     queryFn: async () => {
       const res = await tablesDB.listRows({
         databaseId: DATABASE_ID,
@@ -410,7 +419,7 @@ export default function ContestsListScreen({
 
   // Unified categories list
   const allCategories = useMemo(() => {
-    if (user) {
+    if (dataUser) {
       return authCategories
     }
     // Extract categories from each public contest's embedded categories
@@ -493,8 +502,10 @@ export default function ContestsListScreen({
 
   // Language preference via Appwrite Account Preferences
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
-    queryKey: ['user-language-preference'],
+    queryKey: ['user-language-preference', BACKEND],
     queryFn: async () => {
+      if (BACKEND !== 'appwrite') return 'en'
+
       try {
         const prefs = await account.getPrefs()
         const lang = (prefs as any)?.language || 'en'
@@ -503,13 +514,13 @@ export default function ContestsListScreen({
         return 'en'
       }
     },
-    enabled: !!user, // Only fetch when user is logged in
+    enabled: !!user && BACKEND === 'appwrite', // Supabase prefs are not migrated yet
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   })
   if (Platform.OS === 'android') {
     useEffect(() => {
-      if (!user) return
+      if (BACKEND !== 'appwrite' || !user) return
       const fetchJWT = async () => {
         try {
           const { jwt } = await account.createJWT()
@@ -700,8 +711,8 @@ export default function ContestsListScreen({
     let contestHosts: Host[]
     let badgeCategories: ContestBadgeCategory[]
 
-    if (!user) {
-      // Anonymous: use embedded hosts and categories from public contest
+    if (!dataUser) {
+      // Anonymous (and all Supabase-spike users): use embedded hosts/categories
       const publicContest = contest as any
       contestHosts = (publicContest.hosts || []).map((h: any) => ({
         $id: h.$id,
@@ -749,7 +760,7 @@ export default function ContestsListScreen({
 
     // Get upvote count from public contests data for anonymous users
     // For anonymous users, contest IS the public contest with upvote_count directly on it
-    const initialUpvoteCount = !user
+    const initialUpvoteCount = !dataUser
       ? (contest as any).upvote_count || 0
       : undefined
 

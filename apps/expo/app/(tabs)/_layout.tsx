@@ -60,6 +60,13 @@ export default function TabLayout() {
   const themeValues = COLOR_THEMES[colorTheme][colorScheme === 'dark' ? 'dark' : 'light']
   const main = themeValues.main
 
+  // Explicit background for the header + bottom tab bar so the theme covers the
+  // status-bar and home-indicator safe areas. Matches the `bg-black`/`bg-white`
+  // the screens use for their bodies so there is no seam at the bars.
+  const isDark = colorScheme === 'dark'
+  const navBackground = isDark ? '#000000' : '#ffffff'
+  const navBorder = isDark ? '#27272a' : '#e4e4e7'
+
   const HeaderTitle = () => (
     <View style={styles.headerTitleContainer}>
       <Text style={[styles.headerTitle, { color: Colors[colorScheme ?? 'light'].text }]}>
@@ -75,8 +82,21 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: main,
+        tabBarInactiveTintColor: isDark ? '#9ca3af' : '#6b7280',
+        headerTintColor: isDark ? '#ffffff' : '#000000',
+        headerTitleStyle: {
+          color: isDark ? '#ffffff' : '#000000',
+        },
+        headerStyle: {
+          backgroundColor: navBackground,
+        },
         tabBarStyle: {
           display: 'flex',
+          backgroundColor: navBackground,
+          borderTopColor: navBorder,
+        },
+        sceneStyle: {
+          backgroundColor: navBackground,
         },
       }}
     >
@@ -107,7 +127,7 @@ export default function TabLayout() {
             : undefined,
           tabBarLabel: i18n._(msg`Home`),
           tabBarIcon: ({ color }) => (
-            <IconWrapper Icon={HomeOutline} size={28} color={color} />
+            <IconWrapper Icon={HomeOutline} size={28} color={color as string} />
           ),
         }}
       />
@@ -117,7 +137,7 @@ export default function TabLayout() {
           title: i18n._(msg`Search`),
           headerTitleAlign: 'center',
           tabBarIcon: ({ color }) => (
-            <IconWrapper Icon={SearchOutline} size={28} color={color} />
+            <IconWrapper Icon={SearchOutline} size={28} color={color as string} />
           ),
         }}
       />
@@ -127,7 +147,7 @@ export default function TabLayout() {
           title: i18n._(msg`Profile`),
           headerTitleAlign: 'center',
           tabBarIcon: ({ color }) => (
-            <UserCircleOutline size={28} color={color} />
+            <UserCircleOutline size={28} color={color as string} />
           ),
         }}
       />
@@ -140,7 +160,7 @@ export default function TabLayout() {
             <IconWrapper
               Icon={BuildingLibraryOutline}
               size={28}
-              color={color}
+              color={color as string}
             />
           ),
           href: Platform.OS === 'web' && isAdmin ? undefined : null,

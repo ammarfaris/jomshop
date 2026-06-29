@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import { Platform } from 'react-native'
 import { account } from 'app/provider/appwrite/api'
 import { useAuth } from './AuthContext'
+import { BACKEND } from 'app/lib/backend'
 
 export type TextScale = 'smaller' | 'regular' | 'bigger'
 
@@ -67,7 +68,10 @@ export function TextScaleProvider({ children }: { children: React.ReactNode }) {
     const fetchTextScalePreference = async () => {
       setIsLoading(true)
       try {
-        if (user) {
+        if (BACKEND !== 'appwrite') {
+          // Supabase spike has no preferences table yet; use the local default.
+          setTextScaleState('regular')
+        } else if (user) {
           const prefs = await account.getPrefs()
           const scale = (prefs as any)?.textScale || 'regular'
           if (['smaller', 'regular', 'bigger'].includes(scale)) {
@@ -100,7 +104,7 @@ export function TextScaleProvider({ children }: { children: React.ReactNode }) {
 
     // Save preference to Appwrite
     try {
-      if (user) {
+      if (BACKEND === 'appwrite' && user) {
         const currentPrefs = await account.getPrefs()
         await account.updatePrefs({ ...currentPrefs, textScale: scale })
       }

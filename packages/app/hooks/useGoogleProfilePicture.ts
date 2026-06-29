@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { account } from 'app/provider/appwrite/api'
+import { BACKEND } from 'app/lib/backend'
 
 interface GoogleUserInfo {
   picture?: string
@@ -15,6 +16,12 @@ export function useGoogleProfilePicture(userId?: string) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    if (BACKEND !== 'appwrite') {
+      setProfilePicture(null)
+      setIsLoading(false)
+      return
+    }
+
     if (!userId) {
       setIsLoading(false)
       return
