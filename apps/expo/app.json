@@ -1,14 +1,17 @@
 {
   "expo": {
-    "name": "jc-app-aw",
-    "slug": "jc-app-aw",
+    "name": "JomContest",
+    "slug": "jomcontest",
     "version": "0.1.0",
-    "scheme": "jcapp",
-    "platforms": ["ios", "android"],
+    "scheme": "jomshop",
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "ios": {
       "bundleIdentifier": "com.jomcontest",
       "infoPlist": {
-        "UIViewControllerBasedStatusBarAppearance": true,
+        "UIViewControllerBasedStatusBarAppearance": false,
         "UIStatusBarHidden": false
       }
     },
@@ -18,7 +21,20 @@
     "experiments": {
       "reactCompiler": true
     },
-    "plugins": ["expo-router", "expo-web-browser"],
-    "userInterfaceStyle": "automatic"
+    "plugins": [
+      "expo-router",
+      "expo-web-browser",
+      "@react-native-community/datetimepicker",
+      "expo-image",
+      "expo-splash-screen",
+      "expo-status-bar"
+    ],
+    "userInterfaceStyle": "automatic",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4c9637a9-0cc1-48eb-86a4-3eb8b52885e6"
+      }
+    }
   }
 }

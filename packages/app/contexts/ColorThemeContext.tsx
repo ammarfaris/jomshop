@@ -3,6 +3,7 @@ import { account } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
 import { Platform } from 'react-native'
 import { Storage, COLOR_THEME_STORAGE_KEY } from 'app/lib/storage'
+import { BACKEND } from 'app/lib/backend'
 
 export type ColorTheme = 'green' | 'blue' | 'purple'
 
@@ -53,11 +54,27 @@ export function ColorThemeProvider({
     initializeTheme()
   }, [])
 
+  // Apply the active accent to the web <html> whenever it changes (all backends).
+  // Kept as its own effect so the Appwrite sync effect below does NOT depend on
+  // `colorTheme` — otherwise every local accent change re-fetches prefs and can
+  // revert the selection mid-write.
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      applyColorThemeToDocument(colorTheme)
+    }
+  }, [colorTheme])
+
   // Load color theme preference from Appwrite on mount or when user changes (background sync)
   useEffect(() => {
     const loadColorTheme = async () => {
       // Don't do anything if not initialized yet or if auth is still loading
       if (!isInitialized || isAuthLoading) {
+        return
+      }
+
+      // Supabase spike has no preferences table yet; keep localStorage as source
+      // of truth. The dedicated effect above applies it to the document.
+      if (BACKEND !== 'appwrite') {
         return
       }
 
@@ -131,7 +148,7 @@ export function ColorThemeProvider({
       await Storage.setItem(COLOR_THEME_STORAGE_KEY, theme)
 
       // Save to Appwrite preferences if user is logged in (background sync)
-      if (user) {
+      if (BACKEND === 'appwrite' && user) {
         const currentPrefs = await account.getPrefs()
         await account.updatePrefs({ ...currentPrefs, colorTheme: theme })
       }

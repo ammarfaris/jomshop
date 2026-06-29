@@ -1,5 +1,7 @@
 import { account } from 'app/provider/appwrite/api'
 import { OAuthProvider } from 'app/lib/appwrite-universal'
+import { BACKEND } from 'app/lib/backend'
+import { getSupabase } from 'app/lib/supabase/client'
 import { ButtonIconAndText } from 'app/components/ButtonIconAndText'
 import { GoogleSolid } from 'app/components/icons-svg/GoogleSolid'
 import { useAuth } from 'app/contexts/AuthContext'
@@ -22,6 +24,20 @@ export function ContinueWithGoogle({
 
   const signInUpWithGoogleWeb = async () => {
     try {
+      if (BACKEND === 'supabase') {
+        const origin =
+          typeof window !== 'undefined' && window.location?.origin
+            ? window.location.origin
+            : ''
+        // PKCE + detectSessionInUrl handles the code exchange on return.
+        const { error } = await getSupabase().auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: `${origin}${redirectPath}` },
+        })
+        if (error) throw error
+        return true
+      }
+
       // Use the URL that matches your Appwrite platform settings
       // For local development, this should match what's in your Appwrite console
 

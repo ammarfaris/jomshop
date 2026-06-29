@@ -54,11 +54,16 @@ export {
 export default function RootLayout() {
   const { isDarkColorScheme } = useColorScheme()
 
+  // Paints the window behind the status bar / home-indicator safe areas so the
+  // theme background extends edge-to-edge. Matches the `bg-black`/`bg-white`
+  // the screens use for their bodies so there is no seam at the bars.
+  const rootBackgroundColor = isDarkColorScheme ? '#000000' : '#ffffff'
+
   useEffect(() => {
     if (Platform.OS === 'android') {
       RNStatusBar.setTranslucent(false)
       RNStatusBar.setBackgroundColor(
-        isDarkColorScheme ? '#09090b' : '#ffffff',
+        isDarkColorScheme ? '#000000' : '#ffffff',
         false,
       )
       RNStatusBar.setBarStyle(
@@ -69,7 +74,14 @@ export default function RootLayout() {
   }, [isDarkColorScheme])
 
   const screens = (
-    <Stack>
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: rootBackgroundColor },
+        headerTintColor: isDarkColorScheme ? '#ffffff' : '#000000',
+        headerTitleStyle: { color: isDarkColorScheme ? '#ffffff' : '#000000' },
+        contentStyle: { backgroundColor: rootBackgroundColor },
+      }}
+    >
       <Stack.Screen name="(tabs)" options={{ title: '', headerShown: false }} />
       <Stack.Screen name="user" options={{ title: '', headerShown: false }} />
       <Stack.Screen
@@ -111,7 +123,9 @@ export default function RootLayout() {
   )
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
+    <GestureHandlerRootView
+      style={{ flex: 1, backgroundColor: rootBackgroundColor }}
+    >
       <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
         <Provider>
           <StatusBar

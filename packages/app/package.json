@@ -34,19 +34,21 @@
     "@rn-primitives/toggle-group": "^1.2.0",
     "@rn-primitives/types": "^1.1.0",
     "@shopify/flash-list": "^2.0.3",
+    "@supabase/supabase-js": "^2.108.2",
     "@tanstack/react-query": "^5.82.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.10",
     "meilisearch": "^0.54.0",
     "moti": "^0.30.0",
-    "nativewind": "^4.2.3",
     "opencv-document-scanner": "^1.2.2",
     "react-hook-form": "^7.65.0",
     "react-instantsearch-core": "^7.16.2",
+    "react-native-url-polyfill": "^3.0.0",
     "solito": "4.4.1",
     "tailwind-merge": "^3.2.0",
     "tailwindcss-animate": "^1.0.7",
+    "uniwind": "^1.6.3",
     "valibot": "^1.1.0"
   },
   "sideEffects": false,
@@ -54,7 +56,27 @@
     "@revenuecat/purchases-js": "^1.22.1",
     "@types/jest": "^30.0.0",
     "jest": "^30.2.0",
-    "tailwindcss": "^3.4.17",
+    "tailwindcss": "^4",
     "ts-jest": "^29.4.5"
+  },
+  "peerDependencies": {
+    "@marsidev/react-turnstile": "*",
+    "next": "*",
+    "next-themes": "*",
+    "sonner": "*"
+  },
+  "peerDependenciesMeta": {
+    "@marsidev/react-turnstile": {
+      "optional": true
+    },
+    "next": {
+      "optional": true
+    },
+    "next-themes": {
+      "optional": true
+    },
+    "sonner": {
+      "optional": true
+    }
   }
 }

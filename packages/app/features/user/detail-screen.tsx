@@ -1,13 +1,13 @@
 import { View, Pressable } from 'react-native'
-import { useParams } from 'solito/navigation'
 
 import { Text } from 'app/components/ui/text'
 import { useRouter } from 'app/lib/router-universal'
+import { useRouteParams } from 'app/hooks/useRouteParams'
 
-const useUserParams = useParams<{ id: string }>
+const useUserParams = useRouteParams<{ id: string }>
 
 export default function UserDetailScreen() {
-  const { id } = useUserParams()
+  const { id = '' } = useUserParams()
   const router = useRouter()
 
   return (

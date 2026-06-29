@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Platform } from 'react-native'
 import { useAuth } from 'app/contexts/AuthContext'
 import { downloadAndCacheProfilePicture } from 'app/utils/downloadAndCacheProfilePicture'
+import { BACKEND } from 'app/lib/backend'
 
 /**
  * Hook to handle post-OAuth callback actions
@@ -13,6 +14,8 @@ export function useOAuthCallback() {
   const hasRun = useRef(false)
 
   useEffect(() => {
+    if (BACKEND !== 'appwrite') return
+
     // Skip on native - handled in the OAuth component directly
     if (Platform.OS !== 'web') return
 

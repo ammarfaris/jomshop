@@ -35,6 +35,7 @@ import {
 import { Button } from 'app/components/ui/button'
 import { archiveContestReceipts } from 'app/lib/receipts/api'
 import { useTextScale } from 'app/contexts/TextScaleContext'
+import { BACKEND } from 'app/lib/backend'
 
 export interface SaveButtonProps {
   contestId: string
@@ -63,6 +64,7 @@ export function SaveButton({
   const router = useRouter()
   const { isDarkColorScheme } = useColorScheme()
   const { main } = useColorThemeValues(isDarkColorScheme)
+  const inactiveNativeColor = isDarkColorScheme ? '#9ca3af' : '#4b5563'
 
   const { t } = useLingui()
   const { fontSize } = useTextScale()
@@ -111,6 +113,11 @@ export function SaveButton({
     // Check authentication - show dialog for anonymous users
     if (!user) {
       setSignInDialogOpen(true)
+      return
+    }
+
+    if (BACKEND !== 'appwrite') {
+      toast.info(t`Save is not available in the Supabase spike yet`)
       return
     }
 
@@ -222,6 +229,10 @@ export function SaveButton({
   // Variant-specific styles
   const buttonStyles = getButtonStyles(variant)
   const iconSize = getIconSize(variant)
+  // Explicit pixel size for the SVG. Native (post-Uniwind) does not size
+  // react-native-svg icons from `className`, so width/height props are required
+  // or the icon renders at 0x0 (invisible but still pressable).
+  const iconPx = getIconPx(variant)
   const textSize = getTextSize(variant)
 
   return (
@@ -237,8 +248,7 @@ export function SaveButton({
           className
         )}
         style={({ pressed }) => ({
-          transform:
-            Platform.OS !== 'web' && pressed ? [{ scale: 0.95 }] : undefined,
+          opacity: Platform.OS !== 'web' && pressed ? 0.7 : 1,
         })}
         accessibilityLabel={isSaved ? t`Saved` : t`Save`}
         accessibilityRole="button"
@@ -255,6 +265,8 @@ export function SaveButton({
             <BookmarkSolidWithBadge
               count={receiptCount}
               className={cn(iconSize, Platform.OS === 'web' ? 'text-main' : '')}
+              width={iconPx}
+              height={iconPx}
               color={Platform.OS !== 'web' ? main : undefined}
               accessibilityLabel={`Saved with ${receiptCount} receipt${
                 receiptCount > 1 ? 's' : ''
@@ -263,6 +275,8 @@ export function SaveButton({
           ) : (
             <BookmarkSolidIcon
               className={cn(iconSize, Platform.OS === 'web' ? 'text-main' : '')}
+              width={iconPx}
+              height={iconPx}
               color={Platform.OS !== 'web' ? main : undefined}
               accessibilityLabel="Saved"
             />
@@ -271,6 +285,9 @@ export function SaveButton({
           <BookmarkWithBadge
             count={receiptCount}
             className={cn(iconSize, 'text-gray-600 dark:text-gray-400')}
+            width={iconPx}
+            height={iconPx}
+            color={Platform.OS !== 'web' ? inactiveNativeColor : undefined}
             accessibilityLabel={`Save with ${receiptCount} receipt${
               receiptCount > 1 ? 's' : ''
             }`}
@@ -278,6 +295,9 @@ export function SaveButton({
         ) : (
           <BookmarkIcon
             className={cn(iconSize, 'text-gray-600 dark:text-gray-400')}
+            width={iconPx}
+            height={iconPx}
+            color={Platform.OS !== 'web' ? inactiveNativeColor : undefined}
             accessibilityLabel="Save"
           />
         )}
@@ -295,7 +315,9 @@ export function SaveButton({
                 : 'text-gray-700 dark:text-gray-300'
             )}
             style={
-              isSaved && Platform.OS !== 'web' ? { color: main } : undefined
+              Platform.OS !== 'web'
+                ? { color: isSaved ? main : inactiveNativeColor }
+                : undefined
             }
           >
             {isSaved ? t`Saved` : t`Save`}
@@ -515,6 +537,18 @@ function getIconSize(variant: 'default' | 'compact' | 'large'): string {
     case 'default':
     default:
       return 'w-5 h-5'
+  }
+}
+
+// Pixel equivalent of getIconSize (w-5 = 20px, w-7 = 28px). Required for native.
+function getIconPx(variant: 'default' | 'compact' | 'large'): number {
+  switch (variant) {
+    case 'large':
+      return 28
+    case 'compact':
+    case 'default':
+    default:
+      return 20
   }
 }
 

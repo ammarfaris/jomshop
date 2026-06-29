@@ -44,10 +44,11 @@ export function HostImage({
   jwt,
 }: HostImageProps) {
   const [fetchedMimeType, setFetchedMimeType] = useState<string | null>(null)
+  const isAbsoluteUrl = !!imgId && /^https?:\/\//i.test(imgId)
 
   // Fetch MIME type from storage
   useEffect(() => {
-    if (!imgId) return
+    if (!imgId || isAbsoluteUrl) return
 
     const fetchMimeType = async () => {
       try {
@@ -65,13 +66,22 @@ export function HostImage({
     }
 
     fetchMimeType()
-  }, [imgId])
+  }, [imgId, isAbsoluteUrl])
+
+  // No image (e.g. Supabase spike hosts have no logo column) — render nothing.
+  if (!imgId) return null
 
   const baseUri = `${APPWRITE_ENDPOINT}/storage/buckets/${CONTEST_HOSTS_BUCKET_ID}/files/${imgId}`
 
   // Build the image source with platform-specific handling
   const source = (() => {
     const src: any = {}
+
+    // Supabase spike may pass a full image URL directly.
+    if (isAbsoluteUrl) {
+      src.uri = imgId
+      return src
+    }
 
     if (Platform.OS === 'web') {
       // On web, use /download endpoint which properly serves SVGs with correct Content-Type

@@ -273,8 +273,11 @@ export function ContestCard({
               <View>
                 <ExpoImage
                   source={(() => {
-                    const baseUri = `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${contest.main_img_id}/view?project=${APPWRITE_PROJECT_ID}`
-                    // Contest images are public, no token needed
+                    const raw = contest.main_img_id || ''
+                    // Supabase spike stores a full image URL; Appwrite stores a file id.
+                    const baseUri = /^https?:\/\//i.test(raw)
+                      ? raw
+                      : `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${raw}/view?project=${APPWRITE_PROJECT_ID}`
                     return { uri: baseUri }
                   })()}
                   style={{

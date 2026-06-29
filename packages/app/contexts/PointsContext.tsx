@@ -11,6 +11,7 @@ import {
 import { functions } from 'app/provider/appwrite/api'
 import { ExecutionMethod } from 'app/lib/appwrite-universal'
 import { useAuth } from 'app/contexts/AuthContext'
+import { BACKEND } from 'app/lib/backend'
 import {
   GET_USER_POINTS_FUNCTION_ID,
   INITIALIZE_USER_POINTS_FUNCTION_ID,
@@ -219,6 +220,23 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
    */
   const refreshPoints = useCallback(
     async (includeTransactions = true, reset = true) => {
+      if (BACKEND !== 'appwrite') {
+        setBalance(0)
+        setLifetimeEarned(0)
+        setLifetimeSpent(0)
+        setCompletedReferrals(0)
+        setCanRedeemPlus(false)
+        setCanRedeemPro(false)
+        setPointsToPlus(REDEMPTION_COSTS.plus)
+        setPointsToPro(REDEMPTION_COSTS.pro)
+        setTransactions([])
+        setTransactionCount(0)
+        setIsLoading(false)
+        setIsInitialized(false)
+        setError(null)
+        return
+      }
+
       if (!user) {
         setBalance(0)
         setLifetimeEarned(0)
@@ -354,6 +372,10 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
     success: boolean
     bonus?: number
   }> => {
+    if (BACKEND !== 'appwrite') {
+      return { success: false }
+    }
+
     if (!user) {
       return { success: false }
     }
@@ -406,6 +428,10 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
       error?: string
       expiresAt?: Date
     }> => {
+      if (BACKEND !== 'appwrite') {
+        return { success: false, error: 'Points are not migrated yet' }
+      }
+
       if (!user) {
         return { success: false, error: 'Not authenticated' }
       }
@@ -469,6 +495,16 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
     [user, balance, refreshPoints],
   )
 
+  // Stable public refresh callback. Without useCallback this is a new function
+  // on every render, which makes consumer effects with `refreshPoints` in their
+  // dependency array (e.g. ProfileScreen) re-run every render — and because the
+  // unconfigured/Supabase branch calls setTransactions([]) (a fresh array ref)
+  // that re-render is guaranteed, producing an infinite update loop.
+  const refreshPointsPublic = useCallback(
+    () => refreshPoints(true, true),
+    [refreshPoints],
+  )
+
   // Load points when user changes
   useEffect(() => {
     if (isAuthLoading) return
@@ -510,7 +546,7 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
     isRedeeming,
     isInitialized,
     error,
-    refreshPoints: () => refreshPoints(true, true),
+    refreshPoints: refreshPointsPublic,
     loadMoreTransactions,
     initializePoints,
     redeemForSubscription,

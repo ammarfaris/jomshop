@@ -3,6 +3,13 @@ import { Models } from 'app/lib/appwrite-universal'
 
 import { account, teams } from 'app/provider/appwrite/api'
 import { ADMIN_TEAM_ID } from 'app/provider/appwrite/constants'
+import { BACKEND } from 'app/lib/backend'
+import { getSupabase, isSupabaseConfigured } from 'app/lib/supabase/client'
+import {
+  getSupabaseUser,
+  isSupabaseAdmin,
+  mapSupabaseUser,
+} from 'app/lib/supabase/auth'
 
 interface AuthContextType {
   user: Models.User<Models.Preferences> | null
@@ -30,7 +37,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true)
 
-      // console.log('[Auth] Checking for active user session...')
+      if (BACKEND === 'supabase') {
+        if (!isSupabaseConfigured) {
+          setUser(null)
+          return
+        }
+        try {
+          const currentUser = await getSupabaseUser()
+          setUser(
+            currentUser as unknown as Models.User<Models.Preferences> | null,
+          )
+        } catch (error) {
+          setUser(null)
+        }
+        return
+      }
 
       // First check if there's an active session by trying to get the user
       try {
@@ -57,6 +78,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     setIsLoadingAdmin(true)
+
+    if (BACKEND === 'supabase') {
+      isSupabaseAdmin(user.$id)
+        .then(setIsAdmin)
+        .catch(() => setIsAdmin(false))
+        .finally(() => setIsLoadingAdmin(false))
+      return
+    }
+
     teams
       .listMemberships({ teamId: ADMIN_TEAM_ID })
       .then((res) => {
@@ -67,7 +97,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .finally(() => setIsLoadingAdmin(false))
   }, [user?.$id, isLoading])
 
+  // Supabase: react to sign-in / sign-out (incl. OAuth redirect completion).
   useEffect(() => {
+    if (BACKEND !== 'supabase' || !isSupabaseConfigured) return
+    const { data } = getSupabase().auth.onAuthStateChange((_event, session) => {
+      setUser(
+        mapSupabaseUser(session?.user ?? null) as unknown as
+          | Models.User<Models.Preferences>
+          | null,
+      )
+      setIsLoading(false)
+    })
+    return () => data.subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    // Supabase resolves the initial session via the onAuthStateChange listener
+    // above (it emits INITIAL_SESSION on subscribe), so skip the delayed refresh
+    // here to avoid a loading-state flicker. If Supabase isn't configured nothing
+    // will ever fire, so clear loading to avoid a permanent spinner.
+    if (BACKEND === 'supabase') {
+      if (!isSupabaseConfigured) {
+        setUser(null)
+        setIsLoading(false)
+      }
+      return
+    }
+
     // On Android, add a small delay to ensure AsyncStorage has loaded
     // before checking for session
     const initAuth = async () => {

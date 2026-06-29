@@ -1,10 +1,7 @@
 module.exports = function (api) {
   api.cache(true)
   return {
-    presets: [
-      ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
-      'nativewind/babel',
-    ],
+    presets: ['babel-preset-expo'],
     /**
      * https://lingui.dev/installation?transpiler=babel
      * If you're using React Compiler, make sure that @lingui/babel-plugin-lingui-macro comes

@@ -3,6 +3,7 @@ import { Platform } from 'react-native'
 import { useAuth } from 'app/contexts/AuthContext'
 import { account } from 'app/provider/appwrite/api'
 import { useColorScheme, ThemeMode } from './useColorScheme'
+import { BACKEND } from 'app/lib/backend'
 
 /**
  * Hook to synchronize theme preferences from Appwrite user preferences
@@ -22,6 +23,11 @@ export function useThemeSync() {
   const { user, isLoading } = useAuth()
   const { setThemeMode, themeMode } = useColorScheme()
   const hasLoadedForUserRef = useRef<string | null>(null)
+
+  // Supabase spike has no preferences table yet.
+  if (BACKEND !== 'appwrite') {
+    return
+  }
 
   // setThemeMode is only available on web platforms
   if (!setThemeMode) {

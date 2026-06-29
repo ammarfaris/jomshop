@@ -1,4 +1,6 @@
 import { functions } from 'app/provider/appwrite/api'
+import { BACKEND } from 'app/lib/backend'
+import { searchContestsSupabase } from 'app/lib/supabase/contests'
 
 // Function IDs - these need to be set after deploying the functions
 const MEILISEARCH_SEARCH_FUNCTION_ID = '68c0fb9d00000f1ab95c' // 'meilisearch-search' // Replace with actual function ID
@@ -31,6 +33,9 @@ export interface SearchResult {
 export async function searchContests(
   params: SearchParams = {}
 ): Promise<SearchResult> {
+  if (BACKEND === 'supabase') {
+    return searchContestsSupabase(params)
+  }
   try {
     const execution = await functions.createExecution(
       MEILISEARCH_SEARCH_FUNCTION_ID,

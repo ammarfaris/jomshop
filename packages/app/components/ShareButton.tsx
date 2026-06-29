@@ -35,6 +35,7 @@ export function ShareButton({
   const { t } = useLingui()
   const { isDarkColorScheme } = useColorScheme()
   const { main } = useColorThemeValues(isDarkColorScheme)
+  const inactiveNativeColor = isDarkColorScheme ? '#9ca3af' : '#4b5563'
   const [isSharing, setIsSharing] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [justShared, setJustShared] = useState(false)
@@ -143,8 +144,7 @@ export function ShareButton({
           className
         )}
         style={({ pressed }) => ({
-          transform:
-            Platform.OS !== 'web' && pressed ? [{ scale: 0.95 }] : undefined,
+          opacity: Platform.OS !== 'web' && pressed ? 0.7 : 1,
         })}
         accessibilityRole="button"
         accessibilityLabel={t`Share contest`}
@@ -160,7 +160,15 @@ export function ShareButton({
                 : ''
               : 'text-gray-600 dark:text-gray-400'
           )}
-          color={justShared && Platform.OS !== 'web' ? main : undefined}
+          width={20}
+          height={20}
+          color={
+            Platform.OS !== 'web'
+              ? justShared
+                ? main
+                : inactiveNativeColor
+              : undefined
+          }
           accessibilityLabel="Share icon"
         />
 
@@ -175,7 +183,11 @@ export function ShareButton({
                   : ''
                 : 'text-gray-700 dark:text-gray-300'
             )}
-            style={justShared && Platform.OS !== 'web' ? { color: main } : undefined}
+            style={
+              Platform.OS !== 'web'
+                ? { color: justShared ? main : inactiveNativeColor }
+                : undefined
+            }
           >
             <Trans>Share</Trans>
           </Text>

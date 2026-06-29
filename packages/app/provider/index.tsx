@@ -16,6 +16,7 @@ import { useOAuthCallback } from 'app/hooks/useOAuthCallback'
 import { useThemeSync } from 'app/hooks/useThemeSync'
 import { Toaster } from 'app/lib/sonner-universal'
 import { useColorScheme } from 'app/hooks/useColorScheme'
+import { BACKEND } from 'app/lib/backend'
 
 // for React Query
 const queryClient = new QueryClient()
@@ -46,6 +47,8 @@ function I18nProviderWrapper({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Try to load language preference from Appwrite (only if user is logged in)
+    if (BACKEND !== 'appwrite') return
+
     if (!isLoading && user) {
       ;(async () => {
         try {

@@ -18,6 +18,7 @@ import { ArrowUpCircleOutline } from 'app/components/icons-svg/ArrowUpCircleOutl
 import { ArrowUpCircleSolid } from 'app/components/icons-svg/ArrowUpCircleSolid'
 import { cn } from 'app/lib/utils'
 import { toast } from 'app/lib/sonner-universal'
+import { BACKEND } from 'app/lib/backend'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +49,7 @@ export function UpvoteButton({
   const router = useRouter()
   const { isDarkColorScheme } = useColorScheme()
   const { main } = useColorThemeValues(isDarkColorScheme)
+  const inactiveNativeColor = isDarkColorScheme ? '#9ca3af' : '#4b5563'
 
   const { t } = useLingui()
 
@@ -90,6 +92,11 @@ export function UpvoteButton({
       return
     }
 
+    if (BACKEND !== 'appwrite') {
+      toast.info(t`Upvote is not available in the Supabase spike yet`)
+      return
+    }
+
     // Toggle upvote based on current state
     if (isUpvoted) {
       removeUpvote()
@@ -112,6 +119,10 @@ export function UpvoteButton({
   // Variant-specific styles
   const buttonStyles = getButtonStyles(variant)
   const iconSize = getIconSize(variant)
+  // Explicit pixel size for the SVG. Native (post-Uniwind) does not size
+  // react-native-svg icons from `className`, so width/height props are required
+  // or the icon renders at 0x0 (invisible but still pressable).
+  const iconPx = getIconPx(variant)
   const textSize = getTextSize(variant)
 
   return (
@@ -127,8 +138,7 @@ export function UpvoteButton({
           className
         )}
         style={({ pressed }) => ({
-          transform:
-            Platform.OS !== 'web' && pressed ? [{ scale: 0.95 }] : undefined,
+          opacity: Platform.OS !== 'web' && pressed ? 0.7 : 1,
         })}
       >
         {/* Icon */}
@@ -141,12 +151,17 @@ export function UpvoteButton({
         ) : isUpvoted ? (
           <ArrowUpCircleSolid
             className={cn(iconSize, Platform.OS === 'web' ? 'text-main' : '')}
+            width={iconPx}
+            height={iconPx}
             color={Platform.OS !== 'web' ? main : undefined}
             accessibilityLabel="Upvoted"
           />
         ) : (
           <ArrowUpCircleOutline
             className={cn(iconSize, 'text-gray-600 dark:text-gray-400')}
+            width={iconPx}
+            height={iconPx}
+            color={Platform.OS !== 'web' ? inactiveNativeColor : undefined}
             accessibilityLabel="Upvote"
           />
         )}
@@ -164,7 +179,9 @@ export function UpvoteButton({
                 : 'text-gray-700 dark:text-gray-300'
             )}
             style={
-              isUpvoted && Platform.OS !== 'web' ? { color: main } : undefined
+              Platform.OS !== 'web'
+                ? { color: isUpvoted ? main : inactiveNativeColor }
+                : undefined
             }
             numberOfLines={1}
           >
@@ -257,6 +274,18 @@ function getIconSize(variant: 'default' | 'compact' | 'large'): string {
     case 'default':
     default:
       return 'w-5 h-5'
+  }
+}
+
+// Pixel equivalent of getIconSize (w-5 = 20px, w-7 = 28px). Required for native.
+function getIconPx(variant: 'default' | 'compact' | 'large'): number {
+  switch (variant) {
+    case 'large':
+      return 28
+    case 'compact':
+    case 'default':
+    default:
+      return 20
   }
 }
 

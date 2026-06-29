@@ -7,6 +7,7 @@ import { Trans } from '@lingui/react/macro'
 import { useState, useEffect } from 'react'
 import { account } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
+import { BACKEND } from 'app/lib/backend'
 import { useTheme } from 'next-themes'
 import { useColorScheme } from 'app/hooks/useColorScheme'
 import { useColorThemeValues } from 'app/hooks/useColorThemeValues'
@@ -28,6 +29,9 @@ export function ThemeSelector() {
   // Load theme preference from Appwrite on mount
   useEffect(() => {
     const loadThemeFromAppwrite = async () => {
+      // Supabase spike has no preferences table; next-themes (localStorage) is
+      // the source of truth, so skip the Appwrite read.
+      if (BACKEND !== 'appwrite') return
       if (!user) return
 
       try {
@@ -61,7 +65,7 @@ export function ThemeSelector() {
       setTheme(mode)
 
       // Save to Appwrite preferences if user is logged in
-      if (user) {
+      if (BACKEND === 'appwrite' && user) {
         const currentPrefs = await account.getPrefs()
         await account.updatePrefs({ ...currentPrefs, theme: mode })
       }
