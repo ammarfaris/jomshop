@@ -17,6 +17,10 @@ import {
   INITIALIZE_USER_POINTS_FUNCTION_ID,
   REDEEM_POINTS_FUNCTION_ID,
 } from 'app/provider/appwrite/constants'
+import {
+  getSupabasePoints,
+  redeemPointsSupabase,
+} from 'app/lib/supabase/points'
 
 /**
  * Point transaction types
@@ -220,6 +224,72 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
    */
   const refreshPoints = useCallback(
     async (includeTransactions = true, reset = true) => {
+      if (BACKEND === 'supabase') {
+        if (!user) {
+          setBalance(0)
+          setLifetimeEarned(0)
+          setLifetimeSpent(0)
+          setCompletedReferrals(0)
+          setCanRedeemPlus(false)
+          setCanRedeemPro(false)
+          setPointsToPlus(REDEMPTION_COSTS.plus)
+          setPointsToPro(REDEMPTION_COSTS.pro)
+          setTransactions([])
+          setTransactionCount(0)
+          setIsLoading(false)
+          setIsInitialized(false)
+          return
+        }
+        try {
+          setError(null)
+          const data = await getSupabasePoints(
+            10,
+            reset ? 0 : transactionOffsetRef.current,
+          )
+          if (!data) {
+            setIsLoading(false)
+            setIsInitialized(false)
+            return
+          }
+          setBalance(data.balance)
+          setLifetimeEarned(data.lifetimeEarned)
+          setLifetimeSpent(data.lifetimeSpent)
+          setCompletedReferrals(data.completedReferrals)
+          setCanRedeemPlus(data.canRedeemPlus)
+          setCanRedeemPro(data.canRedeemPro)
+          setPointsToPlus(data.pointsToPlus)
+          setPointsToPro(data.pointsToPro)
+          setIsInitialized(true)
+
+          const parsed: PointTransaction[] = data.transactions.map((tx) => ({
+            id: tx.id,
+            amount: tx.amount,
+            type: tx.type,
+            source: tx.source as PointTransactionSource,
+            description: tx.description,
+            balanceAfter: tx.balanceAfter,
+            createdAt: new Date(tx.createdAt),
+          }))
+          if (reset) {
+            setTransactions(parsed)
+            transactionOffsetRef.current = parsed.length
+            setTransactionOffset(parsed.length)
+          } else {
+            setTransactions((prev) => [...prev, ...parsed])
+            transactionOffsetRef.current += parsed.length
+            setTransactionOffset(transactionOffsetRef.current)
+          }
+          setTransactionCount(data.transactionCount)
+        } catch (err) {
+          setError(
+            err instanceof Error ? err.message : 'Failed to fetch points',
+          )
+        } finally {
+          setIsLoading(false)
+        }
+        return
+      }
+
       if (BACKEND !== 'appwrite') {
         setBalance(0)
         setLifetimeEarned(0)
@@ -372,6 +442,11 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
     success: boolean
     bonus?: number
   }> => {
+    // Supabase grants the signup bonus via a DB trigger, so there's nothing to
+    // initialize client-side.
+    if (BACKEND === 'supabase') {
+      return { success: true }
+    }
     if (BACKEND !== 'appwrite') {
       return { success: false }
     }
@@ -428,6 +503,39 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
       error?: string
       expiresAt?: Date
     }> => {
+      if (BACKEND === 'supabase') {
+        if (!user) {
+          return { success: false, error: 'Not authenticated' }
+        }
+        const cost = REDEMPTION_COSTS[tier]
+        if (balance < cost) {
+          return {
+            success: false,
+            error: `Insufficient points. You need ${cost - balance} more points.`,
+          }
+        }
+        try {
+          setIsRedeeming(true)
+          const res = await redeemPointsSupabase(tier)
+          if (!res.success) {
+            return { success: false, error: res.error || 'Failed to redeem points' }
+          }
+          await refreshPoints(true, true)
+          return {
+            success: true,
+            message: 'Subscription activated with points',
+            expiresAt: res.expiresAt ? new Date(res.expiresAt) : undefined,
+          }
+        } catch (err) {
+          return {
+            success: false,
+            error: err instanceof Error ? err.message : 'Failed to redeem points',
+          }
+        } finally {
+          setIsRedeeming(false)
+        }
+      }
+
       if (BACKEND !== 'appwrite') {
         return { success: false, error: 'Points are not migrated yet' }
       }

@@ -202,8 +202,12 @@ async function handleUpload(admin: any, uid: string, ip: string, body: any) {
     .eq('user_id', uid)
     .eq('contest_id', contestId)
   if (existingErr) {
+    console.error('receipts: existing-rows lookup failed', existingErr)
     await cleanupOrphan()
-    return json({ success: false, error: 'Validation failed' }, 500)
+    return json(
+      { success: false, error: 'Validation failed', detail: existingErr.message },
+      500,
+    )
   }
   const contestReceiptCount = existingForContest?.length ?? 0
 
@@ -267,12 +271,22 @@ async function handleUpload(admin: any, uid: string, ip: string, body: any) {
     .single()
 
   if (insertErr || !row) {
+    console.error('receipts: insert failed', insertErr)
     await cleanupOrphan()
-    return json({ success: false, error: 'Failed to save receipt' }, 500)
+    return json(
+      { success: false, error: 'Failed to save receipt', detail: insertErr?.message },
+      500,
+    )
   }
 
-  // NOTE (Phase 5): first-receipt referral bonus + points ledger is wired here
-  // once the points/referral RPCs land.
+  // Phase 5: on the user's TRUE first receipt this marks has_uploaded_receipt
+  // and pays out any pending referral bonus. Idempotent + best-effort: a points
+  // hiccup must never fail an otherwise-successful upload.
+  try {
+    await admin.rpc('complete_referral_on_first_receipt', { p_user: uid })
+  } catch (e) {
+    console.error('receipts: referral completion failed', e)
+  }
 
   return json({ success: true, data: row }, 201)
 }

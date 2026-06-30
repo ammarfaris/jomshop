@@ -24,6 +24,14 @@ import {
   REFERRAL_SETTINGS_COLLECTION_ID,
 } from 'app/provider/appwrite/constants'
 import { toast } from 'app/lib/sonner-universal'
+import { BACKEND } from 'app/lib/backend'
+import {
+  getSupabaseReferralHistory,
+  getSupabaseMyReferral,
+  getSupabaseReferralSettings,
+  redeemReferralCodeSupabase,
+} from 'app/lib/supabase/referrals'
+import { getUserReceiptStatsSupabase } from 'app/lib/supabase/receipts'
 
 const REDEEM_REFERRAL_CODE_FUNCTION_ID = 'fn_redeem-referral-code'
 
@@ -151,6 +159,16 @@ export function ReferralCard({ className }: ReferralCardProps) {
   useEffect(() => {
     async function fetchMaxReferrals() {
       if (!user) return
+      if (BACKEND === 'supabase') {
+        try {
+          const s = await getSupabaseReferralSettings()
+          setMaxReferrals(s.maxReferrals)
+          if (s.notes) setAdditionalReferralsNote(s.notes)
+        } catch {
+          // default of 10
+        }
+        return
+      }
       try {
         const response = await tablesDB.listRows({
           databaseId: DATABASE_ID,
@@ -184,6 +202,21 @@ export function ReferralCard({ className }: ReferralCardProps) {
     async function fetchReferralHistory() {
       if (!user) {
         setLoadingHistory(false)
+        return
+      }
+      if (BACKEND === 'supabase') {
+        try {
+          const [hist, mine] = await Promise.all([
+            getSupabaseReferralHistory(),
+            getSupabaseMyReferral(),
+          ])
+          setReferralHistory(hist as unknown as ReferralRecord[])
+          setMyReferralRecord(mine as unknown as ReferralRecord | null)
+        } catch {
+          // leave history empty on error
+        } finally {
+          setLoadingHistory(false)
+        }
         return
       }
       try {
@@ -245,6 +278,17 @@ export function ReferralCard({ className }: ReferralCardProps) {
     // Check if user has uploaded any receipts
     async function checkUserReceipts() {
       if (!user) return
+      if (BACKEND === 'supabase') {
+        try {
+          const stats = await getUserReceiptStatsSupabase()
+          if (stats.totalContestsWithReceipts > 0) {
+            setHasUploadedReceipts(true)
+          }
+        } catch {
+          // ignore
+        }
+        return
+      }
       try {
         const response = await tablesDB.listRows({
           databaseId: DATABASE_ID,
@@ -266,6 +310,17 @@ export function ReferralCard({ className }: ReferralCardProps) {
     async function checkIfReferred() {
       if (!user) {
         setCheckingReferrer(false)
+        return
+      }
+      if (BACKEND === 'supabase') {
+        try {
+          const mine = await getSupabaseMyReferral()
+          setHasReferrer(mine !== null)
+        } catch {
+          setHasReferrer(false)
+        } finally {
+          setCheckingReferrer(false)
+        }
         return
       }
       try {
@@ -371,6 +426,24 @@ ${referralCode}
     }
 
     setIsRedeeming(true)
+
+    if (BACKEND === 'supabase') {
+      try {
+        await redeemReferralCodeSupabase(code)
+        toast.success(
+          'Referral code redeemed! You and your friend will each get 200 points after you upload your first receipt.'
+        )
+        setHasReferrer(true)
+        setInputCode('')
+        refreshPoints()
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to redeem code. Please try again.')
+      } finally {
+        setIsRedeeming(false)
+      }
+      return
+    }
+
     try {
       const execution = await functions.createExecution(
         REDEEM_REFERRAL_CODE_FUNCTION_ID,

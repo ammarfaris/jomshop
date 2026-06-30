@@ -29,6 +29,13 @@ import {
   REFERRAL_SETTINGS_COLLECTION_ID,
   USER_REFERRALS_COLLECTION_ID,
 } from 'app/provider/appwrite/constants'
+import { BACKEND } from 'app/lib/backend'
+import {
+  listSupabaseReferralSettings,
+  upsertSupabaseReferralSetting,
+  deleteSupabaseReferralSetting,
+  getSupabaseCompletedReferralCount,
+} from 'app/lib/supabase/referrals'
 
 type Props = {
   containerMaxWidth: number
@@ -82,6 +89,11 @@ export default function ReferralManagerTabContent({
   const loadSettings = async () => {
     setIsLoadingSettings(true)
     try {
+      if (BACKEND === 'supabase') {
+        const rows = await listSupabaseReferralSettings()
+        setSettings(rows as unknown as ReferralSetting[])
+        return
+      }
       const response = await tablesDB.listRows({
         databaseId: DATABASE_ID,
         tableId: REFERRAL_SETTINGS_COLLECTION_ID,
@@ -103,6 +115,9 @@ export default function ReferralManagerTabContent({
   // Get user's current referral count
   const getReferralCount = async (referrerUserId: string) => {
     try {
+      if (BACKEND === 'supabase') {
+        return await getSupabaseCompletedReferralCount(referrerUserId)
+      }
       const response = await tablesDB.listRows({
         databaseId: DATABASE_ID,
         tableId: USER_REFERRALS_COLLECTION_ID,
@@ -166,6 +181,31 @@ export default function ReferralManagerTabContent({
     )
 
     try {
+      if (BACKEND === 'supabase') {
+        const existingSetting = editingId
+          ? settings.find((s) => s.$id === editingId)
+          : null
+        await upsertSupabaseReferralSetting({
+          userId: userId.trim(),
+          maxReferrals: limit,
+          notes: notes.trim() || null,
+          modifiedBy: user?.$id,
+          previousLimit: editingId ? existingSetting?.max_referrals ?? 10 : 10,
+        })
+        toast.dismiss(loadingToastId)
+        toast.success(
+          editingId
+            ? `Updated referral limit for user ${userId.substring(0, 8)}...`
+            : `Set referral limit for user ${userId.substring(0, 8)}...`
+        )
+        setUserId('')
+        setMaxReferrals('')
+        setNotes('')
+        setEditingId(null)
+        await loadSettings()
+        return
+      }
+
       if (editingId) {
         // Update existing setting
         const existingSetting = settings.find((s) => s.$id === editingId)
@@ -288,11 +328,15 @@ export default function ReferralManagerTabContent({
 
     const deletingToastId = toast.loading('Removing custom limit...')
     try {
-      await tablesDB.deleteRow({
-        databaseId: DATABASE_ID,
-        tableId: REFERRAL_SETTINGS_COLLECTION_ID,
-        rowId: deletingItem.settingId,
-      })
+      if (BACKEND === 'supabase') {
+        await deleteSupabaseReferralSetting(deletingItem.userId)
+      } else {
+        await tablesDB.deleteRow({
+          databaseId: DATABASE_ID,
+          tableId: REFERRAL_SETTINGS_COLLECTION_ID,
+          rowId: deletingItem.settingId,
+        })
+      }
 
       toast.dismiss(deletingToastId)
       toast.success('Custom referral limit removed')

@@ -14,6 +14,8 @@ import { functions } from 'app/provider/appwrite/api'
 import { ExecutionMethod } from 'app/lib/appwrite-universal'
 import { useAuth } from 'app/contexts/AuthContext'
 import { usePoints } from 'app/contexts/PointsContext'
+import { BACKEND } from 'app/lib/backend'
+import { adminAdjustPointsSupabase } from 'app/lib/supabase/points'
 
 const AWARD_POINTS_FUNCTION_ID = 'fn_award-points_1766476217_551e'
 
@@ -56,6 +58,43 @@ export default function PointsManagerTabContent({ containerMaxWidth }: Props) {
 
     setIsAwarding(true)
     const loadingToastId = toast.loading('Awarding points...')
+
+    if (BACKEND === 'supabase') {
+      try {
+        await adminAdjustPointsSupabase(
+          userId.trim(),
+          pointsAmount,
+          description.trim(),
+          {
+            adminUserId: user?.$id,
+            awardedViaAdminPanel: true,
+            description_ms: descriptionMs.trim() || null,
+            timestamp: new Date().toISOString(),
+          }
+        )
+        toast.dismiss(loadingToastId)
+        toast.success(
+          `Successfully ${pointsAmount > 0 ? 'awarded' : 'reduced'} ${Math.abs(
+            pointsAmount
+          )} points to user ${userId.substring(0, 8)}...`
+        )
+        setUserId('')
+        setAmount('')
+        setDescription('')
+        setDescriptionMs('')
+        if (userId.trim() === user?.$id) {
+          refreshPoints()
+        }
+      } catch (error) {
+        toast.dismiss(loadingToastId)
+        toast.error(
+          error instanceof Error ? error.message : 'Failed to award points'
+        )
+      } finally {
+        setIsAwarding(false)
+      }
+      return
+    }
 
     try {
       // Call the award-points function

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { View, Text } from 'react-native'
 import { WebView } from 'react-native-webview'
 import { useColorScheme } from '../hooks/useColorScheme'
@@ -10,6 +10,9 @@ interface TurnstileWidgetProps {
   onError?: () => void
   onExpire?: () => void
   onReady?: () => void
+  // Bump this to force the widget to re-mint a token (Turnstile tokens are
+  // single-use, so a fresh one is needed after every verify attempt).
+  resetSignal?: number
 }
 
 type LoadingState = 'initializing' | 'loading' | 'ready' | 'error'
@@ -20,6 +23,7 @@ export function TurnstileWidget({
   onError,
   onExpire,
   onReady,
+  resetSignal,
 }: TurnstileWidgetProps) {
   const { colorScheme, isDarkColorScheme } = useColorScheme()
   const [key, setKey] = useState(0)
@@ -35,6 +39,20 @@ export function TurnstileWidget({
     setProgress(0)
     setKey((prev) => prev + 1)
   }, [colorScheme])
+
+  // Re-mount the WebView when the parent bumps resetSignal (after an upload
+  // attempt or a captcha error) so the next submit gets a brand-new single-use
+  // token instead of replaying a dead one. Skip the first run (initial mount).
+  const skipFirstReset = useRef(true)
+  useEffect(() => {
+    if (skipFirstReset.current) {
+      skipFirstReset.current = false
+      return
+    }
+    setLoadingState('initializing')
+    setProgress(0)
+    setKey((prev) => prev + 1)
+  }, [resetSignal])
 
   // Timeout fallback
   useEffect(() => {

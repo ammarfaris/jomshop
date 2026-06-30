@@ -97,6 +97,9 @@ export default function ReceiptManagerModal({
   // CAPTCHA state for upload protection
   const [captchaToken, setCaptchaToken] = useState('')
   const [isCaptchaReady, setIsCaptchaReady] = useState(false)
+  // Bumped after each upload attempt to force the Turnstile widget to mint a
+  // fresh single-use token (otherwise retries replay a consumed token -> 403).
+  const [captchaResetSignal, setCaptchaResetSignal] = useState(0)
 
   // Collapsible state for "Add New Receipt" section
   const [addReceiptOpen, setAddReceiptOpen] = useState(false)
@@ -301,6 +304,11 @@ export default function ReceiptManagerModal({
       }
     } finally {
       setUploadingType(null)
+      // Re-arm CAPTCHA after every attempt — Turnstile tokens are single-use, so
+      // the next upload (whether this one succeeded or failed) needs a fresh one.
+      setCaptchaToken('')
+      setIsCaptchaReady(false)
+      setCaptchaResetSignal((n) => n + 1)
     }
   }
 
@@ -359,6 +367,11 @@ export default function ReceiptManagerModal({
       }
     } finally {
       setUploadingType(null)
+      // Re-arm CAPTCHA after every attempt — Turnstile tokens are single-use, so
+      // the next upload (whether this one succeeded or failed) needs a fresh one.
+      setCaptchaToken('')
+      setIsCaptchaReady(false)
+      setCaptchaResetSignal((n) => n + 1)
     }
   }
 
@@ -1025,8 +1038,17 @@ export default function ReceiptManagerModal({
                         <View className="items-center">
                           <TurnstileWidget
                             siteKey={TURNSTILE_SITE_KEY}
+                            resetSignal={captchaResetSignal}
                             onSuccess={setCaptchaToken}
                             onReady={() => setIsCaptchaReady(true)}
+                            onError={() => {
+                              setCaptchaToken('')
+                              setIsCaptchaReady(false)
+                              // Re-mint after an error too — otherwise the widget
+                              // can get stuck in an error state with no token and
+                              // no way to recover without reloading the app/page.
+                              setCaptchaResetSignal((n) => n + 1)
+                            }}
                             onExpire={() => {
                               setCaptchaToken('')
                               setIsCaptchaReady(false)

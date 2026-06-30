@@ -9,6 +9,7 @@ interface TurnstileWidgetProps {
   onError?: () => void
   onExpire?: () => void
   onReady?: () => void
+  resetSignal?: number
 }
 
 export function TurnstileWidget({
@@ -17,6 +18,7 @@ export function TurnstileWidget({
   onError,
   onExpire,
   onReady,
+  resetSignal,
 }: TurnstileWidgetProps) {
   const { colorScheme, isDarkColorScheme } = useColorScheme()
   const [key, setKey] = React.useState(0)
@@ -31,6 +33,17 @@ export function TurnstileWidget({
   React.useEffect(() => {
     setKey((prev) => prev + 1)
   }, [colorScheme])
+
+  // Re-mount when the parent bumps resetSignal (after a verify attempt), so the
+  // next submit gets a brand-new single-use token instead of replaying a dead one.
+  const skipFirstReset = React.useRef(true)
+  React.useEffect(() => {
+    if (skipFirstReset.current) {
+      skipFirstReset.current = false
+      return
+    }
+    setKey((prev) => prev + 1)
+  }, [resetSignal])
 
   // Handle when Turnstile is actually loaded and ready
   const handleTurnstileLoad = React.useCallback(() => {

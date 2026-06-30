@@ -64,7 +64,13 @@ async function invokeReceipts<T>(body: Record<string, unknown>): Promise<T> {
       const ctx = (error as { context?: { json?: () => Promise<any> } }).context
       if (ctx?.json) {
         const parsed = await ctx.json()
-        if (parsed?.error) message = parsed.error
+        if (parsed?.error) {
+          // Include the server-side detail (e.g. the underlying Postgres error)
+          // so failures surface the real cause instead of a generic message.
+          message = parsed.detail
+            ? `${parsed.error}: ${parsed.detail}`
+            : parsed.error
+        }
       }
     } catch {
       // fall back to the generic message
