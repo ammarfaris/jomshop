@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useAuth } from 'app/contexts/AuthContext'
 import {
   DATABASE_ID,
   PUBLIC_CONTESTS_COLLECTION_ID,
@@ -9,7 +10,7 @@ import { Query, Models } from 'app/lib/appwrite-universal'
 import { BACKEND } from 'app/lib/backend'
 import {
   fetchPublicContestsSupabase,
-  fetchPublicContestBySlugSupabase,
+  fetchContestDetailSupabase,
 } from 'app/lib/supabase/contests'
 
 /**
@@ -176,20 +177,26 @@ export function usePublicContestBySlug(
       ? { enabled: optionsOrEnabled }
       : optionsOrEnabled
   const { enabled = true } = options
+  // Premium translations + affiliate links are gated by auth inside the Supabase
+  // fetch, so the cache must be keyed by auth state. Otherwise an anonymous view
+  // followed by sign-in keeps serving the stale (non-premium) payload.
+  const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['public-contest', BACKEND, slug],
+    queryKey: ['public-contest', BACKEND, slug, user?.$id ?? 'anon'],
     enabled: enabled && !!slug,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {
-      // Supabase path (Phase 0 spike): single contest via anon RLS.
+      // Supabase path: single contest via anon RLS, now with translations +
+      // gallery files (premium fields gated by auth inside the fetch).
       if (BACKEND === 'supabase') {
-        const contest = await fetchPublicContestBySlugSupabase(slug)
-        if (!contest) throw new Error('Contest not found')
+        const detail = await fetchContestDetailSupabase(slug)
+        if (!detail) throw new Error('Contest not found')
         return {
-          contest: contest as unknown as EnrichedPublicContest,
-          translations: [] as PublicContestTranslation[],
+          contest: detail.contest as unknown as EnrichedPublicContest,
+          translations:
+            detail.translations as unknown as PublicContestTranslation[],
         }
       }
 

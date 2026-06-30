@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   ActivityIndicator,
   View,
@@ -12,9 +12,8 @@ import { useColorThemeValues } from 'app/hooks/useColorThemeValues'
 import { Text } from 'app/components/ui/text'
 import { Tabs, TabsList, TabsTrigger } from 'app/components/ui/tabs'
 
-import { teams } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
-import { ADMIN_TEAM_ID } from 'app/provider/appwrite/constants'
+import { BACKEND } from 'app/lib/backend'
 import {
   setupMeilisearchIndex,
   syncContestsToMeilisearch,
@@ -36,32 +35,14 @@ export default function AdminScreen() {
     ? Math.min(safeWidth - 80, 1280)
     : Math.min(safeWidth - 40, 420)
 
-  const { user, isLoading } = useAuth()
+  // Admin status is resolved once in AuthContext (Appwrite team membership or the
+  // Supabase user_roles table), so the gate works for whichever backend is active.
+  const { user, isLoading, isAdmin, isLoadingAdmin } = useAuth()
   const { isDarkColorScheme } = useColorScheme()
   const { main } = useColorThemeValues(isDarkColorScheme)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [checkingTeam, setCheckingTeam] = useState(true)
   const [tabValue, setTabValue] = useState('create')
 
-  useEffect(() => {
-    if (isLoading) return
-    if (!user) {
-      setIsAdmin(false)
-      setCheckingTeam(false)
-      return
-    }
-    setCheckingTeam(true)
-    teams
-      .list()
-      .then((res) => {
-        const found = res.teams.some((t) => t.$id === ADMIN_TEAM_ID)
-        setIsAdmin(found)
-      })
-      .catch(() => setIsAdmin(false))
-      .finally(() => setCheckingTeam(false))
-  }, [user, isLoading])
-
-  if (isLoading || checkingTeam) {
+  if (isLoading || isLoadingAdmin) {
     return (
       <View className="flex-1 items-center justify-center">
         <ActivityIndicator color="grey" />
@@ -86,59 +67,70 @@ export default function AdminScreen() {
         >
           Admin Panel
         </Text>
-        <Button
-          size="sm"
-          variant="outline"
-          className="px-3 py-1"
-          onPress={async () => {
-            setInitializingSearch(true)
-            try {
-              await setupMeilisearchIndex()
-              await syncContestsToMeilisearch()
-              toast.success('Meilisearch initialized and contests synced!')
-            } catch (error) {
-              toast.error(
-                'Failed to initialize Meilisearch: ' + (error as Error).message,
-              )
-            } finally {
-              setInitializingSearch(false)
-            }
-          }}
-          disabled={initializingSearch}
-        >
-          <Text className="text-xs font-semibold">
-            {initializingSearch ? 'Syncing...' : 'Init / Sync Meilisearch'}
-          </Text>
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          className="px-3 py-1"
-          onPress={async () => {
-            setSyncingPublic(true)
-            try {
-              const result = await syncPublicContests()
-              if (result.success) {
-                toast.success(
-                  `Public contests synced! ${result.contests?.synced ?? 0} contests, ${result.translations?.synced ?? 0} translations`,
-                )
-              } else {
-                toast.error('Sync failed: ' + (result.error ?? 'Unknown error'))
-              }
-            } catch (error) {
-              toast.error(
-                'Failed to sync public contests: ' + (error as Error).message,
-              )
-            } finally {
-              setSyncingPublic(false)
-            }
-          }}
-          disabled={syncingPublic}
-        >
-          <Text className="text-xs font-semibold">
-            {syncingPublic ? 'Syncing...' : 'Sync Public Contests'}
-          </Text>
-        </Button>
+        {/* Appwrite-era tools: Meilisearch + publicContests sync. On Supabase,
+            search runs on the search_contests RPC and the public list is exposed
+            directly via RLS, so these are obsolete and hidden. */}
+        {BACKEND === 'appwrite' && (
+          <>
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-3 py-1"
+              onPress={async () => {
+                setInitializingSearch(true)
+                try {
+                  await setupMeilisearchIndex()
+                  await syncContestsToMeilisearch()
+                  toast.success('Meilisearch initialized and contests synced!')
+                } catch (error) {
+                  toast.error(
+                    'Failed to initialize Meilisearch: ' +
+                      (error as Error).message,
+                  )
+                } finally {
+                  setInitializingSearch(false)
+                }
+              }}
+              disabled={initializingSearch}
+            >
+              <Text className="text-xs font-semibold">
+                {initializingSearch ? 'Syncing...' : 'Init / Sync Meilisearch'}
+              </Text>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="px-3 py-1"
+              onPress={async () => {
+                setSyncingPublic(true)
+                try {
+                  const result = await syncPublicContests()
+                  if (result.success) {
+                    toast.success(
+                      `Public contests synced! ${result.contests?.synced ?? 0} contests, ${result.translations?.synced ?? 0} translations`,
+                    )
+                  } else {
+                    toast.error(
+                      'Sync failed: ' + (result.error ?? 'Unknown error'),
+                    )
+                  }
+                } catch (error) {
+                  toast.error(
+                    'Failed to sync public contests: ' +
+                      (error as Error).message,
+                  )
+                } finally {
+                  setSyncingPublic(false)
+                }
+              }}
+              disabled={syncingPublic}
+            >
+              <Text className="text-xs font-semibold">
+                {syncingPublic ? 'Syncing...' : 'Sync Public Contests'}
+              </Text>
+            </Button>
+          </>
+        )}
       </View>
       <Tabs
         value={tabValue}

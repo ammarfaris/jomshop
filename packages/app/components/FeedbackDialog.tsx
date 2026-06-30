@@ -11,6 +11,8 @@ import { msg } from '@lingui/core/macro'
 import { i18n } from '@lingui/core'
 import { functions } from 'app/provider/appwrite/api'
 import { PROCESS_FEEDBACK_FUNCTION_ID } from 'app/provider/appwrite/constants'
+import { BACKEND } from 'app/lib/backend'
+import { submitFeedbackSupabase } from 'app/lib/supabase'
 import { useAuth } from 'app/contexts/AuthContext'
 import { useTextScale } from 'app/contexts/TextScaleContext'
 import { useColorThemeValues } from 'app/hooks/useColorThemeValues'
@@ -155,20 +157,24 @@ export function FeedbackDialog({ children, currentUrl }: FeedbackDialogProps) {
           ? `app://jomcontest${currentUrl}`
           : 'app://jomcontest'
 
-      const execution = await functions.createExecution(
-        PROCESS_FEEDBACK_FUNCTION_ID,
-        JSON.stringify({
-          user_id: user.$id,
-          message: feedbackCopy,
-          page_url: pageUrl,
-          captcha_token: captchaTokenCopy,
-        })
-      )
+      if (BACKEND === 'supabase') {
+        await submitFeedbackSupabase(feedbackCopy, pageUrl)
+      } else {
+        const execution = await functions.createExecution(
+          PROCESS_FEEDBACK_FUNCTION_ID,
+          JSON.stringify({
+            user_id: user.$id,
+            message: feedbackCopy,
+            page_url: pageUrl,
+            captcha_token: captchaTokenCopy,
+          })
+        )
 
-      const result = JSON.parse(execution.responseBody || '{}')
+        const result = JSON.parse(execution.responseBody || '{}')
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to submit feedback')
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to submit feedback')
+        }
       }
 
       // Success - already showed toast
@@ -217,21 +223,25 @@ export function FeedbackDialog({ children, currentUrl }: FeedbackDialogProps) {
           ? `app://jomcontest${currentUrl}`
           : 'app://jomcontest'
 
-      // First, save to database via secure function
-      const execution = await functions.createExecution(
-        PROCESS_FEEDBACK_FUNCTION_ID,
-        JSON.stringify({
-          user_id: user.$id,
-          message: feedbackCopy,
-          page_url: pageUrl,
-          captcha_token: captchaTokenCopy,
-        })
-      )
+      // First, save to database (Supabase insert or the Appwrite secure function)
+      if (BACKEND === 'supabase') {
+        await submitFeedbackSupabase(feedbackCopy, pageUrl)
+      } else {
+        const execution = await functions.createExecution(
+          PROCESS_FEEDBACK_FUNCTION_ID,
+          JSON.stringify({
+            user_id: user.$id,
+            message: feedbackCopy,
+            page_url: pageUrl,
+            captcha_token: captchaTokenCopy,
+          })
+        )
 
-      const result = JSON.parse(execution.responseBody || '{}')
+        const result = JSON.parse(execution.responseBody || '{}')
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to submit feedback')
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to submit feedback')
+        }
       }
 
       // Then, open WhatsApp with the feedback message
@@ -457,11 +467,12 @@ export function FeedbackDialog({ children, currentUrl }: FeedbackDialogProps) {
               <Button
                 onPress={handleWhatsAppSubmit}
                 disabled={!canSubmit}
-                className="min-w-[95px]"
-                style={{
-                  backgroundColor: !canSubmit ? '#A8E6C1' : '#25D366',
-                  opacity: !canSubmit ? 0.5 : 1,
-                }}
+                // WhatsApp green via className so it overrides the Button's
+                // default `bg-primary` (inline style is dropped by this Button).
+                // Disabled state is handled by the Button's own opacity-50, so the
+                // white label + logo keep their contrast in both light and dark.
+                className="min-w-[95px] bg-[#25D366] web:hover:opacity-90"
+                style={{ backgroundColor: '#25D366' }}
               >
                 {isSubmittingWhatsApp ? (
                   <ActivityIndicator size="small" color="white" />

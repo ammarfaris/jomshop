@@ -36,11 +36,13 @@ import { useSafeArea } from 'app/provider/safe-area/use-safe-area'
 import { useContestNavigation } from 'app/hooks/useContestNavigation'
 import { type ContestBadgeCategory } from 'app/features/contest/components/ContestBadges'
 import { ContestCard } from 'app/features/contest/components/ContestCard'
+import { EngagementProvider } from 'app/contexts/EngagementContext'
 import { Skeleton } from 'app/components/ui/skeleton'
 import { useReceiptStats } from 'app/hooks/useReceipts'
 import ReceiptManagerModal from 'app/features/profile/components/ReceiptManagerModal'
 import { usePublicContests } from 'app/hooks/usePublicContests'
 import { BACKEND } from 'app/lib/backend'
+import { getUserPrefs } from 'app/lib/prefs'
 import {
   CategoryFilter,
   type FilterCategory,
@@ -469,14 +471,27 @@ export default function ContestsListScreen({
         return {}
       }
 
-      const { getContestReceiptCount } = await import('app/lib/receipts/api')
       const counts: Record<string, number> = {}
+      const getCount =
+        BACKEND === 'supabase'
+          ? async (contestId: string) => {
+              const { getContestReceiptCountSupabase } = await import(
+                'app/lib/supabase'
+              )
+              return getContestReceiptCountSupabase(contestId)
+            }
+          : async (contestId: string) => {
+              const { getContestReceiptCount } = await import(
+                'app/lib/receipts/api'
+              )
+              return getContestReceiptCount(user.$id, contestId)
+            }
 
       // Fetch counts for all contests with receipts
       await Promise.all(
         receiptStats.contestsWithReceipts.map(async (contestId) => {
           try {
-            const count = await getContestReceiptCount(user.$id, contestId)
+            const count = await getCount(contestId)
             counts[contestId] = count
           } catch (error) {
             console.error(
@@ -500,21 +515,19 @@ export default function ContestsListScreen({
   const [selectedContestForReceipt, setSelectedContestForReceipt] =
     useState<Contest | null>(null)
 
-  // Language preference via Appwrite Account Preferences
+  // Language preference (backend-agnostic via the prefs abstraction)
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
     queryKey: ['user-language-preference', BACKEND],
     queryFn: async () => {
-      if (BACKEND !== 'appwrite') return 'en'
-
       try {
-        const prefs = await account.getPrefs()
+        const prefs = await getUserPrefs()
         const lang = (prefs as any)?.language || 'en'
         return lang === 'ms' ? 'ms' : 'en'
       } catch {
         return 'en'
       }
     },
-    enabled: !!user && BACKEND === 'appwrite', // Supabase prefs are not migrated yet
+    enabled: !!user,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   })
@@ -786,7 +799,9 @@ export default function ContestsListScreen({
   }
 
   return (
-    <>
+    <EngagementProvider
+      contests={allContests as { $id: string; upvote_count?: number }[]}
+    >
       <View
         className="flex-1 dark:bg-black bg-white"
         style={{
@@ -956,7 +971,7 @@ export default function ContestsListScreen({
           }}
         />
       )}
-    </>
+    </EngagementProvider>
   )
 }
 

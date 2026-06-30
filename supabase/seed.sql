@@ -118,3 +118,61 @@ insert into public.contest_categories_map (contest_id, category_id) values
   ('33333333-0000-0000-0000-000000000009', '22222222-0000-0000-0000-000000000004'),
   ('33333333-0000-0000-0000-000000000010', '22222222-0000-0000-0000-000000000004')
 on conflict do nothing;
+
+-- Host logos ------------------------------------------------------------------
+-- contest_hosts.img_id holds a storage object path OR an absolute URL (the
+-- client's publicUrl() passes absolute URLs through unchanged). Uses
+-- ui-avatars.com for stable brand-coloured placeholder logos.
+update public.contest_hosts set img_id = 'https://ui-avatars.com/api/?name=Shopee&background=ee4d2d&color=fff&bold=true&size=128'  where id = '11111111-0000-0000-0000-000000000001';
+update public.contest_hosts set img_id = 'https://ui-avatars.com/api/?name=Lazada&background=0f156d&color=fff&bold=true&size=128'  where id = '11111111-0000-0000-0000-000000000002';
+update public.contest_hosts set img_id = 'https://ui-avatars.com/api/?name=TikTok&background=000000&color=fff&bold=true&size=128'  where id = '11111111-0000-0000-0000-000000000003';
+update public.contest_hosts set img_id = 'https://ui-avatars.com/api/?name=Watsons&background=00a14b&color=fff&bold=true&size=128' where id = '11111111-0000-0000-0000-000000000004';
+update public.contest_hosts set img_id = 'https://ui-avatars.com/api/?name=Nestle&background=005ca9&color=fff&bold=true&size=128' where id = '11111111-0000-0000-0000-000000000005';
+update public.contest_hosts set img_id = 'https://ui-avatars.com/api/?name=Milo&background=009639&color=fff&bold=true&size=128'   where id = '11111111-0000-0000-0000-000000000006';
+
+-- Gallery files (contest 1) ---------------------------------------------------
+-- storage_path holds an object path OR absolute URL (publicUrl() passes through).
+insert into public.contest_files (id, contest_id, storage_path, file_order) values
+  ('44444444-0000-0000-0000-000000000001', '33333333-0000-0000-0000-000000000001', 'https://picsum.photos/seed/jc1a/800/600', 0),
+  ('44444444-0000-0000-0000-000000000002', '33333333-0000-0000-0000-000000000001', 'https://picsum.photos/seed/jc1b/800/600', 1),
+  ('44444444-0000-0000-0000-000000000003', '33333333-0000-0000-0000-000000000001', 'https://picsum.photos/seed/jc1c/800/600', 2)
+on conflict (id) do nothing;
+
+-- Translations (contests 1 & 4, EN + MS) --------------------------------------
+insert into public.contest_translations
+  (contest_id, locale, prizes, eligible_products, eligible_participants, eligible_participants_exclusion, eligible_stores, winners_selection_method, entry_method, winners_list_and_announcement, winners_comm_and_timeline, link_tnc, link_faq)
+values
+  ('33333333-0000-0000-0000-000000000001', 'en',
+   'RM50,000 cash prize pool: 1× RM20,000 grand prize, 3× RM5,000, 30× RM500 vouchers.',
+   'Any MILO product purchased on Shopee Malaysia during the campaign period.',
+   'Open to all Malaysian citizens aged 18 and above with a valid Shopee account.',
+   'Employees of Nestlé Malaysia, Shopee and their immediate family members.',
+   'Shopee Malaysia (official MILO flagship store).',
+   'Winners drawn at random from all valid entries via a computerised system.',
+   'Buy any MILO product, then submit your order ID in the campaign micro-site.',
+   'Winners announced on the Shopee MILO flagship store page and via email.',
+   'Winners contacted within 14 working days of the draw via email and Shopee chat.',
+   'https://example.com/tnc/shopee-raya', 'https://example.com/faq/shopee-raya'),
+  ('33333333-0000-0000-0000-000000000001', 'ms',
+   'Hadiah tunai RM50,000: 1× RM20,000 hadiah utama, 3× RM5,000, 30× baucar RM500.',
+   'Sebarang produk MILO yang dibeli di Shopee Malaysia sepanjang tempoh kempen.',
+   'Terbuka kepada warganegara Malaysia berumur 18 tahun ke atas dengan akaun Shopee yang sah.',
+   'Kakitangan Nestlé Malaysia, Shopee dan ahli keluarga terdekat mereka.',
+   'Shopee Malaysia (gedung rasmi MILO).',
+   'Pemenang dipilih secara rawak daripada semua penyertaan sah melalui sistem berkomputer.',
+   'Beli sebarang produk MILO, kemudian hantar ID pesanan anda di mikro-tapak kempen.',
+   'Pemenang diumumkan di halaman gedung MILO Shopee dan melalui e-mel.',
+   'Pemenang dihubungi dalam masa 14 hari bekerja selepas cabutan melalui e-mel dan sembang Shopee.',
+   'https://example.com/tnc/shopee-raya', 'https://example.com/faq/shopee-raya'),
+  ('33333333-0000-0000-0000-000000000004', 'en',
+   'RM15,000 worth of school vouchers: 100× RM150 vouchers up for grabs.',
+   'MILO 2kg / 1kg packs purchased at participating stores.',
+   'Open to parents/guardians who are Malaysian citizens.',
+   'Employees of Nestlé Malaysia and their immediate family.',
+   'All major hypermarkets nationwide.',
+   'Weekly random draw from valid receipt submissions.',
+   'Snap your MILO receipt and upload it in the app to enter.',
+   'Weekly winners posted on the MILO Malaysia Facebook page.',
+   'Winners notified via the app within 7 days of each weekly draw.',
+   null, null)
+on conflict (contest_id, locale) do nothing;

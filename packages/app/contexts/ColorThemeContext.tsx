@@ -1,9 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { account } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
 import { Platform } from 'react-native'
 import { Storage, COLOR_THEME_STORAGE_KEY } from 'app/lib/storage'
-import { BACKEND } from 'app/lib/backend'
+import { getUserPrefs, updateUserPrefs } from 'app/lib/prefs'
 
 export type ColorTheme = 'green' | 'blue' | 'purple'
 
@@ -64,17 +63,12 @@ export function ColorThemeProvider({
     }
   }, [colorTheme])
 
-  // Load color theme preference from Appwrite on mount or when user changes (background sync)
+  // Load color theme preference from the backend on mount / when user changes
+  // (cross-device sync). Local storage stays the optimistic source of truth.
   useEffect(() => {
     const loadColorTheme = async () => {
       // Don't do anything if not initialized yet or if auth is still loading
       if (!isInitialized || isAuthLoading) {
-        return
-      }
-
-      // Supabase spike has no preferences table yet; keep localStorage as source
-      // of truth. The dedicated effect above applies it to the document.
-      if (BACKEND !== 'appwrite') {
         return
       }
 
@@ -84,7 +78,7 @@ export function ColorThemeProvider({
       }
 
       try {
-        const prefs = await account.getPrefs()
+        const prefs = await getUserPrefs()
         const savedColorTheme = (prefs as any)?.colorTheme as ColorTheme
         if (savedColorTheme && ['green', 'blue', 'purple'].includes(savedColorTheme)) {
           setColorThemeState(savedColorTheme)
@@ -96,21 +90,17 @@ export function ColorThemeProvider({
 
           // Sync to local storage so next refresh is instant
           await Storage.setItem(COLOR_THEME_STORAGE_KEY, savedColorTheme)
-        } else {
-          // Apply default theme on web if no saved preference
-          if (Platform.OS === 'web' && typeof document !== 'undefined') {
-            applyColorThemeToDocument('green')
-          }
         }
+        // No valid backend preference: keep the accent already loaded from local
+        // storage (it's the optimistic source of truth and is applied to the
+        // document by the effect above). Forcing 'green' here would wipe the
+        // user's chosen accent on every sign-in.
       } catch (e) {
         console.error(
-          '[ColorThemeContext] Failed to load color theme from Appwrite:',
+          '[ColorThemeContext] Failed to load color theme from backend:',
           e
         )
-        // Apply default theme on web on error
-        if (Platform.OS === 'web' && typeof document !== 'undefined') {
-          applyColorThemeToDocument('green')
-        }
+        // On error, also keep the local-storage accent rather than resetting.
       }
     }
 
@@ -147,10 +137,9 @@ export function ColorThemeProvider({
       // Save to local storage immediately (optimistic persistence)
       await Storage.setItem(COLOR_THEME_STORAGE_KEY, theme)
 
-      // Save to Appwrite preferences if user is logged in (background sync)
-      if (BACKEND === 'appwrite' && user) {
-        const currentPrefs = await account.getPrefs()
-        await account.updatePrefs({ ...currentPrefs, colorTheme: theme })
+      // Persist to the backend if signed in (cross-device background sync)
+      if (user) {
+        await updateUserPrefs({ colorTheme: theme })
       }
     } catch (e) {
       console.error(

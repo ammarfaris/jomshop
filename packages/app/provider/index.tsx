@@ -9,14 +9,13 @@ import { I18nProvider } from '@lingui/react'
 // import { I18nProvider, TransRenderProps } from '@lingui/react'
 // import { Text } from 'app/components/ui/text'
 import { i18n, defaultLocale, activateLocale } from 'app/lib/lingui/i18n'
-import { account } from 'app/provider/appwrite/api'
 import { useEffect, useState } from 'react'
 import { Platform } from 'react-native'
 import { useOAuthCallback } from 'app/hooks/useOAuthCallback'
 import { useThemeSync } from 'app/hooks/useThemeSync'
 import { Toaster } from 'app/lib/sonner-universal'
 import { useColorScheme } from 'app/hooks/useColorScheme'
-import { BACKEND } from 'app/lib/backend'
+import { getUserPrefs } from 'app/lib/prefs'
 
 // for React Query
 const queryClient = new QueryClient()
@@ -46,13 +45,11 @@ function I18nProviderWrapper({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    // Try to load language preference from Appwrite (only if user is logged in)
-    if (BACKEND !== 'appwrite') return
-
+    // Load the saved language preference from the backend (only if signed in).
     if (!isLoading && user) {
       ;(async () => {
         try {
-          const prefs = await account.getPrefs()
+          const prefs = await getUserPrefs()
           const lang = (prefs as any)?.language
           if (lang === 'en' || lang === 'ms') {
             activateLocale(lang)

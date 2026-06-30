@@ -8,10 +8,20 @@ import {
   uploadReceipt,
   updateReceiptNotes,
   deleteReceipt,
+  getReceiptFileUrl,
   type Receipt,
   type ReceiptStats,
   type ReceiptUploadResult,
 } from 'app/lib/receipts/api'
+import {
+  uploadReceiptSupabase,
+  getContestReceiptsSupabase,
+  getUserReceiptStatsSupabase,
+  getContestReceiptCountSupabase,
+  updateReceiptNotesSupabase,
+  deleteReceiptSupabase,
+  getReceiptSignedUrlsSupabase,
+} from 'app/lib/supabase'
 
 /**
  * Hook to fetch receipts for a specific contest
@@ -20,15 +30,47 @@ export function useContestReceipts(contestId: string) {
   const { user } = useAuth()
 
   return useQuery<Receipt[]>({
-    queryKey: ['receipts', 'contest', BACKEND, contestId, user?.$id],
+    queryKey: ['receipts', 'contest', contestId, user?.$id],
     queryFn: async () => {
-      if (BACKEND !== 'appwrite') return []
       if (!user?.$id) throw new Error('User not authenticated')
-      return getContestReceipts(user.$id, contestId)
+      return BACKEND === 'supabase'
+        ? getContestReceiptsSupabase(contestId)
+        : getContestReceipts(user.$id, contestId)
     },
-    enabled: !!user?.$id && !!contestId && BACKEND === 'appwrite',
+    enabled: !!user?.$id && !!contestId,
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Hook that resolves displayable URLs for a set of receipts.
+ * - Supabase: ONE batched `createSignedUrls` request (owner-scoped, ~1h TTL).
+ * - Appwrite: synchronous file view URLs.
+ * Returns a map keyed by `file_id`.
+ */
+export function useReceiptSignedUrls(receipts: Receipt[]) {
+  const { user } = useAuth()
+  const fileIds = receipts.map((r) => r.file_id)
+  const fileIdsKey = [...fileIds].sort().join(',')
+
+  return useQuery<Record<string, string>>({
+    queryKey: ['receipts', 'urls', user?.$id, fileIdsKey],
+    queryFn: async () => {
+      if (fileIds.length === 0) return {}
+      if (BACKEND === 'supabase') {
+        return getReceiptSignedUrlsSupabase(fileIds)
+      }
+      const map: Record<string, string> = {}
+      receipts.forEach((r) => {
+        map[r.file_id] = getReceiptFileUrl(r.file_id)
+      })
+      return map
+    },
+    enabled: !!user?.$id && receipts.length > 0,
+    // Refresh comfortably before the 1h signed-URL expiry.
+    staleTime: 50 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   })
 }
 
@@ -39,18 +81,14 @@ export function useReceiptStats() {
   const { user } = useAuth()
 
   return useQuery<ReceiptStats>({
-    queryKey: ['receipts', 'stats', BACKEND, user?.$id],
+    queryKey: ['receipts', 'stats', user?.$id],
     queryFn: async () => {
-      if (BACKEND !== 'appwrite') {
-        return {
-          totalContestsWithReceipts: 0,
-          contestsWithReceipts: [],
-        } as ReceiptStats
-      }
       if (!user?.$id) throw new Error('User not authenticated')
-      return getUserReceiptStats(user.$id)
+      return BACKEND === 'supabase'
+        ? getUserReceiptStatsSupabase()
+        : getUserReceiptStats(user.$id)
     },
-    enabled: !!user?.$id && BACKEND === 'appwrite',
+    enabled: !!user?.$id,
     staleTime: 60 * 1000, // 1 minute
     gcTime: 5 * 60 * 1000, // 5 minutes
   })
@@ -63,13 +101,14 @@ export function useContestReceiptCount(contestId: string) {
   const { user } = useAuth()
 
   return useQuery<number>({
-    queryKey: ['receipts', 'count', BACKEND, contestId, user?.$id],
+    queryKey: ['receipts', 'count', contestId, user?.$id],
     queryFn: async () => {
-      if (BACKEND !== 'appwrite') return 0
       if (!user?.$id) return 0
-      return getContestReceiptCount(user.$id, contestId)
+      return BACKEND === 'supabase'
+        ? getContestReceiptCountSupabase(contestId)
+        : getContestReceiptCount(user.$id, contestId)
     },
-    enabled: !!user?.$id && !!contestId && BACKEND === 'appwrite',
+    enabled: !!user?.$id && !!contestId,
     staleTime: 30 * 1000, // 30 seconds
     gcTime: 5 * 60 * 1000, // 5 minutes
   })
@@ -105,15 +144,25 @@ export function useUploadReceipt() {
       captchaToken,
     }) => {
       if (!user?.$id) throw new Error('User not authenticated')
-      return uploadReceipt(
-        user.$id,
-        contestId,
-        file,
-        notes,
-        fileOrder,
-        fileType,
-        captchaToken
-      )
+      return BACKEND === 'supabase'
+        ? uploadReceiptSupabase(
+            user.$id,
+            contestId,
+            file,
+            notes,
+            fileOrder,
+            fileType,
+            captchaToken
+          )
+        : uploadReceipt(
+            user.$id,
+            contestId,
+            file,
+            notes,
+            fileOrder,
+            fileType,
+            captchaToken
+          )
     },
     onSuccess: (_data, variables) => {
       // Invalidate relevant queries
@@ -148,7 +197,9 @@ export function useUpdateReceipt() {
   >({
     mutationFn: async ({ receiptId, notes }) => {
       if (!user?.$id) throw new Error('User not authenticated')
-      return updateReceiptNotes(receiptId, user.$id, notes)
+      return BACKEND === 'supabase'
+        ? updateReceiptNotesSupabase(receiptId, notes)
+        : updateReceiptNotes(receiptId, user.$id, notes)
     },
     onMutate: async ({ receiptId, contestId, notes }) => {
       // Cancel any outgoing refetches
@@ -206,7 +257,9 @@ export function useDeleteReceipt() {
     { receiptId: string; fileId: string; contestId: string }
   >({
     mutationFn: async ({ receiptId, fileId }) => {
-      return deleteReceipt(receiptId, fileId)
+      return BACKEND === 'supabase'
+        ? deleteReceiptSupabase(receiptId, fileId)
+        : deleteReceipt(receiptId, fileId)
     },
     onMutate: async ({ receiptId, contestId }) => {
       // Cancel any outgoing refetches

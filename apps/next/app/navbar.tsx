@@ -128,8 +128,8 @@ export default function Navbar({ maintenanceMode = false }: { maintenanceMode?: 
       {canGoBack && cameFromList && (
         <button
           onClick={handleBack}
-          className="fixed left-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-10 h-10 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none z-40"
-          style={{ top: '32px', transform: 'translateY(-50%)' }}
+          className="fixed flex items-center justify-center w-10 h-10 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none z-40"
+          style={{ left: '16px', top: '32px', transform: 'translateY(-50%)' }}
           aria-label="Go back to list"
           title="Back to List"
         >

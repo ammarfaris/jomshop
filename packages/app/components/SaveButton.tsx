@@ -105,19 +105,20 @@ export function SaveButton({
     }
   }, [saveResult])
 
-  // Determine if button is in loading state
-  const isLoading = isStatusLoading || isActionLoading || isArchiving
+  // Determine if button is in loading state. On batched lists the per-card status
+  // query is disabled, so `isStatusLoading` stays false while the batch is still
+  // seeding; treat an unknown saved-state (logged-in user, isSaved === undefined)
+  // as loading so taps in that window show a spinner instead of being silently
+  // dropped by the toggle handler below.
+  const isStatusUnknown = !!user && isSaved === undefined
+  const isLoading =
+    isStatusLoading || isActionLoading || isArchiving || isStatusUnknown
 
   // Handle button click
   const handlePress = () => {
     // Check authentication - show dialog for anonymous users
     if (!user) {
       setSignInDialogOpen(true)
-      return
-    }
-
-    if (BACKEND !== 'appwrite') {
-      toast.info(t`Save is not available in the Supabase spike yet`)
       return
     }
 
@@ -172,17 +173,28 @@ export function SaveButton({
     try {
       setIsArchiving(true)
 
-      // Archive receipts before unsaving (if user has any receipts for this contest)
+      // Archive receipts before unsaving (if user has any receipts for this
+      // contest) so their files/rows don't linger and skew storage + tier limits.
       if (user?.$id && receiptCount > 0) {
         // Show loading toast - use user-friendly message
         toast.loading(t`Unsaving contest...`, { id: 'unsave-contest' })
 
         try {
-          await archiveContestReceipts(
-            user.$id,
-            contestId,
-            'Contest unsaved by user'
-          )
+          if (BACKEND === 'supabase') {
+            const { archiveContestReceiptsSupabase } = await import(
+              'app/lib/supabase'
+            )
+            await archiveContestReceiptsSupabase(
+              contestId,
+              'Contest unsaved by user'
+            )
+          } else {
+            await archiveContestReceipts(
+              user.$id,
+              contestId,
+              'Contest unsaved by user'
+            )
+          }
           // Dismiss loading toast on success
           toast.dismiss('unsave-contest')
         } catch (archiveError) {

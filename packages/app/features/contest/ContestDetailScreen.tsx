@@ -62,6 +62,7 @@ import { HostImage } from 'app/components/HostImage'
 import { AdBanner, AdBannerPlaceholder } from 'app/components/AdBanner'
 import { usePublicContestBySlug } from 'app/hooks/usePublicContests'
 import { BACKEND } from 'app/lib/backend'
+import { getUserPrefs } from 'app/lib/prefs'
 import { Button } from 'app/components/ui/button'
 import { useRouter } from 'app/lib/router-universal'
 
@@ -418,8 +419,12 @@ export default function ContestDetailScreen({
     if (dataUser) {
       return authContestFiles
     }
-    // For anonymous users, create a single-item array from the main image if available
     const publicContest = publicContestData?.contest as any
+    // Supabase detail attaches the full gallery (contest_files); prefer it.
+    if (Array.isArray(publicContest?.files) && publicContest.files.length > 0) {
+      return publicContest.files as ContestFile[]
+    }
+    // Otherwise fall back to a single-item array from the main image if available
     if (publicContest?.main_img_id) {
       return [
         {
@@ -437,21 +442,19 @@ export default function ContestDetailScreen({
 
   const isLoadingFiles = dataUser ? isLoadingAuthFiles : isLoadingPublicContest
 
-  // Language preference via Appwrite Account Preferences
+  // Language preference (backend-agnostic via the prefs abstraction)
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
     queryKey: ['user-language-preference', BACKEND],
     queryFn: async () => {
-      if (BACKEND !== 'appwrite') return 'en'
-
       try {
-        const prefs = await account.getPrefs()
+        const prefs = await getUserPrefs()
         const lang = (prefs as any)?.language || 'en'
         return lang === 'ms' ? 'ms' : 'en'
       } catch {
         return 'en'
       }
     },
-    enabled: !!user && BACKEND === 'appwrite', // Supabase prefs are not migrated yet
+    enabled: !!user,
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   })

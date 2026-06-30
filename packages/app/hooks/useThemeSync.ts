@@ -1,9 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { Platform } from 'react-native'
 import { useAuth } from 'app/contexts/AuthContext'
-import { account } from 'app/provider/appwrite/api'
+import { getUserPrefs } from 'app/lib/prefs'
 import { useColorScheme, ThemeMode } from './useColorScheme'
-import { BACKEND } from 'app/lib/backend'
 
 /**
  * Hook to synchronize theme preferences from Appwrite user preferences
@@ -24,11 +23,6 @@ export function useThemeSync() {
   const { setThemeMode, themeMode } = useColorScheme()
   const hasLoadedForUserRef = useRef<string | null>(null)
 
-  // Supabase spike has no preferences table yet.
-  if (BACKEND !== 'appwrite') {
-    return
-  }
-
   // setThemeMode is only available on web platforms
   if (!setThemeMode) {
     return
@@ -46,9 +40,9 @@ export function useThemeSync() {
     // Only load once per user (use user ID to track)
     if (hasLoadedForUserRef.current === user.$id) return
 
-    const syncThemeFromAppwrite = async () => {
+    const syncThemeFromBackend = async () => {
       try {
-        const prefs = await account.getPrefs()
+        const prefs = await getUserPrefs()
         const savedTheme = (prefs as any)?.theme as ThemeMode
 
         if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
@@ -62,7 +56,7 @@ export function useThemeSync() {
         hasLoadedForUserRef.current = user.$id
       } catch (error) {
         console.error(
-          '[useThemeSync] Failed to sync theme from Appwrite:',
+          '[useThemeSync] Failed to sync theme from backend:',
           error
         )
         // Mark as loaded even on error to avoid repeated attempts
@@ -70,7 +64,7 @@ export function useThemeSync() {
       }
     }
 
-    syncThemeFromAppwrite()
+    syncThemeFromBackend()
   }, [user, isLoading, setThemeMode, themeMode])
 
   // Reset the loaded flag when user logs out

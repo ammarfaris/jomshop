@@ -1,10 +1,11 @@
-import { View, Pressable, Platform } from 'react-native'
+import { View, Pressable, Platform, ActivityIndicator } from 'react-native'
 import { Image as ExpoImage } from 'expo-image'
 import { Text } from 'app/components/ui/text'
 import { cn } from 'app/lib/utils'
 import { useColorTheme } from 'app/contexts/ColorThemeContext'
 import type { Receipt } from 'app/lib/receipts/api'
 import { getReceiptFileUrl } from 'app/lib/receipts/api'
+import { BACKEND } from 'app/lib/backend'
 import { isImageFile, isPDFFile } from 'app/utils/filePicker'
 import { Trans } from '@lingui/react/macro'
 import { XMarkOutline } from 'app/components/icons-svg/XMarkOutline'
@@ -13,6 +14,8 @@ import { PencilOutline } from 'app/components/icons-svg/PencilOutline'
 interface ReceiptThumbnailProps {
   receipt: Receipt
   jwt?: string | null
+  /** Pre-resolved display URL (Supabase signed URL). Falls back to Appwrite view URL. */
+  imageUrl?: string
   onPress?: () => void
   onDelete?: () => void
   onEdit?: () => void
@@ -26,6 +29,7 @@ interface ReceiptThumbnailProps {
 export function ReceiptThumbnail({
   receipt,
   jwt,
+  imageUrl,
   onPress,
   onDelete,
   onEdit,
@@ -44,14 +48,17 @@ export function ReceiptThumbnail({
     return colorTheme === 'blue' ? 'bg-blue-500' : 'bg-green-600'
   }
 
-  // Build image source for images
+  // Build image source for images.
+  // Supabase passes a ready signed URL via `imageUrl`; Appwrite computes a view
+  // URL (+ JWT header on Android for private-file auth).
   const imageSource = isImage
     ? (() => {
-        const baseUri = getReceiptFileUrl(receipt.file_id)
+        const baseUri =
+          imageUrl ??
+          (BACKEND === 'appwrite' ? getReceiptFileUrl(receipt.file_id) : '')
         const src: any = { uri: baseUri }
 
-        // For Android, use JWT authentication
-        if (Platform.OS === 'android' && jwt) {
+        if (BACKEND === 'appwrite' && Platform.OS === 'android' && jwt) {
           src.headers = { 'X-Appwrite-JWT': jwt }
         }
 
@@ -72,12 +79,18 @@ export function ReceiptThumbnail({
           opacity: pressed ? 0.7 : 1,
         })}
       >
-        {isImage && imageSource ? (
+        {isImage && imageSource?.uri ? (
           <ExpoImage
             source={imageSource}
             style={{ width: '100%', height: '100%' }}
             contentFit="cover"
           />
+        ) : isImage ? (
+          // Signed URL not ready yet (or failed to mint) — show a spinner instead
+          // of an empty/broken image tile.
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator />
+          </View>
         ) : isPDF ? (
           <View className="flex-1 items-center justify-center bg-red-50 dark:bg-red-950">
             <Text className="text-4xl mb-2">📄</Text>

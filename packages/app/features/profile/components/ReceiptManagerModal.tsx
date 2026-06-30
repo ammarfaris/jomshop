@@ -37,7 +37,9 @@ import {
   useUploadReceipt,
   useUpdateReceipt,
   useDeleteReceipt,
+  useReceiptSignedUrls,
 } from 'app/hooks/useReceipts'
+import { BACKEND } from 'app/lib/backend'
 import { useSubscription } from 'app/contexts/SubscriptionContext'
 import {
   pickImages,
@@ -52,7 +54,7 @@ import { useTextScale } from 'app/contexts/TextScaleContext'
 import { account } from 'app/provider/appwrite/api'
 import { TURNSTILE_SITE_KEY } from 'app/utils/constants/ConstTurnstile'
 import { TurnstileWidget } from 'app/components/TurnstileWidget'
-import { getReceiptFileUrl, type Receipt } from 'app/lib/receipts/api'
+import { type Receipt } from 'app/lib/receipts/api'
 import { useColorScheme } from 'app/hooks/useColorScheme'
 import Colors from 'app/utils/constants/ConstColors'
 import { cn } from 'app/lib/utils'
@@ -118,6 +120,19 @@ export default function ReceiptManagerModal({
   } = useContestReceipts(contestId)
   const { data: stats, refetch: refetchStats } = useReceiptStats()
 
+  // Displayable URLs (Supabase: batched signed URLs; Appwrite: file view URLs).
+  const { data: fileUrls = {}, error: fileUrlsError } =
+    useReceiptSignedUrls(receipts)
+
+  // Surface signed-URL failures instead of silently showing blank thumbnails.
+  useEffect(() => {
+    if (fileUrlsError) {
+      toast.error(
+        t`Couldn't load receipt previews. Please try reopening this contest.`
+      )
+    }
+  }, [fileUrlsError, t])
+
   // Get subscription limits (server-side source of truth)
   const { features } = useSubscription()
 
@@ -161,9 +176,9 @@ export default function ReceiptManagerModal({
     !isContestLimitUnlimited && isNewContest && contestCount >= maxContests
   const atReceiptLimit = !isReceiptLimitUnlimited && receiptCount >= maxReceipts
 
-  // Get JWT for Android
+  // Get JWT for Android (Appwrite private-image auth only; Supabase uses signed URLs).
   useEffect(() => {
-    if (Platform.OS === 'android' && user) {
+    if (Platform.OS === 'android' && user && BACKEND === 'appwrite') {
       const fetchJWT = async () => {
         try {
           const { jwt } = await account.createJWT()
@@ -420,12 +435,21 @@ export default function ReceiptManagerModal({
       )
 
       // Update file_order for receipts that came after the deleted one
-      const { updateReceiptFileOrder } = await import('app/lib/receipts/api')
+      const reorder = async (receiptId: string, newOrder: number) => {
+        if (BACKEND === 'supabase') {
+          const { updateReceiptFileOrderSupabase } = await import(
+            'app/lib/supabase'
+          )
+          return updateReceiptFileOrderSupabase(receiptId, newOrder)
+        }
+        const { updateReceiptFileOrder } = await import('app/lib/receipts/api')
+        return updateReceiptFileOrder(receiptId, newOrder)
+      }
       const updatePromises = remainingReceipts
         .filter((r) => r.file_order > deletedFileOrder)
         .map(async (receipt) => {
           try {
-            await updateReceiptFileOrder(receipt.$id, receipt.file_order - 1)
+            await reorder(receipt.$id, receipt.file_order - 1)
           } catch (error) {
             console.error(`Failed to reorder receipt ${receipt.$id}:`, error)
           }
@@ -455,6 +479,13 @@ export default function ReceiptManagerModal({
 
     if (!targetReceipt) return
 
+    // Image URIs come from the async signed-URL query; don't open an empty
+    // gallery before the URL is ready (mirrors the PDF-view guard).
+    if (!fileUrls[targetReceipt.file_id]) {
+      toast.error(t`Preparing file, please try again in a moment`)
+      return
+    }
+
     const imageIndex = imageReceipts.findIndex(
       (r) => r.$id === targetReceipt.$id
     )
@@ -467,7 +498,11 @@ export default function ReceiptManagerModal({
 
   // Handle PDF view
   const handleViewPDF = async (receipt: Receipt) => {
-    const url = getReceiptFileUrl(receipt.file_id)
+    const url = fileUrls[receipt.file_id]
+    if (!url) {
+      toast.error(t`Preparing file, please try again in a moment`)
+      return
+    }
     try {
       const canOpen = await Linking.canOpenURL(url)
       if (canOpen) {
@@ -484,17 +519,12 @@ export default function ReceiptManagerModal({
   // Prepare gallery images (only images, not PDFs)
   const galleryImages: ImageItem[] = receipts
     .filter((r) => isImageFile(r.file_type))
-    .map((receipt, index) => {
-      const baseUri = getReceiptFileUrl(receipt.file_id)
-      const uri = baseUri
-
-      return {
-        id: receipt.file_id,
-        uri,
-        title: contestTitle,
-        description: receipt.notes || t`Receipt ${index + 1}`,
-      }
-    })
+    .map((receipt, index) => ({
+      id: receipt.file_id,
+      uri: fileUrls[receipt.file_id] || '',
+      title: contestTitle,
+      description: receipt.notes || t`Receipt ${index + 1}`,
+    }))
 
   return (
     <>
@@ -622,6 +652,7 @@ export default function ReceiptManagerModal({
                     <ReceiptThumbnail
                       receipt={receipt}
                       jwt={jwt}
+                      imageUrl={fileUrls[receipt.file_id]}
                       onPress={() => {
                         if (isImageFile(receipt.file_type)) {
                           handleViewImage(index)

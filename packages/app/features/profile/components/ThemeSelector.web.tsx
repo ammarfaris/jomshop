@@ -5,9 +5,8 @@ import { Text } from 'app/components/ui/text'
 import { cn } from 'app/lib/utils'
 import { Trans } from '@lingui/react/macro'
 import { useState, useEffect } from 'react'
-import { account } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
-import { BACKEND } from 'app/lib/backend'
+import { getUserPrefs, updateUserPrefs } from 'app/lib/prefs'
 import { useTheme } from 'next-themes'
 import { useColorScheme } from 'app/hooks/useColorScheme'
 import { useColorThemeValues } from 'app/hooks/useColorThemeValues'
@@ -26,16 +25,13 @@ export function ThemeSelector() {
   const { isDarkColorScheme } = useColorScheme()
   const { main } = useColorThemeValues(isDarkColorScheme)
 
-  // Load theme preference from Appwrite on mount
+  // Load theme preference from the backend on mount (cross-device sync).
   useEffect(() => {
-    const loadThemeFromAppwrite = async () => {
-      // Supabase spike has no preferences table; next-themes (localStorage) is
-      // the source of truth, so skip the Appwrite read.
-      if (BACKEND !== 'appwrite') return
+    const loadThemeFromBackend = async () => {
       if (!user) return
 
       try {
-        const prefs = await account.getPrefs()
+        const prefs = await getUserPrefs()
         const savedTheme = (prefs as any)?.theme as ThemeMode
         if (
           savedTheme &&
@@ -45,11 +41,11 @@ export function ThemeSelector() {
           setTheme(savedTheme)
         }
       } catch (e) {
-        console.error('Failed to load theme from Appwrite:', e)
+        console.error('Failed to load theme from backend:', e)
       }
     }
 
-    loadThemeFromAppwrite()
+    loadThemeFromBackend()
   }, [user])
 
   const handleThemeChange = async (mode: ThemeMode) => {
@@ -64,10 +60,9 @@ export function ThemeSelector() {
       // Update local theme immediately for better UX
       setTheme(mode)
 
-      // Save to Appwrite preferences if user is logged in
-      if (BACKEND === 'appwrite' && user) {
-        const currentPrefs = await account.getPrefs()
-        await account.updatePrefs({ ...currentPrefs, theme: mode })
+      // Persist to the backend if signed in (cross-device sync)
+      if (user) {
+        await updateUserPrefs({ theme: mode })
       }
     } catch (e) {
       console.error('Failed to save theme preference:', e)

@@ -13,6 +13,13 @@ import {
   saveWithAutoUpvote,
   type SaveWithAutoUpvoteResult,
 } from 'app/lib/saves/api'
+import {
+  checkUserSaveSupabase,
+  removeSaveSupabase,
+  saveWithAutoUpvoteSupabase,
+  getUserSavedContestsSupabase,
+} from 'app/lib/supabase'
+import { useIsContestBatched } from 'app/contexts/EngagementContext'
 
 /**
  * Hook to check if the current user has saved a contest
@@ -21,22 +28,23 @@ import {
  */
 export function useSaveStatus(contestId: string) {
   const { user } = useAuth()
+  // On list screens an EngagementProvider batch-seeds this cache, so the per-card
+  // query stays disabled (no N+1) and reads the seeded value instead.
+  const isBatched = useIsContestBatched(contestId)
 
   return useQuery({
-    queryKey: ['save', 'status', BACKEND, contestId, user?.$id],
+    queryKey: ['save', 'status', contestId, user?.$id],
     queryFn: async () => {
-      if (BACKEND !== 'appwrite') {
-        return false
-      }
-
       // If user is not authenticated, return false
       if (!user?.$id) {
         return false
       }
-      return checkUserSave(contestId, user.$id)
+      return BACKEND === 'supabase'
+        ? checkUserSaveSupabase(contestId)
+        : checkUserSave(contestId, user.$id)
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!contestId && BACKEND === 'appwrite', // Supabase save is not migrated yet
+    enabled: !!contestId && !!user && !isBatched,
   })
 }
 
@@ -52,15 +60,13 @@ export function useSaveActions(contestId: string) {
 
   const saveMutation = useMutation({
     mutationFn: async (): Promise<SaveWithAutoUpvoteResult> => {
-      if (BACKEND !== 'appwrite') {
-        throw new Error('Save is not migrated to Supabase yet')
-      }
-
       if (!user?.$id) {
         throw new Error('User not authenticated')
       }
       // Save contest and automatically upvote if not already upvoted
-      return saveWithAutoUpvote(contestId, user.$id)
+      return BACKEND === 'supabase'
+        ? saveWithAutoUpvoteSupabase(contestId)
+        : saveWithAutoUpvote(contestId, user.$id)
     },
     onMutate: async () => {
       // OPTIMISTIC UPDATE: Update UI immediately before API call completes
@@ -86,8 +92,27 @@ export function useSaveActions(contestId: string) {
       return { previousSaveStatus }
     },
     onSuccess: (result) => {
-      // If auto-upvote occurred, invalidate upvote queries
+      // If auto-upvote occurred, write the same cache keys useUpvoteActions uses.
+      // On batched lists the per-card upvote queries are disabled, so a bare
+      // invalidate would never refetch and the button/count would stay stale —
+      // seed the values directly (then invalidate so non-batched screens refetch).
       if (result.autoUpvoted) {
+        const wasUpvoted = queryClient.getQueryData([
+          'upvote',
+          'status',
+          contestId,
+          user?.$id,
+        ])
+        queryClient.setQueryData(
+          ['upvote', 'status', contestId, user?.$id],
+          true
+        )
+        if (wasUpvoted !== true) {
+          queryClient.setQueryData(
+            ['upvote', 'count', contestId],
+            (old: number | undefined) => (old ?? 0) + 1
+          )
+        }
         queryClient.invalidateQueries({
           queryKey: ['upvote', 'status', contestId, user?.$id],
         })
@@ -127,12 +152,12 @@ export function useSaveActions(contestId: string) {
 
   const removeSaveMutation = useMutation({
     mutationFn: async () => {
-      if (BACKEND !== 'appwrite') {
-        throw new Error('Save is not migrated to Supabase yet')
-      }
-
       if (!user?.$id) {
         throw new Error('User not authenticated')
+      }
+      if (BACKEND === 'supabase') {
+        await removeSaveSupabase(contestId)
+        return
       }
       // Remove save document
       await removeSave(contestId, user.$id)
@@ -210,19 +235,17 @@ export function useUserSavedContests() {
   const { user } = useAuth()
 
   return useInfiniteQuery({
-    queryKey: ['saves', 'user', BACKEND, user?.$id],
+    queryKey: ['saves', 'user', user?.$id],
     queryFn: async ({ pageParam = 0 }) => {
-      if (BACKEND !== 'appwrite') {
-        return []
-      }
-
       if (!user?.$id) {
         return []
       }
-      return getUserSavedContests(user.$id, {
-        limit: 20,
-        offset: pageParam,
-      })
+      return BACKEND === 'supabase'
+        ? getUserSavedContestsSupabase({ limit: 20, offset: pageParam })
+        : getUserSavedContests(user.$id, {
+            limit: 20,
+            offset: pageParam,
+          })
     },
     getNextPageParam: (lastPage, allPages) => {
       // If the last page has fewer items than the limit, we've reached the end
@@ -235,6 +258,6 @@ export function useUserSavedContests() {
     initialPageParam: 0,
     staleTime: 30 * 1000, // 30 seconds - refetch more often to ensure fresh data
     gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-    enabled: !!user?.$id && BACKEND === 'appwrite', // Supabase save is not migrated yet
+    enabled: !!user?.$id,
   })
 }

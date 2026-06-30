@@ -7,6 +7,13 @@ import {
   createUpvote,
   removeUpvote,
 } from 'app/lib/upvotes/api'
+import {
+  checkUserUpvoteSupabase,
+  getUpvoteCountSupabase,
+  createUpvoteSupabase,
+  removeUpvoteSupabase,
+} from 'app/lib/supabase'
+import { useIsContestBatched } from 'app/contexts/EngagementContext'
 
 /**
  * Hook to check if the current user has upvoted a contest
@@ -15,22 +22,23 @@ import {
  */
 export function useUpvoteStatus(contestId: string) {
   const { user } = useAuth()
+  // On list screens an EngagementProvider batch-seeds this cache, so the per-card
+  // query stays disabled (no N+1) and reads the seeded value instead.
+  const isBatched = useIsContestBatched(contestId)
 
   return useQuery({
-    queryKey: ['upvote', 'status', BACKEND, contestId, user?.$id],
+    queryKey: ['upvote', 'status', contestId, user?.$id],
     queryFn: async () => {
-      if (BACKEND !== 'appwrite') {
-        return false
-      }
-
       // If user is not authenticated, return false
       if (!user?.$id) {
         return false
       }
-      return checkUserUpvote(contestId, user.$id)
+      return BACKEND === 'supabase'
+        ? checkUserUpvoteSupabase(contestId)
+        : checkUserUpvote(contestId, user.$id)
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: !!contestId && BACKEND === 'appwrite', // Supabase upvote is not migrated yet
+    enabled: !!contestId && !!user && !isBatched,
   })
 }
 
@@ -41,14 +49,22 @@ export function useUpvoteStatus(contestId: string) {
  */
 export function useUpvoteCount(contestId: string) {
   const { user } = useAuth()
+  // Only Supabase seeds the count cache from the list payload (its contest rows
+  // carry `upvote_count`). Appwrite list rows don't, so we must still fetch the
+  // count per card there or batched cards would render 0.
+  const isCountSeeded = useIsContestBatched(contestId) && BACKEND === 'supabase'
 
   return useQuery({
-    queryKey: ['upvote', 'count', BACKEND, contestId],
-    queryFn: () => (BACKEND === 'appwrite' ? getUpvoteCount(contestId) : 0),
+    queryKey: ['upvote', 'count', contestId],
+    queryFn: () =>
+      BACKEND === 'supabase'
+        ? getUpvoteCountSupabase(contestId)
+        : getUpvoteCount(contestId),
     staleTime: 1 * 60 * 1000, // 1 minute
-    // Only run query if contestId exists AND user is authenticated
-    // For anonymous users, the initialCount prop will be used instead
-    enabled: !!contestId && !!user && BACKEND === 'appwrite',
+    // Only run query if contestId exists AND user is authenticated.
+    // Anonymous users fall back to the initialCount prop; on Supabase, batched
+    // (list) cards read the count seeded by EngagementProvider.
+    enabled: !!contestId && !!user && !isCountSeeded,
   })
 }
 
@@ -63,12 +79,12 @@ export function useUpvoteActions(contestId: string) {
 
   const upvoteMutation = useMutation({
     mutationFn: async () => {
-      if (BACKEND !== 'appwrite') {
-        throw new Error('Upvote is not migrated to Supabase yet')
-      }
-
       if (!user?.$id) {
         throw new Error('User not authenticated')
+      }
+      if (BACKEND === 'supabase') {
+        await createUpvoteSupabase(contestId)
+        return
       }
       // Create upvote document
       await createUpvote(contestId, user.$id)
@@ -133,12 +149,12 @@ export function useUpvoteActions(contestId: string) {
 
   const removeUpvoteMutation = useMutation({
     mutationFn: async () => {
-      if (BACKEND !== 'appwrite') {
-        throw new Error('Upvote is not migrated to Supabase yet')
-      }
-
       if (!user?.$id) {
         throw new Error('User not authenticated')
+      }
+      if (BACKEND === 'supabase') {
+        await removeUpvoteSupabase(contestId)
+        return
       }
       // Remove upvote document
       await removeUpvote(contestId, user.$id)

@@ -41,6 +41,7 @@ import { useAuth } from 'app/contexts/AuthContext'
 import { useRouter } from 'app/lib/router-universal'
 import { useQuery } from '@tanstack/react-query'
 import { BACKEND } from 'app/lib/backend'
+import { getUserPrefs } from 'app/lib/prefs'
 import { searchContestsSupabase } from 'app/lib/supabase/contests'
 
 // ===== SEARCH CONFIGURATION =====
@@ -1077,21 +1078,19 @@ export default function SearchScreen() {
   // JWT for Android image authentication
   const [jwt, setJwt] = useState<string | null>(null)
 
-  // Language preference via Appwrite Account Preferences
+  // Language preference (backend-agnostic via the prefs abstraction)
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
     queryKey: ['user-language-preference', BACKEND],
     queryFn: async () => {
-      if (BACKEND !== 'appwrite') return 'en'
-
       try {
-        const prefs = await account.getPrefs()
+        const prefs = await getUserPrefs()
         const lang = (prefs as any)?.language || 'en'
         return lang === 'ms' ? 'ms' : 'en'
       } catch {
         return 'en'
       }
     },
-    enabled: !!user && BACKEND === 'appwrite',
+    enabled: !!user,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   })

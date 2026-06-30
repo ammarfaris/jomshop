@@ -19,6 +19,7 @@ import { usePoints } from 'app/contexts/PointsContext'
 import { account } from 'app/provider/appwrite/api'
 import { BACKEND } from 'app/lib/backend'
 import { supabaseSignOut } from 'app/lib/supabase/auth'
+import { getUserPrefs, updateUserPrefs } from 'app/lib/prefs'
 import { activateLocale, locales } from 'app/lib/lingui/i18n'
 import {
   Tabs,
@@ -55,7 +56,7 @@ export default function ProfileScreen() {
       try {
         // Only fetch preferences if user is logged in
         if (user) {
-          const prefs = await account.getPrefs()
+          const prefs = await getUserPrefs()
           const lang = (prefs as any)?.language || 'en'
           setCurrentLocale(lang === 'ms' ? 'ms' : 'en')
         } else {
@@ -77,10 +78,9 @@ export default function ProfileScreen() {
     activateLocale(newLocale)
     setCurrentLocale(newLocale)
     try {
-      // IMPORTANT: Get current prefs first, then merge with new language
-      // This prevents overwriting other preferences like profile picture
-      const currentPrefs = await account.getPrefs()
-      await account.updatePrefs({ ...currentPrefs, language: newLocale })
+      // updateUserPrefs merges server-side so other prefs (e.g. cached profile
+      // picture) are preserved.
+      await updateUserPrefs({ language: newLocale })
       // Invalidate language preference query so other screens update immediately
       queryClient.invalidateQueries({ queryKey: ['user-language-preference'] })
     } catch {}

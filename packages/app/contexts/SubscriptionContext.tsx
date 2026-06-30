@@ -12,6 +12,7 @@ import { ExecutionMethod } from 'app/lib/appwrite-universal'
 import { useAuth } from 'app/contexts/AuthContext'
 import { GET_SUBSCRIPTION_TIER_FUNCTION_ID } from 'app/provider/appwrite/constants'
 import { BACKEND } from 'app/lib/backend'
+import { getSupabaseSubscription } from 'app/lib/supabase'
 
 /**
  * Subscription Tier Types
@@ -188,22 +189,6 @@ export function SubscriptionProvider({
    * This is the ONLY source of truth for subscription status
    */
   const refreshSubscription = useCallback(async () => {
-    if (BACKEND !== 'appwrite') {
-      setTier('free')
-      setSource('none')
-      setFeatures(TIER_FEATURES.free)
-      setExpiresAt(null)
-      setDaysRemaining(null)
-      setExpiringSoon(false)
-      setAutoRenew(false)
-      setAutoRenewFailedAt(null)
-      setAutoRenewFailedDismissed(false)
-      setAutoRenewAdjustedAt(null)
-      setAutoRenewAdjustedDismissed(false)
-      setIsLoading(false)
-      return
-    }
-
     if (!user) {
       setTier('free')
       setSource('none')
@@ -212,11 +197,65 @@ export function SubscriptionProvider({
       setDaysRemaining(null)
       setExpiringSoon(false)
       setAutoRenew(false)
+      setAutoRenewNextTier(null)
       setAutoRenewFailedAt(null)
       setAutoRenewFailedDismissed(false)
       setAutoRenewAdjustedAt(null)
       setAutoRenewAdjustedDismissed(false)
       setIsLoading(false)
+      return
+    }
+
+    if (BACKEND !== 'appwrite') {
+      // Supabase: read the user's real tier from public.subscriptions (self-RLS)
+      // so the UI's limits agree with what the receipts Edge Function enforces.
+      // (Auto-renew *writes* aren't migrated yet, but reads keep limits honest.)
+      try {
+        const sub = await getSupabaseSubscription()
+        const exp = sub?.expiresAt ? new Date(sub.expiresAt) : null
+        // Mirror the receipts Edge Function's getTier(): a lapsed subscription is
+        // the free tier, so the UI's limits/features match what the server allows.
+        const expired = exp != null && exp.getTime() < Date.now()
+        const t: SubscriptionTier = expired ? 'free' : sub?.tier ?? 'free'
+        const days =
+          exp != null
+            ? Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+            : null
+        setTier(t)
+        setSource(expired ? 'none' : sub?.source ?? 'none')
+        setFeatures(TIER_FEATURES[t])
+        setExpiresAt(exp)
+        setDaysRemaining(days)
+        setExpiringSoon(days != null && days >= 0 && days <= 7)
+        setAutoRenew(sub?.autoRenew ?? false)
+        setAutoRenewNextTier(sub?.autoRenewNextTier ?? null)
+        setAutoRenewFailedAt(
+          sub?.autoRenewFailedAt ? new Date(sub.autoRenewFailedAt) : null
+        )
+        // The Supabase subscriptions table has no dismissed/adjusted columns yet.
+        setAutoRenewFailedDismissed(false)
+        setAutoRenewAdjustedAt(null)
+        setAutoRenewAdjustedDismissed(false)
+      } catch (error) {
+        console.error(
+          '[SubscriptionContext] Failed to read Supabase subscription:',
+          error
+        )
+        setTier('free')
+        setSource('none')
+        setFeatures(TIER_FEATURES.free)
+        setExpiresAt(null)
+        setDaysRemaining(null)
+        setExpiringSoon(false)
+        setAutoRenew(false)
+        setAutoRenewNextTier(null)
+        setAutoRenewFailedAt(null)
+        setAutoRenewFailedDismissed(false)
+        setAutoRenewAdjustedAt(null)
+        setAutoRenewAdjustedDismissed(false)
+      } finally {
+        setIsLoading(false)
+      }
       return
     }
 

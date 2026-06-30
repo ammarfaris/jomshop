@@ -1,0 +1,165 @@
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  type ReactNode,
+} from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from 'app/contexts/AuthContext'
+import { BACKEND } from 'app/lib/backend'
+import { fetchEngagementBatchSupabase } from 'app/lib/supabase'
+import { Query } from 'app/lib/appwrite-universal'
+import { tablesDB } from 'app/provider/appwrite/api'
+import {
+  DATABASE_ID,
+  CONTEST_UPVOTES_COLLECTION_ID,
+  CONTEST_SAVES_COLLECTION_ID,
+} from 'app/provider/appwrite/constants'
+
+/**
+ * Batches the current user's upvote/save status for a whole list of contests
+ * into TWO queries and seeds the per-card React Query caches, so the per-card
+ * `useUpvoteStatus` / `useUpvoteCount` / `useSaveStatus` hooks can stay disabled
+ * on lists (avoiding the 3-queries-per-card N+1) while still rendering the right
+ * state and keeping optimistic updates working (same cache keys).
+ */
+
+type EngagementContextValue = {
+  batchedIds: Set<string>
+  /** True when the batch query failed, so per-card hooks should fetch themselves. */
+  failed: boolean
+}
+
+const EngagementContext = createContext<EngagementContextValue | null>(null)
+
+type EngagementBatch = { upvoted: Set<string>; saved: Set<string> }
+
+async function fetchEngagementBatchAppwrite(
+  contestIds: string[],
+  uid?: string,
+): Promise<EngagementBatch> {
+  const empty: EngagementBatch = { upvoted: new Set(), saved: new Set() }
+  if (!uid || contestIds.length === 0) return empty
+
+  const [upvotesRes, savesRes] = await Promise.all([
+    tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId: CONTEST_UPVOTES_COLLECTION_ID,
+      queries: [
+        Query.equal('user_id', uid),
+        Query.equal('contest_id', contestIds),
+        Query.limit(contestIds.length),
+      ],
+    }),
+    tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId: CONTEST_SAVES_COLLECTION_ID,
+      queries: [
+        Query.equal('user_id', uid),
+        Query.equal('contest_id', contestIds),
+        Query.limit(contestIds.length),
+      ],
+    }),
+  ])
+
+  return {
+    upvoted: new Set(
+      upvotesRes.rows.map((r) => (r as unknown as { contest_id: string }).contest_id),
+    ),
+    saved: new Set(
+      savesRes.rows.map((r) => (r as unknown as { contest_id: string }).contest_id),
+    ),
+  }
+}
+
+function fetchEngagementBatch(
+  contestIds: string[],
+  uid?: string,
+): Promise<EngagementBatch> {
+  return BACKEND === 'supabase'
+    ? fetchEngagementBatchSupabase(contestIds)
+    : fetchEngagementBatchAppwrite(contestIds, uid)
+}
+
+export function EngagementProvider({
+  contests,
+  children,
+}: {
+  contests: { $id: string; upvote_count?: number }[]
+  children: ReactNode
+}) {
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+
+  const ids = useMemo(
+    () => Array.from(new Set(contests.map((c) => c.$id))).sort(),
+    [contests],
+  )
+  const idsKey = ids.join(',')
+
+  // Seed per-card upvote COUNT caches from the list payload (no auth needed).
+  // `old ?? value` never clobbers an optimistic/fresher value already in cache.
+  useEffect(() => {
+    contests.forEach((c) => {
+      if (typeof c.upvote_count === 'number') {
+        queryClient.setQueryData(
+          ['upvote', 'count', c.$id],
+          (old: number | undefined) => old ?? c.upvote_count,
+        )
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey])
+
+  const { data, isError } = useQuery({
+    queryKey: ['engagement', 'batch', user?.$id, idsKey],
+    queryFn: () => fetchEngagementBatch(ids, user?.$id),
+    enabled: !!user?.$id && ids.length > 0,
+    staleTime: 60 * 1000,
+  })
+
+  // Seed per-card STATUS caches with server truth once the batch resolves.
+  // Use `old ?? value` so a late/stale batch response can never clobber an
+  // optimistic upvote/save the user just made (the per-card queries are disabled
+  // while batched, so they won't refetch to self-correct). Mutations write the
+  // same keys directly and remain the source of truth after the first seed.
+  useEffect(() => {
+    if (!data || !user?.$id) return
+    ids.forEach((id) => {
+      queryClient.setQueryData(
+        ['upvote', 'status', id, user.$id],
+        (old: boolean | undefined) => old ?? data.upvoted.has(id),
+      )
+      queryClient.setQueryData(
+        ['save', 'status', id, user.$id],
+        (old: boolean | undefined) => old ?? data.saved.has(id),
+      )
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, user?.$id, idsKey])
+
+  const value = useMemo<EngagementContextValue>(
+    () => ({ batchedIds: new Set(ids), failed: isError }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [idsKey, isError],
+  )
+
+  return (
+    <EngagementContext.Provider value={value}>
+      {children}
+    </EngagementContext.Provider>
+  )
+}
+
+/**
+ * True when this contest's engagement is provided by a surrounding
+ * EngagementProvider (i.e. its status/count caches are batch-seeded). Per-card
+ * hooks use this to skip their own network fetch.
+ */
+export function useIsContestBatched(contestId: string): boolean {
+  const ctx = useContext(EngagementContext)
+  // If the batch failed, report "not batched" so the per-card hooks re-enable and
+  // fetch their own status/count instead of waiting forever on a seed that never came.
+  return !!ctx && !ctx.failed && ctx.batchedIds.has(contestId)
+}

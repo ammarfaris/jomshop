@@ -15,6 +15,8 @@ import { useLingui, Trans } from '@lingui/react/macro'
 import { Query, Models } from 'app/lib/appwrite-universal'
 import { tablesDB, account } from 'app/provider/appwrite/api'
 import { useQuery } from '@tanstack/react-query'
+import { BACKEND } from 'app/lib/backend'
+import { getUserPrefs } from 'app/lib/prefs'
 
 import { Text } from 'app/components/ui/text'
 import { Button } from 'app/components/ui/button'
@@ -42,6 +44,7 @@ import { useColorTheme } from 'app/contexts/ColorThemeContext'
 import { useUserSavedContests } from 'app/hooks/useSave'
 import { useContestNavigation } from 'app/hooks/useContestNavigation'
 import { ContestCard } from 'app/features/contest/components/ContestCard'
+import { EngagementProvider } from 'app/contexts/EngagementContext'
 import { toast } from 'app/lib/sonner-universal'
 import ReceiptManagerModal from 'app/features/profile/components/ReceiptManagerModal'
 import {
@@ -170,19 +173,36 @@ function SavedTabContent() {
     toast.success(t`Contest unsaved`)
 
     try {
-      // Archive receipts first if any exist
+      // Archive receipts first if any exist (moves files to the archive bucket).
       if (receiptCount > 0) {
-        const { archiveContestReceipts } = await import('app/lib/receipts/api')
-        await archiveContestReceipts(
-          userId,
-          contestId,
-          'Contest unsaved by user'
-        )
+        if (BACKEND === 'supabase') {
+          const { archiveContestReceiptsSupabase } = await import(
+            'app/lib/supabase'
+          )
+          await archiveContestReceiptsSupabase(
+            contestId,
+            'Contest unsaved by user'
+          )
+        } else {
+          const { archiveContestReceipts } = await import(
+            'app/lib/receipts/api'
+          )
+          await archiveContestReceipts(
+            userId,
+            contestId,
+            'Contest unsaved by user'
+          )
+        }
       }
 
       // Perform actual API call in background
-      const { removeSave: removeSaveAPI } = await import('app/lib/saves/api')
-      await removeSaveAPI(contestId, userId)
+      if (BACKEND === 'supabase') {
+        const { removeSaveSupabase } = await import('app/lib/supabase')
+        await removeSaveSupabase(contestId)
+      } else {
+        const { removeSave: removeSaveAPI } = await import('app/lib/saves/api')
+        await removeSaveAPI(contestId, userId)
+      }
 
       // Invalidate queries to ensure data is fresh
       queryClient.invalidateQueries({
@@ -283,7 +303,7 @@ function SavedTabContent() {
     queryKey: ['user-language-preference'],
     queryFn: async () => {
       try {
-        const prefs = await account.getPrefs()
+        const prefs = await getUserPrefs()
         const lang = (prefs as any)?.language || 'en'
         return lang === 'ms' ? 'ms' : 'en'
       } catch {
@@ -303,6 +323,10 @@ function SavedTabContent() {
     queryKey: ['receipts', 'stats', user?.$id],
     queryFn: async () => {
       if (!user?.$id) throw new Error('User not authenticated')
+      if (BACKEND === 'supabase') {
+        const { getUserReceiptStatsSupabase } = await import('app/lib/supabase')
+        return getUserReceiptStatsSupabase()
+      }
       const { getUserReceiptStats } = await import('app/lib/receipts/api')
       return getUserReceiptStats(user.$id)
     },
@@ -324,14 +348,27 @@ function SavedTabContent() {
         return {}
       }
 
-      const { getContestReceiptCount } = await import('app/lib/receipts/api')
       const counts: Record<string, number> = {}
+      const getCount =
+        BACKEND === 'supabase'
+          ? async (contestId: string) => {
+              const { getContestReceiptCountSupabase } = await import(
+                'app/lib/supabase'
+              )
+              return getContestReceiptCountSupabase(contestId)
+            }
+          : async (contestId: string) => {
+              const { getContestReceiptCount } = await import(
+                'app/lib/receipts/api'
+              )
+              return getContestReceiptCount(user.$id, contestId)
+            }
 
       // Fetch counts for all contests with receipts
       await Promise.all(
         receiptStats.contestsWithReceipts.map(async (contestId) => {
           try {
-            const count = await getContestReceiptCount(user.$id, contestId)
+            const count = await getCount(contestId)
             counts[contestId] = count
           } catch (error) {
             console.error(
@@ -367,9 +404,10 @@ function SavedTabContent() {
     setSelectedContestForReceipt(null)
   }
 
-  // Android JWT for images
+  // Android JWT for images (Appwrite private-image auth only).
   if (Platform.OS === 'android') {
     useEffect(() => {
+      if (BACKEND !== 'appwrite') return
       const fetchJWT = async () => {
         const { jwt } = await account.createJWT()
         setJwt(jwt)
@@ -553,6 +591,9 @@ function SavedTabContent() {
 
   // Contests list
   return (
+    <EngagementProvider
+      contests={savedContests as { $id: string; upvote_count?: number }[]}
+    >
     <View className="flex-1 relative">
       {/* Loading overlay - centered in middle of screen */}
       {isUpdating && (
@@ -674,24 +715,53 @@ function SavedTabContent() {
 
         <View className="gap-4">
           {filteredContests.map((contest: Contest) => {
-            const contestHosts = (contest.host_ids || [])
-              .map((id) => hostsById.get(id))
-              .filter(Boolean) as Host[]
+            // Supabase saved contests carry embedded hosts/categories; the
+            // Appwrite path resolves them from host_ids/category_ids batches.
+            const embeddedHosts = (contest as any).hosts as Host[] | undefined
+            const contestHosts =
+              embeddedHosts && embeddedHosts.length > 0
+                ? embeddedHosts
+                : ((contest.host_ids || [])
+                    .map((id) => hostsById.get(id))
+                    .filter(Boolean) as Host[])
+
+            const embeddedCategories = (contest as any).categories as
+              | Array<{
+                  $id: string
+                  name_en: string
+                  name_ms: string
+                  priority_order?: number | null
+                  type?: ContestBadgeCategory['type']
+                }>
+              | undefined
 
             const badgeCategories: ContestBadgeCategory[] = []
-            ;(contest.category_ids || []).forEach((id, index) => {
-              const category = categoriesById.get(id)
-              if (!category) return
-
-              badgeCategories.push({
-                id: category.$id,
-                name_en: category.name_en,
-                name_ms: category.name_ms,
-                priority_order: category.priority_order ?? null,
-                originalIndex: index,
-                type: category.type ?? null,
+            if (embeddedCategories && embeddedCategories.length > 0) {
+              embeddedCategories.forEach((category, index) => {
+                badgeCategories.push({
+                  id: category.$id,
+                  name_en: category.name_en,
+                  name_ms: category.name_ms,
+                  priority_order: category.priority_order ?? null,
+                  originalIndex: index,
+                  type: category.type ?? null,
+                })
               })
-            })
+            } else {
+              ;(contest.category_ids || []).forEach((id, index) => {
+                const category = categoriesById.get(id)
+                if (!category) return
+
+                badgeCategories.push({
+                  id: category.$id,
+                  name_en: category.name_en,
+                  name_ms: category.name_ms,
+                  priority_order: category.priority_order ?? null,
+                  originalIndex: index,
+                  type: category.type ?? null,
+                })
+              })
+            }
 
             return (
               <View
@@ -850,6 +920,7 @@ function SavedTabContent() {
         />
       )}
     </View>
+    </EngagementProvider>
   )
 }
 

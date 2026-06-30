@@ -57,3 +57,9 @@ enabled = true
 client_id = "env(SUPABASE_AUTH_GOOGLE_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_GOOGLE_SECRET)"
 skip_nonce_check = true
+
+# Receipts: all receipt writes (upload/notes/archive) go through this function so
+# CAPTCHA + per-tier limits + rate limits are enforced server-side. Requires a
+# valid user JWT. Set the secret with: supabase secrets set TURNSTILE_SECRET_KEY=...
+[functions.receipts]
+verify_jwt = true

@@ -18,7 +18,6 @@ import { ArrowUpCircleOutline } from 'app/components/icons-svg/ArrowUpCircleOutl
 import { ArrowUpCircleSolid } from 'app/components/icons-svg/ArrowUpCircleSolid'
 import { cn } from 'app/lib/utils'
 import { toast } from 'app/lib/sonner-universal'
-import { BACKEND } from 'app/lib/backend'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -79,9 +78,14 @@ export function UpvoteButton({
   const displayCount = upvoteCount ?? initialCount ?? 0
 
   // Determine if button is in loading state
-  // For anonymous users, don't show loading state for count since we have initialCount
+  // For anonymous users, don't show loading state for count since we have initialCount.
+  // On batched lists the per-card status query is disabled, so treat an unknown
+  // upvoted-state (logged-in, isUpvoted === undefined) as loading — otherwise a tap
+  // in the batch-seeding window would optimistically +1 a contest that may already
+  // be upvoted.
+  const isStatusUnknown = !!user && isUpvoted === undefined
   const isLoading = user
-    ? isStatusLoading || isCountLoading || isActionLoading
+    ? isStatusLoading || isCountLoading || isActionLoading || isStatusUnknown
     : false
 
   // Handle button click
@@ -89,11 +93,6 @@ export function UpvoteButton({
     // Check authentication - show dialog for anonymous users
     if (!user) {
       setSignInDialogOpen(true)
-      return
-    }
-
-    if (BACKEND !== 'appwrite') {
-      toast.info(t`Upvote is not available in the Supabase spike yet`)
       return
     }
 
