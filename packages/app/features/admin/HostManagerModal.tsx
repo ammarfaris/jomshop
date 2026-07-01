@@ -23,6 +23,14 @@ import {
   ADMIN_TEAM_ID,
   GENERATE_IMG_BLURHASH_IMG_TOKEN_FN_ID,
 } from 'app/provider/appwrite/constants'
+import { BACKEND } from 'app/lib/backend'
+import {
+  listSupabaseHosts,
+  createSupabaseHost,
+  updateSupabaseHost,
+  deleteSupabaseHost,
+  findSupabaseContestsUsingHost,
+} from 'app/lib/supabase/admin'
 import { useAuth } from 'app/contexts/AuthContext'
 import { useColorScheme } from 'app/hooks/useColorScheme'
 import {
@@ -97,6 +105,19 @@ export default function HostManagerModal(props: {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
 
+  // Backend-agnostic list fetch: Supabase content table vs Appwrite collection.
+  const fetchHosts = async (): Promise<HostDoc[]> => {
+    if (BACKEND === 'supabase') {
+      return (await listSupabaseHosts()) as unknown as HostDoc[]
+    }
+    const res = await tablesDB.listRows({
+      databaseId: DATABASE_ID,
+      tableId: CONTEST_HOSTS_COLLECTION_ID,
+      queries: [Query.orderAsc('name'), Query.limit(100)],
+    })
+    return res.rows as unknown as HostDoc[]
+  }
+
   useEffect(() => {
     if (!newHostName) setNewHostSlug('')
     else setNewHostSlug(slugify(newHostName))
@@ -110,12 +131,8 @@ export default function HostManagerModal(props: {
       setHostsLoading(true)
       setHostsError(null)
       try {
-        const res = await tablesDB.listRows({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_HOSTS_COLLECTION_ID,
-          queries: [Query.orderAsc('name'), Query.limit(100)],
-        })
-        if (!cancelled) setAllHosts(res.rows as unknown as HostDoc[])
+        const rows = await fetchHosts()
+        if (!cancelled) setAllHosts(rows)
       } catch (e: any) {
         if (!cancelled) setHostsError(e?.message || 'Failed to load hosts')
       } finally {
@@ -240,6 +257,14 @@ export default function HostManagerModal(props: {
     }
     setCreatingHost(true)
     try {
+      if (BACKEND === 'supabase') {
+        await createSupabaseHost({
+          name: newHostName.trim(),
+          slug: newHostSlug.trim(),
+          bio: newHostBio || '',
+          imageAsset: newHostImageAsset,
+        })
+      } else {
       // Prepare file object for upload
       let fileToUpload: any
       const asset = newHostImageAsset
@@ -337,6 +362,7 @@ export default function HostManagerModal(props: {
         },
         permissions: [Permission.write(Role.team(ADMIN_TEAM_ID))],
       })
+      }
 
       // Reset local form
       setNewHostName('')
@@ -346,12 +372,7 @@ export default function HostManagerModal(props: {
 
       // Auto-refresh hosts list after successful creation
       try {
-        const refreshRes = await tablesDB.listRows({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_HOSTS_COLLECTION_ID,
-          queries: [Query.orderAsc('name'), Query.limit(100)],
-        })
-        setAllHosts(refreshRes.rows as unknown as HostDoc[])
+        setAllHosts(await fetchHosts())
       } catch {}
       setShowForm(false)
     } catch (e: any) {
@@ -369,6 +390,14 @@ export default function HostManagerModal(props: {
     }
     setUpdatingHost(true)
     try {
+      if (BACKEND === 'supabase') {
+        await updateSupabaseHost(editingHost.$id, {
+          name: newHostName.trim(),
+          slug: newHostSlug.trim(),
+          bio: newHostBio || '',
+          imageAsset: newHostImageAsset ?? undefined,
+        })
+      } else {
       let imgId = editingHost.img_id
       let tokenSecret: string | undefined =
         (editingHost.img_token_secret as string | undefined) || undefined
@@ -480,15 +509,11 @@ export default function HostManagerModal(props: {
           img_blurhash: blurhash ?? DEFAULT_BLURHASH,
         },
       })
+      }
 
       // Refresh hosts list and update selection refs so parent gets fresh objects
       try {
-        const refreshRes = await tablesDB.listRows({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_HOSTS_COLLECTION_ID,
-          queries: [Query.orderAsc('name'), Query.limit(100)],
-        })
-        const updatedAll = refreshRes.rows as unknown as HostDoc[]
+        const updatedAll = await fetchHosts()
         setAllHosts(updatedAll)
         if (selectedHostIds.length > 0) {
           const byId = new Map(updatedAll.map((h) => [h.$id, h]))
@@ -515,18 +540,22 @@ export default function HostManagerModal(props: {
   const handleDeleteHost = async (hostId: string) => {
     // Guard: prevent deletion if any contests reference this host
     try {
-      const contestsUsingHost = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: CONTESTS_COLLECTION_ID,
-        queries: [Query.contains('host_ids', hostId), Query.limit(50)],
-      })
-      if (contestsUsingHost.rows.length > 0) {
-        const contestTitles = (contestsUsingHost.rows as any[])
-          .map((c) => c.title)
-          .filter(Boolean)
+      const contestTitles =
+        BACKEND === 'supabase'
+          ? await findSupabaseContestsUsingHost(hostId)
+          : ((
+              await tablesDB.listRows({
+                databaseId: DATABASE_ID,
+                tableId: CONTESTS_COLLECTION_ID,
+                queries: [Query.contains('host_ids', hostId), Query.limit(50)],
+              })
+            ).rows as any[])
+              .map((c) => c.title)
+              .filter(Boolean)
+      if (contestTitles.length > 0) {
         const titlesList = contestTitles.map((t) => `- ${t}`).join('\n')
         alert(
-          `Cannot delete host. ${contestsUsingHost.rows.length} contest(s) reference this host:\n${titlesList}`,
+          `Cannot delete host. ${contestTitles.length} contest(s) reference this host:\n${titlesList}`,
         )
         return
       }
@@ -542,27 +571,26 @@ export default function HostManagerModal(props: {
       return next
     })
     try {
-      // best-effort delete associated image (requires reading host doc)
-      const current = allHosts.find((h) => h.$id === hostId)
-      if (current?.img_id) {
-        try {
-          await storage.deleteFile(CONTEST_HOSTS_BUCKET_ID, current.img_id)
-        } catch {}
+      if (BACKEND === 'supabase') {
+        await deleteSupabaseHost(hostId)
+      } else {
+        // best-effort delete associated image (requires reading host doc)
+        const current = allHosts.find((h) => h.$id === hostId)
+        if (current?.img_id) {
+          try {
+            await storage.deleteFile(CONTEST_HOSTS_BUCKET_ID, current.img_id)
+          } catch {}
+        }
+        await tablesDB.deleteRow({
+          databaseId: DATABASE_ID,
+          tableId: CONTEST_HOSTS_COLLECTION_ID,
+          rowId: hostId,
+        })
       }
-      await tablesDB.deleteRow({
-        databaseId: DATABASE_ID,
-        tableId: CONTEST_HOSTS_COLLECTION_ID,
-        rowId: hostId,
-      })
 
       // Auto-refresh hosts list after deletion
       try {
-        const refreshRes = await tablesDB.listRows({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_HOSTS_COLLECTION_ID,
-          queries: [Query.orderAsc('name'), Query.limit(100)],
-        })
-        setAllHosts(refreshRes.rows as unknown as HostDoc[])
+        setAllHosts(await fetchHosts())
       } catch {}
 
       // update selection
@@ -699,15 +727,8 @@ export default function HostManagerModal(props: {
                   onPress={() => {
                     setHostsLoading(true)
                     setHostsError(null)
-                    tablesDB
-                      .listRows({
-                        databaseId: DATABASE_ID,
-                        tableId: CONTEST_HOSTS_COLLECTION_ID,
-                        queries: [Query.orderAsc('name'), Query.limit(100)],
-                      })
-                      .then((res) =>
-                        setAllHosts(res.rows as unknown as HostDoc[]),
-                      )
+                    fetchHosts()
+                      .then((rows) => setAllHosts(rows))
                       .catch((e) =>
                         setHostsError(e?.message || 'Failed to refresh hosts'),
                       )

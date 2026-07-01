@@ -62,6 +62,15 @@ import {
   addContestToMeilisearch,
   deleteContestFromMeilisearch,
 } from 'app/lib/meilisearch/api'
+import { BACKEND } from 'app/lib/backend'
+import {
+  searchSupabaseContestsForEdit,
+  loadSupabaseContestForEdit,
+  updateSupabaseContest,
+  deleteSupabaseContest,
+  contentPublicUrl,
+  CONTESTS_BUCKET,
+} from 'app/lib/supabase/admin'
 import {
   createContestSchema,
   CreateContestFormData,
@@ -369,6 +378,31 @@ export default function EditContestTabContent({
       setSearchError(null)
 
       try {
+        if (BACKEND === 'supabase') {
+          try {
+            const { contests: rows, hostsByContest } =
+              await searchSupabaseContestsForEdit(query.trim(), searchMode)
+
+            if (searchMode === 'slug' && rows.length === 0) {
+              setSearchError(
+                `Contest not found. No contest exists with slug: "${query.trim()}"`
+              )
+              setContests([])
+              return
+            }
+
+            setContests(rows as unknown as ContestDocument[])
+            setContestHosts(
+              hostsByContest as unknown as Record<string, HostModalDoc[]>
+            )
+          } catch (error) {
+            console.error('Failed to search contests (supabase):', error)
+            setSearchError('Failed to search contests. Please try again.')
+            toast.error('Failed to search contests')
+          }
+          return
+        }
+
         if (searchMode === 'slug') {
           // Exact slug match mode
           try {
@@ -662,6 +696,20 @@ export default function EditContestTabContent({
       setIsLoadingContestDetails(true)
       setLoadError(null)
       try {
+        if (BACKEND === 'supabase') {
+          const data = await loadSupabaseContestForEdit(contestId)
+          setSelectedContest(data.contest as unknown as ContestDocument)
+          populateFormFromContest(
+            data.contest as unknown as ContestDocument,
+            data.translations as unknown as ContestTranslation[],
+            data.hostDocs as unknown as HostModalDoc[],
+            data.categoryDocs as unknown as CategoryModalDoc[],
+            data.contestFiles as unknown as ContestFile[]
+          )
+          console.log('Contest loaded successfully for editing (supabase)')
+          return
+        }
+
         // 1. Fetch contest document
         let contest
         try {
@@ -817,6 +865,16 @@ export default function EditContestTabContent({
     } catch {
       return dateString
     }
+  }
+
+  // Resolve a contest image id/path to a displayable URL. On Supabase the stored
+  // value is a storage object path; on Appwrite it's a file id rendered via the
+  // storage view endpoint.
+  const resolveContestImageUri = (idOrPath: string | null | undefined) => {
+    if (!idOrPath) return ''
+    return BACKEND === 'supabase'
+      ? contentPublicUrl(CONTESTS_BUCKET, idOrPath)
+      : `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${idOrPath}/view?project=${APPWRITE_PROJECT_ID}`
   }
 
   // Image Management Functions
@@ -977,6 +1035,51 @@ export default function EditContestTabContent({
     // Clear error if validation passes
     setShowDeleteConfirmationError(false)
     setIsDeletingContest(true)
+
+    if (BACKEND === 'supabase') {
+      try {
+        await deleteSupabaseContest(selectedContest.$id)
+
+        toast.success('Contest deleted successfully!')
+        setDeleteDialogOpen(false)
+
+        queryClient.invalidateQueries({ queryKey: ['contests'] })
+        queryClient.invalidateQueries({
+          queryKey: ['contest', selectedContest.$id],
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['contest', selectedContest.slug],
+        })
+
+        setSelectedContest(null)
+        setSearchQuery('')
+        setContests([])
+        setHasSearched(false)
+        reset()
+        setSelectedHostIds([])
+        setSelectedHostDocs([])
+        setSelectedCategoryIds([])
+        setSelectedCategoryDocs([])
+        setExistingImages([])
+        setNewGalleryAssets([])
+        setImagesToDelete([])
+        setMainImageId(null)
+        setNewMainImageUri(null)
+        setDeleteConfirmationText('')
+        setShowDeleteConfirmationError(false)
+      } catch (error) {
+        console.error('Failed to delete contest (supabase):', error)
+        toast.error(
+          `Failed to delete contest: ${
+            error instanceof Error ? error.message : 'An unknown error occurred'
+          }`
+        )
+      } finally {
+        setIsDeletingContest(false)
+      }
+      return
+    }
+
     try {
       console.log('Starting contest deletion with transaction...')
 
@@ -1290,6 +1393,45 @@ export default function EditContestTabContent({
 
     try {
       console.log('Starting contest update...')
+
+      if (BACKEND === 'supabase') {
+        await updateSupabaseContest(selectedContest.$id, data, {
+          hostIds: selectedHostIds,
+          categoryIds: selectedCategoryIds,
+          imagesToDelete,
+          newGalleryAssets,
+          mainImageId,
+          newMainImageUri,
+          slugBase: data.slug || data.title,
+        })
+
+        toast.dismiss(loadingToastId)
+        toast.success('Contest updated successfully!')
+
+        queryClient.invalidateQueries({ queryKey: ['contests'] })
+        queryClient.invalidateQueries({
+          queryKey: ['contest', selectedContest.$id],
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['contest', selectedContest.slug],
+        })
+
+        setSelectedContest(null)
+        setSearchQuery('')
+        setContests([])
+        setHasSearched(false)
+        reset()
+        setSelectedHostIds([])
+        setSelectedHostDocs([])
+        setSelectedCategoryIds([])
+        setSelectedCategoryDocs([])
+        setExistingImages([])
+        setNewGalleryAssets([])
+        setImagesToDelete([])
+        setMainImageId(null)
+        setNewMainImageUri(null)
+        return
+      }
 
       // 1. Update contest document
       try {
@@ -2368,7 +2510,7 @@ export default function EditContestTabContent({
               <View className="gap-2">
                 {contests.map((contest) => {
                   const mainImageUri = contest.main_img_id
-                    ? `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${contest.main_img_id}/view?project=${APPWRITE_PROJECT_ID}`
+                    ? resolveContestImageUri(contest.main_img_id)
                     : null
 
                   return (
@@ -2504,7 +2646,7 @@ export default function EditContestTabContent({
                 {selectedContest.main_img_id && (
                   <ExpoImage
                     source={{
-                      uri: `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${selectedContest.main_img_id}/view?project=${APPWRITE_PROJECT_ID}`,
+                      uri: resolveContestImageUri(selectedContest.main_img_id),
                     }}
                     style={{
                       width: 80,
@@ -2732,7 +2874,7 @@ export default function EditContestTabContent({
                         img.file_id
                       )
                       const isMainImage = img.file_id === mainImageId
-                      const imageUri = `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${img.file_id}/view?project=${APPWRITE_PROJECT_ID}`
+                      const imageUri = resolveContestImageUri(img.file_id)
 
                       return (
                         <View

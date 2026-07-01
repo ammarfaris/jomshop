@@ -36,6 +36,8 @@ import {
   ADMIN_TEAM_ID,
   CONTEST_TRANSLATIONS_COLLECTION_ID,
 } from 'app/provider/appwrite/constants'
+import { BACKEND } from 'app/lib/backend'
+import { createSupabaseContest } from 'app/lib/supabase/admin'
 import SingleDateTimePicker from 'app/components/SingleDateTimePicker'
 import SingleDateTimePickerMobile from 'app/components/SingleDateTimePickerMobile'
 import { addContestToMeilisearch } from 'app/lib/meilisearch/api'
@@ -552,6 +554,15 @@ export default function CreateContestTabContent({
     const loadingToastId = toast.loading('Creating contest...')
 
     try {
+      if (BACKEND === 'supabase') {
+        setUploadingImages(true)
+        await createSupabaseContest(data, {
+          hostIds: selectedHostIds,
+          categoryIds: selectedCategoryIds,
+          galleryAssets,
+          mainUri,
+        })
+      } else {
       // Create the contest document first (without images)
       const contestDoc = await tablesDB.createRow({
         databaseId: DATABASE_ID,
@@ -776,6 +787,7 @@ export default function CreateContestTabContent({
           '⚠️ Failed to update Meilisearch index:',
           meilisearchError
         )
+      }
       }
 
       // Note: Using main image as OG image (no custom OG generation needed)
