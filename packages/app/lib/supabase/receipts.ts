@@ -288,3 +288,16 @@ export async function archiveContestReceiptsSupabase(
 ): Promise<void> {
   await invokeReceipts<unknown>({ action: 'archive', contestId, reason })
 }
+
+/**
+ * Admin-only: archive EVERY user's receipts for a contest before deleting it
+ * (the contest FK cascade would otherwise drop the receipt rows). The Edge
+ * Function re-checks admin privileges; throws if archiving isn't fully clean so
+ * the caller can abort the delete rather than lose receipts.
+ */
+export async function archiveAllContestReceiptsAsAdminSupabase(
+  contestId: string,
+  reason = 'Contest deleted by admin',
+): Promise<void> {
+  await invokeReceipts<unknown>({ action: 'archive-contest', contestId, reason })
+}

@@ -16,7 +16,10 @@
 // RLS confines it to their own prefix), then calls this function with the object
 // path. We validate, then either insert the DB row or delete the orphan object.
 //
-// Actions: { action: 'upload' | 'update-notes' | 'archive', ... }
+// Actions: { action: 'upload' | 'update-notes' | 'archive' | 'archive-contest', ... }
+//   'archive'          archives the caller's own receipts for a contest (unsave)
+//   'archive-contest'  admin-only: archives ALL users' receipts for a contest
+//                      (run before deleting a contest)
 //
 // Deploy:  supabase functions deploy receipts
 // Secrets: supabase secrets set TURNSTILE_SECRET_KEY=...
@@ -319,23 +322,16 @@ async function handleUpdateNotes(admin: any, uid: string, body: any) {
   return json({ success: true, data: row }, 200)
 }
 
+// Archive a set of receipt rows: for each, move file -> archive bucket, record
+// the archive row, then delete the active row. Ordered so a failure at any step
+// never loses a receipt (worst case: a harmless archived+active duplicate).
 // deno-lint-ignore no-explicit-any
-async function handleArchive(admin: any, uid: string, body: any) {
-  const { contestId, reason } = body
-  if (!contestId) {
-    return json({ success: false, error: 'Missing contestId' }, 400)
-  }
-
-  const { data: rows } = await admin
-    .from('receipts')
-    .select('*')
-    .eq('user_id', uid)
-    .eq('contest_id', contestId)
-
-  if (!rows || rows.length === 0) {
-    return json({ success: true, archivedCount: 0, errors: [] }, 200)
-  }
-
+async function archiveReceiptRows(
+  admin: any,
+  // deno-lint-ignore no-explicit-any
+  rows: any[],
+  reason: string,
+): Promise<{ archivedCount: number; errors: string[] }> {
   let archivedCount = 0
   const errors: string[] = []
 
@@ -361,7 +357,7 @@ async function handleArchive(admin: any, uid: string, body: any) {
         notes: r.notes,
         file_order: r.file_order,
         file_type: r.file_type,
-        archived_reason: reason ?? 'Contest unsaved by user',
+        archived_reason: reason,
       })
       if (insErr) {
         await admin.storage
@@ -387,7 +383,104 @@ async function handleArchive(admin: any, uid: string, body: any) {
     }
   }
 
+  return { archivedCount, errors }
+}
+
+// deno-lint-ignore no-explicit-any
+async function isAdmin(admin: any, uid: string): Promise<boolean> {
+  // Checked with the service-role client (no auth.uid() context), so query
+  // user_roles directly rather than the is_admin() RLS helper.
+  const { data } = await admin
+    .from('user_roles')
+    .select('user_id')
+    .eq('user_id', uid)
+    .eq('role', 'admin')
+    .maybeSingle()
+  return !!data
+}
+
+// deno-lint-ignore no-explicit-any
+async function handleArchive(admin: any, uid: string, body: any) {
+  const { contestId, reason } = body
+  if (!contestId) {
+    return json({ success: false, error: 'Missing contestId' }, 400)
+  }
+
+  const { data: rows } = await admin
+    .from('receipts')
+    .select('*')
+    .eq('user_id', uid)
+    .eq('contest_id', contestId)
+
+  if (!rows || rows.length === 0) {
+    return json({ success: true, archivedCount: 0, errors: [] }, 200)
+  }
+
+  const { archivedCount, errors } = await archiveReceiptRows(
+    admin,
+    rows,
+    reason ?? 'Contest unsaved by user',
+  )
   return json({ success: errors.length === 0, archivedCount, errors }, 200)
+}
+
+// Admin-only: archive EVERY user's receipts for a contest. Used right before an
+// admin deletes the contest, whose FK cascade would otherwise drop the receipt
+// rows outright. Gated by is_admin so a normal user can't archive others' data.
+// deno-lint-ignore no-explicit-any
+async function handleArchiveContest(admin: any, uid: string, body: any) {
+  const { contestId, reason } = body
+  if (!contestId) {
+    return json({ success: false, error: 'Missing contestId' }, 400)
+  }
+  if (!(await isAdmin(admin, uid))) {
+    return json({ success: false, error: 'Admin privileges required' }, 403)
+  }
+
+  let archivedCount = 0
+  let lastErrors: string[] = []
+  let complete = false
+
+  // Archive in batches. A successful archive deletes the row, so re-querying
+  // returns the remainder; stop when the contest has no active receipts left
+  // (success) or when a whole batch archives nothing (a row we can't move — stop
+  // rather than loop forever). Success is decided by the END STATE, not by a
+  // transient per-row error on an earlier batch that a later batch then clears.
+  while (true) {
+    const { data: rows, error } = await admin
+      .from('receipts')
+      .select('*')
+      .eq('contest_id', contestId)
+      .limit(200)
+    if (error) {
+      lastErrors = [`fetch: ${error.message}`]
+      break
+    }
+    if (!rows || rows.length === 0) {
+      complete = true
+      break
+    }
+
+    const res = await archiveReceiptRows(
+      admin,
+      rows,
+      reason ?? 'Contest deleted by admin',
+    )
+    archivedCount += res.archivedCount
+    if (res.archivedCount === 0) {
+      // No progress: the remaining rows can't be archived. Stop and report
+      // failure so the caller aborts the delete (active receipts still remain).
+      lastErrors = res.errors
+      break
+    }
+    // Progress made; ignore any per-row errors this round — the rows that failed
+    // stay active and get retried on the next fetch.
+  }
+
+  return json(
+    { success: complete, archivedCount, errors: complete ? [] : lastErrors },
+    200,
+  )
 }
 
 Deno.serve(async (req: Request) => {
@@ -424,6 +517,8 @@ Deno.serve(async (req: Request) => {
         return await handleUpdateNotes(admin, uid, body)
       case 'archive':
         return await handleArchive(admin, uid, body)
+      case 'archive-contest':
+        return await handleArchiveContest(admin, uid, body)
       default:
         return json(
           { success: false, error: `Unknown action: ${body.action}` },

@@ -1,5 +1,6 @@
 import { Platform } from 'react-native'
 import { getSupabase } from './client'
+import { archiveAllContestReceiptsAsAdminSupabase } from './receipts'
 import type { CreateContestFormData } from 'app/features/admin/createContestSchema'
 import {
   slugify,
@@ -843,6 +844,13 @@ export async function updateSupabaseContest(
  */
 export async function deleteSupabaseContest(contestId: string): Promise<void> {
   const supabase = getSupabase()
+
+  // Preserve every user's receipts before deleting: the contest FK cascade would
+  // otherwise drop the receipt rows outright. Routed through the admin-gated
+  // Edge Function (the archive bucket is service-role only) and throws unless
+  // archiving is fully clean, so a failure aborts the delete rather than losing
+  // receipts. A contest with no receipts is a clean no-op.
+  await archiveAllContestReceiptsAsAdminSupabase(contestId, 'Contest deleted by admin')
 
   const { data: files } = await supabase
     .from('contest_files')
