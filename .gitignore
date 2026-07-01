@@ -80,10 +80,8 @@ build/**
 !.yarn/sdks
 !.yarn/versions
 
-# Temp exclude (later just save dummy)
-mcp.json
-# below for chatgpt mcp server integration
-mcpconfig.json 
+# cursor local mcp server
+.cursor/mcp.json
 
 # secret environment variables
 *.secrets.env
