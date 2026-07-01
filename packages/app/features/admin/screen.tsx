@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   View,
@@ -30,6 +30,25 @@ export default function AdminScreen() {
   const { isDarkColorScheme } = useColorScheme()
   const { main } = useColorThemeValues(isDarkColorScheme)
   const [tabValue, setTabValue] = useState('create')
+  const [initialEditSlug, setInitialEditSlug] = useState<string | undefined>(
+    undefined,
+  )
+
+  // Honor review deep-links from the ingest-contest function:
+  // /admin?tab=edit&slug=<slug>. Web-only (the review link targets the web admin
+  // panel); native simply falls back to the default Create tab.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.location?.search) return
+    const params = new URLSearchParams(window.location.search)
+    const tab = params.get('tab')
+    const slug = params.get('slug')
+    if (slug) setInitialEditSlug(slug)
+    if (tab && ['create', 'edit', 'points', 'referrals'].includes(tab)) {
+      setTabValue(tab)
+    } else if (slug) {
+      setTabValue('edit')
+    }
+  }, [])
 
   if (isLoading || isLoadingAdmin) {
     return (
@@ -100,6 +119,7 @@ export default function AdminScreen() {
               isDarkColorScheme={false}
               containerMaxWidth={containerMaxWidth}
               isDesktopLayout={isDesktopLayout}
+              initialEditSlug={initialEditSlug}
             />
           </View>
 

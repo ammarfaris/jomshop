@@ -63,3 +63,13 @@ skip_nonce_check = true
 # valid user JWT. Set the secret with: supabase secrets set TURNSTILE_SECRET_KEY=...
 [functions.receipts]
 verify_jwt = true
+
+# ingest-contest: machine-editor endpoint for the OpenClaw contest-ingestion
+# pipeline. It authenticates the caller itself (a shared secret via x-ingest-key,
+# or an admin user JWT) and writes with the service-role key, so gateway JWT
+# verification is disabled. Ingested contests are always created with
+# visibility='admin' (never public) pending human approval.
+# Secret: supabase secrets set INGEST_CONTEST_KEY=<long-random-string>
+#         supabase secrets set SITE_URL=https://jomcontest.com   (optional)
+[functions.ingest-contest]
+verify_jwt = false

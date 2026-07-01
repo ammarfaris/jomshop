@@ -72,6 +72,10 @@ interface EditContestTabContentProps {
   isDarkColorScheme: boolean
   containerMaxWidth: number
   isDesktopLayout: boolean
+  // Optional slug from a review deep-link (/admin?tab=edit&slug=...): pre-fills
+  // the search in slug mode so an ingested (visibility='admin') contest opens
+  // ready to review.
+  initialEditSlug?: string
 }
 
 interface ContestDocument {
@@ -138,6 +142,7 @@ export default function EditContestTabContent({
   isDarkColorScheme,
   containerMaxWidth,
   isDesktopLayout,
+  initialEditSlug,
 }: EditContestTabContentProps) {
   const queryClient = useQueryClient()
   const { main, mainForeground } = useColorThemeValues(isDarkColorScheme)
@@ -404,6 +409,19 @@ export default function EditContestTabContent({
       }
     }
   }, [searchQuery, searchContests, extractSlugFromQuery])
+
+  // Deep-link prefill: when arriving via /admin?tab=edit&slug=..., search for the
+  // pending contest by slug once (the debounced effect above then runs it). The
+  // admin still clicks the result to load it into the form — no auto-load.
+  const appliedInitialSlugRef = useRef(false)
+  useEffect(() => {
+    if (appliedInitialSlugRef.current) return
+    const s = (initialEditSlug ?? '').trim()
+    if (!s) return
+    appliedInitialSlugRef.current = true
+    setSearchMode('slug')
+    setSearchQuery(s)
+  }, [initialEditSlug])
 
   // Manual search trigger (for search button)
   const handleManualSearch = useCallback(() => {
