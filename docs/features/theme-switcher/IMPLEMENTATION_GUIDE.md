@@ -2,7 +2,7 @@
 
 ## 🎯 Overview
 
-The theme switcher allows users to choose between **Light**, **Dark**, and **System** theme preferences across web and native platforms. Theme preferences are synchronized across devices via Appwrite user preferences.
+The theme switcher allows users to choose between **Light**, **Dark**, and **System** theme preferences across web and native platforms. Theme preferences are synchronized across devices via the user's Supabase profile preferences.
 
 ## ✅ Current Status
 
@@ -12,13 +12,13 @@ The theme switcher allows users to choose between **Light**, **Dark**, and **Sys
 - ✅ SSR/SSG support
 - ✅ LocalStorage persistence
 - ✅ System theme detection
-- ✅ Appwrite cross-device sync
+- ✅ Supabase profile cross-device sync
 
 ### Native (React Native / Expo)
 - ✅ Full AsyncStorage persistence
 - ✅ NativeWind integration
 - ✅ System theme detection via Appearance API
-- ✅ Appwrite cross-device sync
+- ✅ Supabase profile cross-device sync
 - ✅ Automatic system theme changes tracking
 
 ## 📁 Key Files
@@ -28,7 +28,7 @@ The theme switcher allows users to choose between **Light**, **Dark**, and **Sys
 packages/app/
 ├── hooks/
 │   ├── useColorScheme.tsx        # Unified theme hook (web + native)
-│   └── useThemeSync.ts            # Appwrite sync hook
+│   └── useThemeSync.ts            # Supabase profile sync hook
 ├── features/profile/components/
 │   ├── ThemeSelector.tsx          # Native theme selector
 │   └── ThemeSelector.web.tsx      # Web theme selector
@@ -52,7 +52,7 @@ packages/app/locales/
 │                    App Root Provider                        │
 │  ┌───────────────────────────────────────────────────────┐  │
 │  │  useThemeSync()                                       │  │
-│  │  - Loads theme from Appwrite on login                 │  │
+│  │  - Loads theme from the Supabase profile on login     │  │
 │  │  - Applies via useColorScheme.setThemeMode()          │  │
 │  └───────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
@@ -72,7 +72,7 @@ packages/app/locales/
 ┌─────────────────────────────────────────────────────────────┐
 │                    ThemeSelector Component                  │
 │  - User interface for selecting theme                       │
-│  - Saves selection to Appwrite (cross-device sync)          │
+│  - Saves selection to the Supabase profile (cross-device)   │
 │  - Updates local theme via useColorScheme                   │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -85,7 +85,7 @@ User Logs In
     ↓
 useThemeSync Hook (in Provider)
     ↓
-Fetch theme from Appwrite preferences
+Fetch theme from Supabase profile preferences (getUserPrefs)
     ↓
 useColorScheme.setThemeMode(theme)
     ↓
@@ -107,8 +107,8 @@ handleThemeChange(mode)
 │     - Web: next-themes.setTheme(mode)                      │
 │     - Native: useColorScheme.setThemeMode(mode)            │
 │                                                            │
-│  2. Save to Appwrite (for cross-device sync)              │
-│     - account.updatePrefs({ theme: mode })                │
+│  2. Save to Supabase profile (for cross-device sync)      │
+│     - updateUserPrefs({ theme: mode })                    │
 └────────────────────────────────────────────────────────────┘
 ```
 
@@ -116,11 +116,11 @@ handleThemeChange(mode)
 ```
 Device A: User changes theme to "dark"
     ↓
-ThemeSelector saves to Appwrite
+ThemeSelector saves to the Supabase profile
     ↓
 Device B: User opens app / refreshes page
     ↓
-useThemeSync loads theme from Appwrite
+useThemeSync loads theme from the Supabase profile
     ↓
 useColorScheme applies "dark" theme
     ↓
@@ -132,12 +132,12 @@ Device B shows dark theme ✅
 ### 1. Light Mode
 - Forces light theme regardless of system preference
 - Persisted locally (localStorage/AsyncStorage)
-- Synced via Appwrite
+- Synced via the Supabase profile
 
 ### 2. Dark Mode
 - Forces dark theme regardless of system preference
 - Persisted locally (localStorage/AsyncStorage)
-- Synced via Appwrite
+- Synced via the Supabase profile
 
 ### 3. System Mode
 - Follows OS/browser theme preference
@@ -145,7 +145,7 @@ Device B shows dark theme ✅
 - Web: Uses `prefers-color-scheme` media query
 - Native: Uses React Native Appearance API
 - Persisted as "system" preference
-- Synced via Appwrite
+- Synced via the Supabase profile
 
 ## 🔌 API Reference
 
@@ -197,7 +197,7 @@ function MyComponent() {
 
 ```typescript
 /**
- * Synchronizes theme from Appwrite on login
+ * Synchronizes theme from the Supabase profile on login
  * - Automatically called in app Provider
  * - Loads theme once per user session
  * - No manual intervention needed
@@ -303,9 +303,10 @@ msgstr "Sistem"
 
 ### Cross-device not syncing
 - Verify user is logged in
-- Check Appwrite user preferences:
+- Check the Supabase profile preferences:
   ```tsx
-  const prefs = await account.getPrefs()
+  import { getUserPrefs } from 'app/lib/prefs'
+  const prefs = await getUserPrefs()
   console.log(prefs.theme)
   ```
 - Ensure `useThemeSync()` is called in Provider
@@ -327,7 +328,7 @@ msgstr "Sistem"
 
 ### Shared
 - `@lingui/react` - Internationalization
-- `appwrite` - Cross-device preference sync
+- `@supabase/supabase-js` - Cross-device preference sync (profile `prefs`)
 
 ## 🚀 Future Enhancements
 
@@ -341,7 +342,7 @@ msgstr "Sistem"
 ### Performance Optimizations
 - [x] Lazy load next-themes on web
 - [x] Memoize theme context values
-- [x] Debounce Appwrite save operations
+- [x] Debounce Supabase profile save operations
 - [x] Cache theme in memory
 
 ## 📝 Notes
@@ -371,7 +372,7 @@ msgstr "Sistem"
 
 - **v1.0**: Initial implementation with basic light/dark toggle
 - **v2.0**: Added system theme support
-- **v3.0**: Added Appwrite cross-device sync
+- **v3.0**: Added Supabase profile cross-device sync
 - **v3.1**: Refactored to use unified `useColorScheme` hook
 - **v3.2**: Removed ThemeContext, simplified architecture
 
@@ -392,7 +393,7 @@ When working with themes, ensure:
 The theme switcher is considered fully functional when:
 - ✅ User can switch between 3 modes (light/dark/system)
 - ✅ Theme persists across app restarts
-- ✅ Theme syncs across devices via Appwrite
+- ✅ Theme syncs across devices via the Supabase profile
 - ✅ System mode follows OS theme changes
 - ✅ No visual flicker on load
 - ✅ Works on both web and native

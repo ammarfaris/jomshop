@@ -8,15 +8,7 @@ import {
   useState,
   useCallback,
 } from 'react'
-import { functions } from 'app/provider/appwrite/api'
-import { ExecutionMethod } from 'app/lib/appwrite-universal'
 import { useAuth } from 'app/contexts/AuthContext'
-import { BACKEND } from 'app/lib/backend'
-import {
-  GET_USER_POINTS_FUNCTION_ID,
-  INITIALIZE_USER_POINTS_FUNCTION_ID,
-  REDEEM_POINTS_FUNCTION_ID,
-} from 'app/provider/appwrite/constants'
 import {
   getSupabasePoints,
   redeemPointsSupabase,
@@ -65,73 +57,6 @@ export interface PointsData {
   pointsToPlus: number
   pointsToPro: number
   completedReferrals: number
-}
-
-/**
- * Server response from get-user-points function
- */
-interface GetUserPointsResponse {
-  success: boolean
-  needsInitialization?: boolean
-  points: {
-    balance: number
-    lifetimeEarned: number
-    lifetimeSpent: number
-    canRedeemPlus: boolean
-    canRedeemPro: boolean
-    pointsToPlus: number
-    pointsToPro: number
-    completedReferrals?: number
-  }
-  transactions?: Array<{
-    $id: string
-    amount: number
-    type: PointTransactionType
-    source: PointTransactionSource
-    description: string
-    balance_after: number
-    created_at: string
-  }>
-  transactionCount?: number
-  error?: string
-}
-
-/**
- * Server response from initialize-user-points function
- */
-interface InitializePointsResponse {
-  success: boolean
-  points: {
-    balance: number
-    lifetimeEarned: number
-    lifetimeSpent: number
-  }
-  isNewUser: boolean
-  signupBonus: number
-  message?: string
-  error?: string
-}
-
-/**
- * Server response from redeem-points-for-subscription function
- */
-interface RedeemPointsResponse {
-  success: boolean
-  redemption?: {
-    tier: 'plus' | 'pro'
-    pointsSpent: number
-    previousBalance: number
-    newBalance: number
-    expiresAt: string
-    daysAdded: number
-  }
-  message?: string
-  error?: string
-  details?: {
-    required: number
-    current: number
-    needed: number
-  }
 }
 
 // Costs for redemption
@@ -223,90 +148,7 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
    * Fetch points from server
    */
   const refreshPoints = useCallback(
-    async (includeTransactions = true, reset = true) => {
-      if (BACKEND === 'supabase') {
-        if (!user) {
-          setBalance(0)
-          setLifetimeEarned(0)
-          setLifetimeSpent(0)
-          setCompletedReferrals(0)
-          setCanRedeemPlus(false)
-          setCanRedeemPro(false)
-          setPointsToPlus(REDEMPTION_COSTS.plus)
-          setPointsToPro(REDEMPTION_COSTS.pro)
-          setTransactions([])
-          setTransactionCount(0)
-          setIsLoading(false)
-          setIsInitialized(false)
-          return
-        }
-        try {
-          setError(null)
-          const data = await getSupabasePoints(
-            10,
-            reset ? 0 : transactionOffsetRef.current,
-          )
-          if (!data) {
-            setIsLoading(false)
-            setIsInitialized(false)
-            return
-          }
-          setBalance(data.balance)
-          setLifetimeEarned(data.lifetimeEarned)
-          setLifetimeSpent(data.lifetimeSpent)
-          setCompletedReferrals(data.completedReferrals)
-          setCanRedeemPlus(data.canRedeemPlus)
-          setCanRedeemPro(data.canRedeemPro)
-          setPointsToPlus(data.pointsToPlus)
-          setPointsToPro(data.pointsToPro)
-          setIsInitialized(true)
-
-          const parsed: PointTransaction[] = data.transactions.map((tx) => ({
-            id: tx.id,
-            amount: tx.amount,
-            type: tx.type,
-            source: tx.source as PointTransactionSource,
-            description: tx.description,
-            balanceAfter: tx.balanceAfter,
-            createdAt: new Date(tx.createdAt),
-          }))
-          if (reset) {
-            setTransactions(parsed)
-            transactionOffsetRef.current = parsed.length
-            setTransactionOffset(parsed.length)
-          } else {
-            setTransactions((prev) => [...prev, ...parsed])
-            transactionOffsetRef.current += parsed.length
-            setTransactionOffset(transactionOffsetRef.current)
-          }
-          setTransactionCount(data.transactionCount)
-        } catch (err) {
-          setError(
-            err instanceof Error ? err.message : 'Failed to fetch points',
-          )
-        } finally {
-          setIsLoading(false)
-        }
-        return
-      }
-
-      if (BACKEND !== 'appwrite') {
-        setBalance(0)
-        setLifetimeEarned(0)
-        setLifetimeSpent(0)
-        setCompletedReferrals(0)
-        setCanRedeemPlus(false)
-        setCanRedeemPro(false)
-        setPointsToPlus(REDEMPTION_COSTS.plus)
-        setPointsToPro(REDEMPTION_COSTS.pro)
-        setTransactions([])
-        setTransactionCount(0)
-        setIsLoading(false)
-        setIsInitialized(false)
-        setError(null)
-        return
-      }
-
+    async (_includeTransactions = true, reset = true) => {
       if (!user) {
         setBalance(0)
         setLifetimeEarned(0)
@@ -322,91 +164,47 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
         setIsInitialized(false)
         return
       }
-
       try {
         setError(null)
-        // console.log('[PointsContext] Fetching points from server...')
-
-        const execution = await functions.createExecution(
-          GET_USER_POINTS_FUNCTION_ID,
-          JSON.stringify({
-            includeTransactions,
-            transactionLimit: 10,
-            transactionOffset: reset ? 0 : transactionOffsetRef.current,
-          }),
-          false, // sync
-          '/',
-          ExecutionMethod.POST,
+        const data = await getSupabasePoints(
+          10,
+          reset ? 0 : transactionOffsetRef.current,
         )
-
-        const responseBody =
-          execution.responseBody || (execution as any).response
-
-        if (!responseBody) {
-          throw new Error('Empty response from server')
+        if (!data) {
+          setIsLoading(false)
+          setIsInitialized(false)
+          return
         }
-
-        const data: GetUserPointsResponse = JSON.parse(responseBody)
-
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to fetch points')
-        }
-
-        // Auto-initialize if user has no points record yet
-        if (data.needsInitialization) {
-          // console.log(
-          //   '[PointsContext] User not initialized, auto-initializing...'
-          // )
-          await initializePoints()
-          return // initializePoints will refresh
-        }
-
-        const { points } = data
-
-        setBalance(points.balance)
-        setLifetimeEarned(points.lifetimeEarned)
-        setLifetimeSpent(points.lifetimeSpent)
-        setCompletedReferrals(points.completedReferrals || 0)
-        setCanRedeemPlus(points.canRedeemPlus)
-        setCanRedeemPro(points.canRedeemPro)
-        setPointsToPlus(points.pointsToPlus)
-        setPointsToPro(points.pointsToPro)
+        setBalance(data.balance)
+        setLifetimeEarned(data.lifetimeEarned)
+        setLifetimeSpent(data.lifetimeSpent)
+        setCompletedReferrals(data.completedReferrals)
+        setCanRedeemPlus(data.canRedeemPlus)
+        setCanRedeemPro(data.canRedeemPro)
+        setPointsToPlus(data.pointsToPlus)
+        setPointsToPro(data.pointsToPro)
         setIsInitialized(true)
 
-        if (data.transactions) {
-          const parsedTransactions: PointTransaction[] = data.transactions.map(
-            (t) => ({
-              id: t.$id,
-              amount: t.amount,
-              type: t.type,
-              source: t.source,
-              description: t.description,
-              balanceAfter: t.balance_after,
-              createdAt: new Date(t.created_at),
-            }),
-          )
-
-          if (reset) {
-            setTransactions(parsedTransactions)
-            transactionOffsetRef.current = parsedTransactions.length
-            setTransactionOffset(parsedTransactions.length)
-          } else {
-            setTransactions((prev) => [...prev, ...parsedTransactions])
-            transactionOffsetRef.current =
-              transactionOffsetRef.current + parsedTransactions.length
-            setTransactionOffset(transactionOffsetRef.current)
-          }
+        const parsed: PointTransaction[] = data.transactions.map((tx) => ({
+          id: tx.id,
+          amount: tx.amount,
+          type: tx.type,
+          source: tx.source as PointTransactionSource,
+          description: tx.description,
+          balanceAfter: tx.balanceAfter,
+          createdAt: new Date(tx.createdAt),
+        }))
+        if (reset) {
+          setTransactions(parsed)
+          transactionOffsetRef.current = parsed.length
+          setTransactionOffset(parsed.length)
+        } else {
+          setTransactions((prev) => [...prev, ...parsed])
+          transactionOffsetRef.current += parsed.length
+          setTransactionOffset(transactionOffsetRef.current)
         }
-
-        if (data.transactionCount !== undefined) {
-          setTransactionCount(data.transactionCount)
-        }
-
-        // console.log(
-        //   `[PointsContext] Balance: ${points.balance}, Lifetime: ${points.lifetimeEarned}`
-        // )
+        setTransactionCount(data.transactionCount)
       } catch (err) {
-        // console.error('[PointsContext] Failed to fetch points:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch points')
       } finally {
         setIsLoading(false)
@@ -444,52 +242,8 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
   }> => {
     // Supabase grants the signup bonus via a DB trigger, so there's nothing to
     // initialize client-side.
-    if (BACKEND === 'supabase') {
-      return { success: true }
-    }
-    if (BACKEND !== 'appwrite') {
-      return { success: false }
-    }
-
-    if (!user) {
-      return { success: false }
-    }
-
-    try {
-      console.log('[PointsContext] Initializing points...')
-
-      const execution = await functions.createExecution(
-        INITIALIZE_USER_POINTS_FUNCTION_ID,
-        JSON.stringify({}),
-        false, // sync
-        '/',
-        ExecutionMethod.POST,
-      )
-
-      const responseBody = execution.responseBody || (execution as any).response
-
-      if (!responseBody) {
-        throw new Error('Empty response from server')
-      }
-
-      const data: InitializePointsResponse = JSON.parse(responseBody)
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to initialize points')
-      }
-
-      // Refresh points to get latest state
-      await refreshPoints(true, true)
-
-      return {
-        success: true,
-        bonus: data.isNewUser ? data.signupBonus : 0,
-      }
-    } catch (err) {
-      console.error('[PointsContext] Failed to initialize points:', err)
-      return { success: false }
-    }
-  }, [user, refreshPoints])
+    return { success: true }
+  }, [])
 
   /**
    * Redeem points for subscription
@@ -503,47 +257,9 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
       error?: string
       expiresAt?: Date
     }> => {
-      if (BACKEND === 'supabase') {
-        if (!user) {
-          return { success: false, error: 'Not authenticated' }
-        }
-        const cost = REDEMPTION_COSTS[tier]
-        if (balance < cost) {
-          return {
-            success: false,
-            error: `Insufficient points. You need ${cost - balance} more points.`,
-          }
-        }
-        try {
-          setIsRedeeming(true)
-          const res = await redeemPointsSupabase(tier)
-          if (!res.success) {
-            return { success: false, error: res.error || 'Failed to redeem points' }
-          }
-          await refreshPoints(true, true)
-          return {
-            success: true,
-            message: 'Subscription activated with points',
-            expiresAt: res.expiresAt ? new Date(res.expiresAt) : undefined,
-          }
-        } catch (err) {
-          return {
-            success: false,
-            error: err instanceof Error ? err.message : 'Failed to redeem points',
-          }
-        } finally {
-          setIsRedeeming(false)
-        }
-      }
-
-      if (BACKEND !== 'appwrite') {
-        return { success: false, error: 'Points are not migrated yet' }
-      }
-
       if (!user) {
         return { success: false, error: 'Not authenticated' }
       }
-
       const cost = REDEMPTION_COSTS[tier]
       if (balance < cost) {
         return {
@@ -551,47 +267,19 @@ export function PointsProvider({ children }: { children: React.ReactNode }) {
           error: `Insufficient points. You need ${cost - balance} more points.`,
         }
       }
-
       try {
-        console.log(`[PointsContext] Redeeming ${cost} points for ${tier}...`)
         setIsRedeeming(true)
-
-        const execution = await functions.createExecution(
-          REDEEM_POINTS_FUNCTION_ID,
-          JSON.stringify({ tier }),
-          false, // sync
-          '/',
-          ExecutionMethod.POST,
-        )
-
-        const responseBody =
-          execution.responseBody || (execution as any).response
-
-        if (!responseBody) {
-          throw new Error('Empty response from server')
+        const res = await redeemPointsSupabase(tier)
+        if (!res.success) {
+          return { success: false, error: res.error || 'Failed to redeem points' }
         }
-
-        const data: RedeemPointsResponse = JSON.parse(responseBody)
-
-        if (!data.success) {
-          return {
-            success: false,
-            error: data.error || 'Failed to redeem points',
-          }
-        }
-
-        // Refresh points to get updated balance
         await refreshPoints(true, true)
-
         return {
           success: true,
-          message: data.message,
-          expiresAt: data.redemption?.expiresAt
-            ? new Date(data.redemption.expiresAt)
-            : undefined,
+          message: 'Subscription activated with points',
+          expiresAt: res.expiresAt ? new Date(res.expiresAt) : undefined,
         }
       } catch (err) {
-        console.error('[PointsContext] Failed to redeem points:', err)
         return {
           success: false,
           error: err instanceof Error ? err.message : 'Failed to redeem points',

@@ -1,12 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'app/contexts/AuthContext'
-import { BACKEND } from 'app/lib/backend'
-import {
-  checkUserUpvote,
-  getUpvoteCount,
-  createUpvote,
-  removeUpvote,
-} from 'app/lib/upvotes/api'
 import {
   checkUserUpvoteSupabase,
   getUpvoteCountSupabase,
@@ -33,9 +26,7 @@ export function useUpvoteStatus(contestId: string) {
       if (!user?.$id) {
         return false
       }
-      return BACKEND === 'supabase'
-        ? checkUserUpvoteSupabase(contestId)
-        : checkUserUpvote(contestId, user.$id)
+      return checkUserUpvoteSupabase(contestId)
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!contestId && !!user && !isBatched,
@@ -49,17 +40,13 @@ export function useUpvoteStatus(contestId: string) {
  */
 export function useUpvoteCount(contestId: string) {
   const { user } = useAuth()
-  // Only Supabase seeds the count cache from the list payload (its contest rows
-  // carry `upvote_count`). Appwrite list rows don't, so we must still fetch the
-  // count per card there or batched cards would render 0.
-  const isCountSeeded = useIsContestBatched(contestId) && BACKEND === 'supabase'
+  // The contest list payload seeds the count cache (its rows carry
+  // `upvote_count`), so batched (list) cards read the seeded value.
+  const isCountSeeded = useIsContestBatched(contestId)
 
   return useQuery({
     queryKey: ['upvote', 'count', contestId],
-    queryFn: () =>
-      BACKEND === 'supabase'
-        ? getUpvoteCountSupabase(contestId)
-        : getUpvoteCount(contestId),
+    queryFn: () => getUpvoteCountSupabase(contestId),
     staleTime: 1 * 60 * 1000, // 1 minute
     // Only run query if contestId exists AND user is authenticated.
     // Anonymous users fall back to the initialCount prop; on Supabase, batched
@@ -82,12 +69,7 @@ export function useUpvoteActions(contestId: string) {
       if (!user?.$id) {
         throw new Error('User not authenticated')
       }
-      if (BACKEND === 'supabase') {
-        await createUpvoteSupabase(contestId)
-        return
-      }
-      // Create upvote document
-      await createUpvote(contestId, user.$id)
+      await createUpvoteSupabase(contestId)
     },
     onMutate: async () => {
       // Cancel any outgoing refetches
@@ -152,12 +134,7 @@ export function useUpvoteActions(contestId: string) {
       if (!user?.$id) {
         throw new Error('User not authenticated')
       }
-      if (BACKEND === 'supabase') {
-        await removeUpvoteSupabase(contestId)
-        return
-      }
-      // Remove upvote document
-      await removeUpvote(contestId, user.$id)
+      await removeUpvoteSupabase(contestId)
     },
     onMutate: async () => {
       // Cancel any outgoing refetches

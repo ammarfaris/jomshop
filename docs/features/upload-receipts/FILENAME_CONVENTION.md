@@ -342,8 +342,6 @@ When archiving receipts:
 
 ## Related Documentation
 
-- [Why User CREATE Permission Needed](./WHY_USER_CREATE_PERMISSION_NEEDED.md)
-- [Archive Bucket Permissions](./ARCHIVE_BUCKET_NO_USER_PERMISSIONS.md)
 - [Receipt Upload Flow](../upload-receipts/)
 
 ---

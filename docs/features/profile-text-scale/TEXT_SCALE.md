@@ -18,7 +18,7 @@ The text scale system consists of:
 
    - Manages text scale state (smaller, regular, bigger)
    - Provides font size values for each scale
-   - Persists preference to Appwrite user preferences
+   - Persists preference to the user's Supabase profile preferences
    - Applies scale to document root on web
 
 2. **TextScaleSelector** (`packages/app/features/profile/components/TextScaleSelector.tsx`)
@@ -137,7 +137,7 @@ document.addEventListener('gesturestart', preventGesture, { passive: false })
 1. **Default**: App starts with "smaller" scale (16px base) for a compact, modern look
 2. **Selection**: Users can change scale in Profile > General tab
 3. **Visual Preview**: Each button shows "Aa" in the actual font size (16px, 17px, 18px) so users can see the difference before selecting
-4. **Persistence**: Preference is saved to Appwrite and persists across sessions
+4. **Persistence**: Preference is saved to the Supabase profile and persists across sessions
 5. **Immediate Effect**: Changes apply instantly across the app
 6. **Cross-Platform**: Works on web and native (iOS/Android)
 

@@ -156,17 +156,23 @@ const CONTEST_LIST_SELECT =
 
 /**
  * Public contests list via anon RLS (replaces the publicContests collection +
- * its sync function). Ordered by soonest-ending first to match current UX.
+ * its sync function). Ordered latest-ending first to match current UX.
+ *
+ * Supports offset pagination for the infinite-scroll home feed. `includeHidden`
+ * drops the visibility filter so admins can see admin-only contests too — RLS
+ * still blocks hidden rows for everyone else, so this is safe to pass through.
  */
 export async function fetchPublicContestsSupabase(
   limit = 20,
+  offset = 0,
+  includeHidden = false,
 ): Promise<SupabasePublicContest[]> {
-  const { data, error } = await getSupabase()
-    .from('contests')
-    .select(CONTEST_LIST_SELECT)
-    .in('visibility', PUBLIC_VISIBILITY)
+  let query = getSupabase().from('contests').select(CONTEST_LIST_SELECT)
+  if (!includeHidden) query = query.in('visibility', PUBLIC_VISIBILITY)
+
+  const { data, error } = await query
     .order('end_date', { ascending: false })
-    .limit(limit)
+    .range(offset, offset + limit - 1)
 
   if (error) throw error
   return ((data ?? []) as unknown as ContestListRow[]).map(mapListRow)

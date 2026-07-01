@@ -12,7 +12,7 @@ This document describes the implementation of the theme switcher feature that al
   - 💻 **System Mode**: Automatically follows the operating system's theme preference
 
 - **Cross-Platform Support**: Works seamlessly on web (Next.js) and native (React Native/Expo)
-- **Persistent Preferences**: Theme choice is saved and synced across devices via Appwrite
+- **Persistent Preferences**: Theme choice is saved and synced across devices via the user's Supabase profile
 - **Smooth Transitions**: No flash of unstyled content on page load
 - **Real-time Updates**: Automatically responds to system theme changes when in system mode
 
@@ -28,7 +28,7 @@ This document describes the implementation of the theme switcher feature that al
 2. **`ThemeSelector` Component** (`packages/app/features/profile/components/ThemeSelector.tsx`)
    - User interface for theme selection
    - Three visual buttons for light/dark/system modes
-   - Syncs theme preference with Appwrite user preferences
+   - Syncs theme preference with the user's Supabase profile preferences
    - Supports localization (English/Malay)
 
 3. **Icon Components**:
@@ -77,8 +77,9 @@ Theme preferences are stored in three locations:
    - **Native**: `AsyncStorage`
    - Purpose: Fast local access, works offline
 
-2. **Appwrite User Preferences**:
-   - Stored in user's preferences document
+2. **Supabase Profile Preferences**:
+   - Stored in the `prefs` JSON column on the user's `profiles` row
+   - Read/written via `getUserPrefs()` / `updateUserPrefs()` in `app/lib/prefs`
    - Enables cross-device synchronization
    - Key: `theme` with value `'light' | 'dark' | 'system'`
 
@@ -191,7 +192,7 @@ interface UseColorSchemeReturn {
 **Features:**
 - Displays three theme option buttons
 - Shows current selection
-- Syncs with Appwrite user preferences
+- Syncs with the user's Supabase profile preferences
 - Loading states during theme changes
 - Localized labels
 
@@ -220,7 +221,7 @@ Translations are stored in:
 - [ ] Change theme to System - should match OS theme
 - [ ] Change OS theme while app is in System mode - should update automatically
 - [ ] Refresh page - theme preference should persist
-- [ ] Log out and log back in - theme should be restored from Appwrite
+- [ ] Log out and log back in - theme should be restored from the Supabase profile
 
 #### Native Testing:
 - [ ] Change theme to Light - should show light colors immediately
@@ -228,7 +229,7 @@ Translations are stored in:
 - [ ] Change theme to System - should match OS theme
 - [ ] Change OS theme while app is in System mode - should update automatically
 - [ ] Kill and restart app - theme preference should persist
-- [ ] Log out and log back in - theme should be restored from Appwrite
+- [ ] Log out and log back in - theme should be restored from the Supabase profile
 
 #### Cross-Device Testing:
 - [ ] Set theme on Device A
@@ -243,7 +244,7 @@ Translations are stored in:
 **Solution**: Check that:
 1. `next-themes` is properly configured in `apps/next/app/layout.tsx`
 2. AsyncStorage is working on native (check permissions)
-3. Appwrite user preferences are being saved
+3. Supabase profile preferences are being saved (`updateUserPrefs`)
 
 ### System mode not working
 

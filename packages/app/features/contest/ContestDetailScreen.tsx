@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { View, ScrollView, Platform, Dimensions, Pressable } from 'react-native'
 import { useRouteParams } from 'app/hooks/useRouteParams'
 import { useQuery } from '@tanstack/react-query'
-import { Query, Models } from 'app/lib/appwrite-universal'
+import type { Document } from 'app/lib/types'
 import dayjs from 'dayjs'
 
 import { Text } from 'app/components/ui/text'
@@ -19,18 +19,6 @@ import {
   PopoverTrigger,
 } from 'app/components/ui/popover'
 
-import { tablesDB, account } from 'app/provider/appwrite/api'
-import {
-  DATABASE_ID,
-  CONTESTS_COLLECTION_ID,
-  CONTEST_FILES_COLLECTION_ID,
-  CONTESTS_BUCKET_ID,
-  APPWRITE_PROJECT_ID,
-  APPWRITE_ENDPOINT,
-  CONTEST_TRANSLATIONS_COLLECTION_ID,
-  CONTEST_HOSTS_COLLECTION_ID,
-  CONTEST_CATEGORIES_COLLECTION_ID,
-} from 'app/provider/appwrite/constants'
 import { Skeleton } from 'app/components/ui/skeleton'
 import { Badge } from 'app/components/ui/badge'
 import {
@@ -61,7 +49,6 @@ import { useIsAdmin } from 'app/hooks/useIsAdmin'
 import { HostImage } from 'app/components/HostImage'
 import { AdBanner, AdBannerPlaceholder } from 'app/components/AdBanner'
 import { usePublicContestBySlug } from 'app/hooks/usePublicContests'
-import { BACKEND } from 'app/lib/backend'
 import { getUserPrefs } from 'app/lib/prefs'
 import { Button } from 'app/components/ui/button'
 import { useRouter } from 'app/lib/router-universal'
@@ -75,7 +62,7 @@ const SHOW_ADS =
   Boolean(ADSENSE_SLOT_ID) && !ADSENSE_PUBLISHER_ID.includes('XXXX')
 
 // Define types
-type Contest = Models.Document & {
+type Contest = Document & {
   title: string
   slug: string
   summary: string
@@ -102,7 +89,7 @@ type Contest = Models.Document & {
   visibility?: 'any' | 'users' | 'admin'
 }
 
-type ContestFile = Models.Document & {
+type ContestFile = Document & {
   file_id: string
   contest_id: string
   token_secret: string
@@ -111,7 +98,7 @@ type ContestFile = Models.Document & {
 }
 
 // Host type for contest hosts
-type Host = Models.Document & {
+type Host = Document & {
   name: string
   slug: string
   img_id: string
@@ -120,7 +107,7 @@ type Host = Models.Document & {
   bio?: string
 }
 
-type Category = Models.Document & {
+type Category = Document & {
   slug: string
   name_en: string
   name_ms?: string | null
@@ -150,16 +137,11 @@ export default function ContestDetailScreen({
   const { isAdmin, isLoading: isLoadingAdmin } = useIsAdmin()
   const { isDarkColorScheme } = useColorScheme()
 
-  // Spike: only the public (RLS) Supabase path is migrated, so under Supabase we
-  // treat everyone as anonymous for DATA fetching. dataUser === user under
-  // Appwrite, so this is a no-op for that backend.
-  const dataUser = BACKEND === 'supabase' ? null : user
   const { main } = useColorThemeValues(isDarkColorScheme)
   const router = useRouter()
 
   const [galleryVisible, setGalleryVisible] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [jwt, setJwt] = useState<string | null>(null)
   const [receiptModalVisible, setReceiptModalVisible] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
   const [actionButtonsY, setActionButtonsY] = useState(0)
@@ -168,21 +150,6 @@ export default function ContestDetailScreen({
   // Calculate image height for consistent sizing
   const { width: screenWidth } = Dimensions.get('window')
   const imageHeight = Math.min(screenWidth * 0.75, 400)
-
-  // Get JWT for Android image loading
-  useEffect(() => {
-    if (Platform.OS === 'android' && dataUser) {
-      const fetchJWT = async () => {
-        try {
-          const { jwt } = await account.createJWT()
-          setJwt(jwt)
-        } catch (error) {
-          console.error('Failed to create JWT:', error)
-        }
-      }
-      fetchJWT()
-    }
-  }, [user])
 
   // Web-specific scroll handler
   useEffect(() => {
@@ -239,48 +206,22 @@ export default function ContestDetailScreen({
     }
   }
 
-  // PUBLIC CONTEST QUERY (for anonymous users) ------------------------------------
+  // Contest detail via Supabase public RLS (works for anon + signed-in; premium
+  // translation fields + affiliate links are gated server-side inside the fetch).
   const {
     data: publicContestData,
     isLoading: isLoadingPublicContest,
     isError: isErrorPublicContest,
-  } = usePublicContestBySlug(id || '', !dataUser && !isLoadingUser && !!id)
-
-  // AUTHENTICATED CONTEST QUERY (for logged-in users) -----------------------------
-  const {
-    data: authContest,
-    isLoading: isLoadingAuthContest,
-    isError: isErrorAuthContest,
-  } = useQuery<Contest>({
-    queryKey: ['contest', id],
-    queryFn: async () => {
-      if (!id) throw new Error('No contest slug provided')
-      const bySlug = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: CONTESTS_COLLECTION_ID,
-        queries: [Query.equal('slug', [id]), Query.limit(1)],
-      })
-      if (bySlug.rows.length > 0) {
-        return bySlug.rows[0] as unknown as Contest
-      }
-      throw new Error('Contest not found')
-    },
-    enabled: !!dataUser && !!id,
-  })
+  } = usePublicContestBySlug(id || '', !isLoadingUser && !!id)
 
   // Unified contest data
-  const contest = useMemo(() => {
-    if (dataUser) {
-      return authContest
-    }
-    // publicContestData returns { contest, translations } from usePublicContestBySlug
-    return publicContestData?.contest as unknown as Contest | undefined
-  }, [user, authContest, publicContestData?.contest])
+  const contest = useMemo(
+    () => publicContestData?.contest as unknown as Contest | undefined,
+    [publicContestData?.contest],
+  )
 
-  const isLoadingContest = dataUser
-    ? isLoadingAuthContest
-    : isLoadingPublicContest
-  const isErrorContest = dataUser ? isErrorAuthContest : isErrorPublicContest
+  const isLoadingContest = isLoadingPublicContest
+  const isErrorContest = isErrorPublicContest
 
   // Check if this is a non-public contest being accessed by anonymous user
   const isNonPublicContestForAnonymous =
@@ -299,34 +240,8 @@ export default function ContestDetailScreen({
   // Get receipt count using the actual contest document ID (not the slug!)
   const { data: receiptCount = 0 } = useContestReceiptCount(contest?.$id || '')
 
-  // For authenticated users, fetch categories from database
-  // For anonymous users, categories are already included in publicContestData
-  const { data: authContestCategories = [] } = useQuery<Category[]>({
-    queryKey: ['contest-categories-detail', contest?.category_ids],
-    enabled:
-      !!dataUser && !!contest?.category_ids && contest.category_ids.length > 0,
-    queryFn: async () => {
-      if (!contest?.category_ids || contest.category_ids.length === 0) return []
-      try {
-        const res = await tablesDB.listRows({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_CATEGORIES_COLLECTION_ID,
-          queries: [Query.equal('$id', contest.category_ids), Query.limit(200)],
-        })
-        return res.rows as unknown as Category[]
-      } catch {
-        return []
-      }
-    },
-  })
-
-  // Unified categories
+  // Categories (embedded in the Supabase detail payload)
   const contestCategories = useMemo(() => {
-    if (dataUser) {
-      return authContestCategories
-    }
-    // publicContestData.contest has parsed categories from categories_json
-    // Map PublicCategory to Category format
     const publicCategories = publicContestData?.contest?.categories || []
     return publicCategories.map((c) => ({
       $id: c.$id,
@@ -336,7 +251,7 @@ export default function ContestDetailScreen({
       priority_order: c.priority_order,
       type: c.type,
     })) as unknown as Category[]
-  }, [user, authContestCategories, publicContestData?.contest?.categories])
+  }, [publicContestData?.contest?.categories])
 
   // Helper function to sort categories by priority and sequence in category_ids array
   const sortCategories = (cats: Category[]) => {
@@ -390,41 +305,13 @@ export default function ContestDetailScreen({
     [contestCategories],
   )
 
-  // For authenticated users, fetch files from database
-  // For anonymous users, files are already included in publicContestData
-  const { data: authContestFiles = [], isLoading: isLoadingAuthFiles } =
-    useQuery<ContestFile[]>({
-      queryKey: ['contest-files', contest?.$id],
-      queryFn: async () => {
-        if (!contest?.$id) return []
-        try {
-          const response = await tablesDB.listRows({
-            databaseId: DATABASE_ID,
-            tableId: CONTEST_FILES_COLLECTION_ID,
-            queries: [
-              Query.equal('contest_id', [contest.$id]),
-              Query.orderAsc('file_order'),
-            ],
-          })
-          return response.rows as unknown as ContestFile[]
-        } catch {
-          return []
-        }
-      },
-      enabled: !!dataUser && !!contest?.$id,
-    })
-
-  // Unified files
+  // Files: embedded gallery in the Supabase detail payload; fall back to the
+  // main image when there are no gallery files.
   const contestFiles = useMemo(() => {
-    if (dataUser) {
-      return authContestFiles
-    }
     const publicContest = publicContestData?.contest as any
-    // Supabase detail attaches the full gallery (contest_files); prefer it.
     if (Array.isArray(publicContest?.files) && publicContest.files.length > 0) {
       return publicContest.files as ContestFile[]
     }
-    // Otherwise fall back to a single-item array from the main image if available
     if (publicContest?.main_img_id) {
       return [
         {
@@ -438,13 +325,13 @@ export default function ContestDetailScreen({
       ] as ContestFile[]
     }
     return [] as ContestFile[]
-  }, [user, authContestFiles, publicContestData?.contest])
+  }, [publicContestData?.contest])
 
-  const isLoadingFiles = dataUser ? isLoadingAuthFiles : isLoadingPublicContest
+  const isLoadingFiles = isLoadingPublicContest
 
   // Language preference (backend-agnostic via the prefs abstraction)
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
-    queryKey: ['user-language-preference', BACKEND],
+    queryKey: ['user-language-preference', 'supabase'],
     queryFn: async () => {
       try {
         const prefs = await getUserPrefs()
@@ -550,94 +437,19 @@ export default function ContestDetailScreen({
     }
   }
 
-  // For authenticated users, fetch translations from database
-  // For anonymous users, translations are already included in publicContestData
-  const { data: authContestTranslation } = useQuery<{
-    prizes?: string
-    link_tnc?: string
-    link_tnc_locale?: 'en' | 'ms'
-    link_faq?: string
-    link_faq_locale?: 'en' | 'ms'
-    eligible_products_and_purchases?: string
-    eligible_participants?: string
-    eligible_participants_exclusion?: string
-    eligible_stores?: string
-    winners_selection_method?: string
-    winners_comm_and_timeline?: string
-    entry_method_and_submission?: string
-    winners_list_and_announcement?: string
-  }>({
-    queryKey: ['contest-translation', contest?.$id, language],
-    enabled: !!dataUser && !!contest?.$id,
-    queryFn: async () => {
-      if (!contest?.$id) return {}
-      try {
-        const res = await tablesDB.listRows({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_TRANSLATIONS_COLLECTION_ID,
-          queries: [Query.equal('contest_id', [contest.$id]), Query.limit(10)],
-        })
-        return processTranslations(res.rows || [], language)
-      } catch {
-        return {}
-      }
-    },
-  })
-
-  // Unified translations
+  // Translations (embedded in the Supabase detail payload; premium fields are
+  // gated server-side for anonymous callers).
   const contestTranslation = useMemo(() => {
-    if (dataUser) {
-      return authContestTranslation
-    }
-    // Filter translations for this contest from public data
-    // publicContestTranslations uses source_contest_id, not contest_id
-    // publicContest also uses source_contest_id to reference the original contest
     const sourceContestId = (publicContestData?.contest as any)
       ?.source_contest_id
     const translations = (publicContestData?.translations || []).filter(
       (t: any) => t.source_contest_id === sourceContestId,
     )
     return processTranslations(translations, language)
-  }, [
-    user,
-    authContestTranslation,
-    publicContestData?.translations,
-    publicContestData?.contest,
-    language,
-  ])
+  }, [publicContestData?.translations, publicContestData?.contest, language])
 
-  // For authenticated users, fetch hosts from database
-  // For anonymous users, hosts are already included in publicContestData
-  const { data: authContestHosts = [] } = useQuery<Host[]>({
-    queryKey: ['contest-hosts-detail', contest?.host_ids],
-    enabled: !!dataUser && !!contest?.host_ids && contest.host_ids.length > 0,
-    queryFn: async () => {
-      if (!contest?.host_ids || contest.host_ids.length === 0) return []
-      try {
-        const res = await tablesDB.listRows({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_HOSTS_COLLECTION_ID,
-          queries: [Query.equal('$id', contest.host_ids), Query.limit(100)],
-        })
-        // Sort hosts to preserve order from contest.host_ids array
-        const hosts = res.rows as unknown as Host[]
-        return hosts.sort((a, b) => {
-          const indexA = contest.host_ids!.indexOf(a.$id)
-          const indexB = contest.host_ids!.indexOf(b.$id)
-          return indexA - indexB
-        })
-      } catch {
-        return []
-      }
-    },
-  })
-
-  // Unified hosts
+  // Hosts (embedded in the Supabase detail payload)
   const contestHosts = useMemo(() => {
-    if (dataUser) {
-      return authContestHosts
-    }
-    // publicContestData.contest has parsed hosts from hosts_json
     const publicHosts = publicContestData?.contest?.hosts || []
     return publicHosts.map((h) => ({
       $id: h.$id,
@@ -647,7 +459,7 @@ export default function ContestDetailScreen({
       img_token_secret: h.img_token_secret,
       img_blurhash: h.img_blurhash,
     })) as unknown as Host[]
-  }, [user, authContestHosts, publicContestData?.contest?.hosts])
+  }, [publicContestData?.contest?.hosts])
 
   const openGallery = (index: number) => {
     setSelectedImageIndex(index)
@@ -681,19 +493,10 @@ export default function ContestDetailScreen({
 
   // Prepare images for gallery
   const galleryImages: ImageItem[] = contestFiles.map((file, index) => {
-    // Supabase spike stores a full image URL in file_id; Appwrite stores a file id.
-    let uri = /^https?:\/\//i.test(file.file_id)
-      ? file.file_id
-      : `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${file.file_id}/view?project=${APPWRITE_PROJECT_ID}`
-
-    // Add token if available (needed for public contest main image)
-    if (file.token_secret) {
-      uri += `&token=${file.token_secret}`
-    }
-
+    // Supabase stores a full public URL in file_id.
     return {
       id: file.file_id,
-      uri,
+      uri: file.file_id,
       tokenSecret: file.token_secret, // Keep for backward compatibility with old images
       blurhash: file.img_blurhash,
       title: contest?.title,
@@ -908,9 +711,7 @@ export default function ContestDetailScreen({
           }
           language={language}
           onManageReceipts={() => setReceiptModalVisible(true)}
-          initialUpvoteCount={
-            !dataUser ? publicContestData?.contest?.upvote_count : undefined
-          }
+          initialUpvoteCount={publicContestData?.contest?.upvote_count}
           showAds={SHOW_ADS}
         />
       )}
@@ -983,7 +784,6 @@ export default function ContestDetailScreen({
                     height={70}
                     borderRadius={8}
                     contentFit="contain"
-                    jwt={jwt}
                   />
                 </View>
               ))}
@@ -1039,18 +839,9 @@ export default function ContestDetailScreen({
                 contentContainerStyle={{ paddingRight: 16, gap: 12 }}
               >
                 {contestFiles.map((file, index) => {
-                  // Supabase spike stores a full image URL in file_id; Appwrite stores a file id.
-                  let imageUri = /^https?:\/\//i.test(file.file_id)
-                    ? file.file_id
-                    : `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${file.file_id}/view?project=${APPWRITE_PROJECT_ID}`
-
-                  // Add token if available (needed for public contest main image)
-                  if (file.token_secret) {
-                    imageUri += `&token=${file.token_secret}`
-                  }
-
+                  // Supabase stores a full public URL in file_id.
                   const source: any = {
-                    uri: imageUri,
+                    uri: file.file_id,
                   }
 
                   return (
@@ -1081,9 +872,7 @@ export default function ContestDetailScreen({
                 contestId={contest.$id}
                 variant="default"
                 showCount={true}
-                initialCount={
-                  !dataUser ? publicContestData?.contest?.upvote_count : undefined
-                }
+                initialCount={publicContestData?.contest?.upvote_count}
               />
               <View style={{ width: 20 }} />
               <SaveButton

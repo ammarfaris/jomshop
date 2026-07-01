@@ -53,8 +53,8 @@ export function ColorThemeProvider({
     initializeTheme()
   }, [])
 
-  // Apply the active accent to the web <html> whenever it changes (all backends).
-  // Kept as its own effect so the Appwrite sync effect below does NOT depend on
+  // Apply the active accent to the web <html> whenever it changes.
+  // Kept as its own effect so the prefs-sync effect below does NOT depend on
   // `colorTheme` — otherwise every local accent change re-fetches prefs and can
   // revert the selection mid-write.
   useEffect(() => {

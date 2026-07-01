@@ -9,9 +9,6 @@ import {
 } from 'app/components/ui/dialog'
 import { msg } from '@lingui/core/macro'
 import { i18n } from '@lingui/core'
-import { functions } from 'app/provider/appwrite/api'
-import { PROCESS_FEEDBACK_FUNCTION_ID } from 'app/provider/appwrite/constants'
-import { BACKEND } from 'app/lib/backend'
 import { submitFeedbackSupabase } from 'app/lib/supabase'
 import { useAuth } from 'app/contexts/AuthContext'
 import { useTextScale } from 'app/contexts/TextScaleContext'
@@ -157,25 +154,7 @@ export function FeedbackDialog({ children, currentUrl }: FeedbackDialogProps) {
           ? `app://jomcontest${currentUrl}`
           : 'app://jomcontest'
 
-      if (BACKEND === 'supabase') {
-        await submitFeedbackSupabase(feedbackCopy, pageUrl)
-      } else {
-        const execution = await functions.createExecution(
-          PROCESS_FEEDBACK_FUNCTION_ID,
-          JSON.stringify({
-            user_id: user.$id,
-            message: feedbackCopy,
-            page_url: pageUrl,
-            captcha_token: captchaTokenCopy,
-          })
-        )
-
-        const result = JSON.parse(execution.responseBody || '{}')
-
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to submit feedback')
-        }
-      }
+      await submitFeedbackSupabase(feedbackCopy, pageUrl)
 
       // Success - already showed toast
     } catch (error: any) {
@@ -223,26 +202,8 @@ export function FeedbackDialog({ children, currentUrl }: FeedbackDialogProps) {
           ? `app://jomcontest${currentUrl}`
           : 'app://jomcontest'
 
-      // First, save to database (Supabase insert or the Appwrite secure function)
-      if (BACKEND === 'supabase') {
-        await submitFeedbackSupabase(feedbackCopy, pageUrl)
-      } else {
-        const execution = await functions.createExecution(
-          PROCESS_FEEDBACK_FUNCTION_ID,
-          JSON.stringify({
-            user_id: user.$id,
-            message: feedbackCopy,
-            page_url: pageUrl,
-            captcha_token: captchaTokenCopy,
-          })
-        )
-
-        const result = JSON.parse(execution.responseBody || '{}')
-
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to submit feedback')
-        }
-      }
+      // First, save to database (Supabase insert)
+      await submitFeedbackSupabase(feedbackCopy, pageUrl)
 
       // Then, open WhatsApp with the feedback message
       const whatsappMessage = encodeURIComponent(

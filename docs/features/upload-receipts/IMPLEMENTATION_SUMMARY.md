@@ -405,8 +405,6 @@ git commit -m "Rollback filename standardization"
 ## Related Documentation
 
 - [Filename Convention Specification](./FILENAME_CONVENTION.md)
-- [Why User CREATE Permission Needed](./WHY_USER_CREATE_PERMISSION_NEEDED.md)
-- [Archive Bucket Permissions](./ARCHIVE_BUCKET_NO_USER_PERMISSIONS.md)
 
 ---
 

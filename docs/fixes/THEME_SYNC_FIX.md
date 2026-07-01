@@ -2,7 +2,7 @@
 
 ## Issue
 
-Theme changes made on one device were not reflected on other devices until the user navigated to the profile page or refreshed the profile page. This was because the theme was only loaded from Appwrite user preferences when the `ThemeSelector` component mounted (which only happens on the profile page).
+Theme changes made on one device were not reflected on other devices until the user navigated to the profile page or refreshed the profile page. This was because the theme was only loaded from the user's Supabase profile preferences when the `ThemeSelector` component mounted (which only happens on the profile page).
 
 ## Root Cause
 
@@ -11,21 +11,21 @@ The theme synchronization logic was implemented only in the `ThemeSelector` comp
 ```typescript
 // In ThemeSelector.web.tsx
 useEffect(() => {
-  const loadThemeFromAppwrite = async () => {
+  const loadThemeFromProfile = async () => {
     if (!user) return
     
     try {
-      const prefs = await account.getPrefs()
+      const prefs = await getUserPrefs()
       const savedTheme = (prefs as any)?.theme as ThemeMode
       if (savedTheme && savedTheme !== currentThemeMode) {
         setTheme(savedTheme)
       }
     } catch (e) {
-      console.error('Failed to load theme from Appwrite:', e)
+      console.error('Failed to load theme from the Supabase profile:', e)
     }
   }
   
-  loadThemeFromAppwrite()
+  loadThemeFromProfile()
 }, [user])
 ```
 
@@ -43,7 +43,7 @@ Created a global theme synchronization mechanism similar to how language prefere
 **File**: `packages/app/hooks/useThemeSync.ts`
 
 This hook:
-- Loads theme from Appwrite when user logs in
+- Loads theme from the Supabase profile when user logs in
 - Only loads once per user session to avoid unnecessary API calls
 - Applies the theme if it differs from the current local theme
 - Resets when user logs out
@@ -56,28 +56,28 @@ export function useThemeSync() {
 
   useEffect(() => {
     if (isLoading || !user) return
-    if (hasLoadedForUserRef.current === user.$id) return
+    if (hasLoadedForUserRef.current === user.id) return
 
-    const syncThemeFromAppwrite = async () => {
+    const syncThemeFromProfile = async () => {
       try {
-        const prefs = await account.getPrefs()
+        const prefs = await getUserPrefs()
         const savedTheme = (prefs as any)?.theme as ThemeMode
 
         if (savedTheme && ['light', 'dark', 'system'].includes(savedTheme)) {
           if (savedTheme !== themeMode) {
-            console.log('[useThemeSync] Applying theme from Appwrite:', savedTheme)
+            console.log('[useThemeSync] Applying theme from Supabase profile:', savedTheme)
             setThemeMode(savedTheme)
           }
         }
         
-        hasLoadedForUserRef.current = user.$id
+        hasLoadedForUserRef.current = user.id
       } catch (error) {
-        console.error('[useThemeSync] Failed to sync theme from Appwrite:', error)
-        hasLoadedForUserRef.current = user.$id
+        console.error('[useThemeSync] Failed to sync theme from Supabase profile:', error)
+        hasLoadedForUserRef.current = user.id
       }
     }
 
-    syncThemeFromAppwrite()
+    syncThemeFromProfile()
   }, [user, isLoading, setThemeMode, themeMode])
 
   useEffect(() => {
@@ -101,7 +101,7 @@ function I18nProviderWrapper({ children }: { children: React.ReactNode }) {
 
   useOAuthCallback()
   
-  // Sync theme from Appwrite when user logs in
+  // Sync theme from the Supabase profile when user logs in
   useThemeSync()  // <-- Added this line
 
   // ... rest of the component
@@ -117,7 +117,7 @@ User logs in on Device A
     ↓
 Changes theme to "dark"
     ↓
-ThemeSelector saves to Appwrite preferences
+ThemeSelector saves to the Supabase profile preferences
     ↓
 User opens app on Device B
     ↓
@@ -125,7 +125,7 @@ AuthProvider loads user
     ↓
 useThemeSync hook detects user is logged in
     ↓
-Fetches theme preference from Appwrite
+Fetches theme preference from the Supabase profile
     ↓
 Applies "dark" theme to Device B
     ↓
@@ -135,7 +135,7 @@ User sees correct theme immediately
 ### Key Features
 
 1. **Automatic Synchronization**: Theme is loaded automatically when user logs in
-2. **One-Time Load**: Only fetches from Appwrite once per user session to avoid unnecessary API calls
+2. **One-Time Load**: Only fetches from the Supabase profile once per user session to avoid unnecessary API calls
 3. **Cross-Platform**: Works on both web (Next.js) and native (React Native/Expo)
 4. **Non-Intrusive**: Doesn't interfere with local theme changes
 5. **Efficient**: Uses user ID to track whether theme has been loaded for current user
@@ -162,11 +162,11 @@ User sees correct theme immediately
 ### Test Scenario 3: Local Theme Preference
 
 1. Open app on Device A
-2. Log in (theme loads from Appwrite)
-3. Change theme locally (without saving to Appwrite)
+2. Log in (theme loads from the Supabase profile)
+3. Change theme locally (without saving to the Supabase profile)
 4. Navigate to different pages
 5. ✅ Local theme change should persist during session
-6. ✅ Should not be overridden by Appwrite theme
+6. ✅ Should not be overridden by the Supabase profile theme
 
 ## Files Changed
 
@@ -188,7 +188,7 @@ User sees correct theme immediately
 
 Potential improvements for future iterations:
 
-1. **Real-time Sync**: Use Appwrite Realtime API to sync theme changes instantly across devices
+1. **Real-time Sync**: Use Supabase Realtime to sync theme changes instantly across devices
 2. **Conflict Resolution**: Handle cases where user changes theme on multiple devices simultaneously
 3. **Offline Support**: Cache theme preference for offline access
 4. **Theme History**: Track theme change history for analytics

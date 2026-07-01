@@ -1,9 +1,0 @@
-{
-  "name": "public-contests",
-  "version": "1.0.0",
-  "description": "Public contests gateway with is_public filter and related data hydration",
-  "main": "index.js",
-  "dependencies": {
-    "node-appwrite": "^20.3.0"
-  }
-}

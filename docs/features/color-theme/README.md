@@ -50,7 +50,7 @@ For developers and technical users:
 
 - **Implementation**: CSS variables with Tailwind CSS
 - **Cross-platform**: Works on web (Next.js) and native (Expo/React Native)
-- **Persistence**: Theme preference is saved to your Appwrite account
+- **Persistence**: Theme preference is saved to your Supabase profile
 - **Performance**: Instant theme switching with no page reload required
 - **Accessibility**: Both themes work in light and dark modes
 

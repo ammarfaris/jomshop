@@ -5,18 +5,14 @@ import { getUserPrefs } from 'app/lib/prefs'
 import { useColorScheme, ThemeMode } from './useColorScheme'
 
 /**
- * Hook to synchronize theme preferences from Appwrite user preferences
- * This ensures theme changes on one device are reflected on other devices
- * when the user logs in or when the app loads.
+ * Synchronize the saved theme preference from the user's profile so a theme
+ * change on one device is reflected on others when they log in / load the app.
  *
- * This hook should be used at the app root level (in Provider component)
- * to ensure theme is loaded from Appwrite as soon as the user is authenticated.
+ * Used at the app root (Provider) so the theme loads as soon as the user is
+ * authenticated. Loads ONCE per login (no polling) to avoid clobbering local
+ * theme changes.
  *
- * The hook loads the theme ONCE when the user logs in. It does not continuously
- * poll for changes to avoid unnecessary API calls and potential conflicts with
- * local theme changes.
- *
- * NOTE: This only works on web. Native always follows system theme.
+ * NOTE: web only. Native always follows the system theme.
  */
 export function useThemeSync() {
   const { user, isLoading } = useAuth()

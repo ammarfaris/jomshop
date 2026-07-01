@@ -7,15 +7,7 @@ import {
 } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'app/contexts/AuthContext'
-import { BACKEND } from 'app/lib/backend'
 import { fetchEngagementBatchSupabase } from 'app/lib/supabase'
-import { Query } from 'app/lib/appwrite-universal'
-import { tablesDB } from 'app/provider/appwrite/api'
-import {
-  DATABASE_ID,
-  CONTEST_UPVOTES_COLLECTION_ID,
-  CONTEST_SAVES_COLLECTION_ID,
-} from 'app/provider/appwrite/constants'
 
 /**
  * Batches the current user's upvote/save status for a whole list of contests
@@ -32,55 +24,6 @@ type EngagementContextValue = {
 }
 
 const EngagementContext = createContext<EngagementContextValue | null>(null)
-
-type EngagementBatch = { upvoted: Set<string>; saved: Set<string> }
-
-async function fetchEngagementBatchAppwrite(
-  contestIds: string[],
-  uid?: string,
-): Promise<EngagementBatch> {
-  const empty: EngagementBatch = { upvoted: new Set(), saved: new Set() }
-  if (!uid || contestIds.length === 0) return empty
-
-  const [upvotesRes, savesRes] = await Promise.all([
-    tablesDB.listRows({
-      databaseId: DATABASE_ID,
-      tableId: CONTEST_UPVOTES_COLLECTION_ID,
-      queries: [
-        Query.equal('user_id', uid),
-        Query.equal('contest_id', contestIds),
-        Query.limit(contestIds.length),
-      ],
-    }),
-    tablesDB.listRows({
-      databaseId: DATABASE_ID,
-      tableId: CONTEST_SAVES_COLLECTION_ID,
-      queries: [
-        Query.equal('user_id', uid),
-        Query.equal('contest_id', contestIds),
-        Query.limit(contestIds.length),
-      ],
-    }),
-  ])
-
-  return {
-    upvoted: new Set(
-      upvotesRes.rows.map((r) => (r as unknown as { contest_id: string }).contest_id),
-    ),
-    saved: new Set(
-      savesRes.rows.map((r) => (r as unknown as { contest_id: string }).contest_id),
-    ),
-  }
-}
-
-function fetchEngagementBatch(
-  contestIds: string[],
-  uid?: string,
-): Promise<EngagementBatch> {
-  return BACKEND === 'supabase'
-    ? fetchEngagementBatchSupabase(contestIds)
-    : fetchEngagementBatchAppwrite(contestIds, uid)
-}
 
 export function EngagementProvider({
   contests,
@@ -114,7 +57,7 @@ export function EngagementProvider({
 
   const { data, isError } = useQuery({
     queryKey: ['engagement', 'batch', user?.$id, idsKey],
-    queryFn: () => fetchEngagementBatch(ids, user?.$id),
+    queryFn: () => fetchEngagementBatchSupabase(ids),
     enabled: !!user?.$id && ids.length > 0,
     staleTime: 60 * 1000,
   })

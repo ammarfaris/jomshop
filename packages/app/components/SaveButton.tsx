@@ -33,9 +33,7 @@ import {
   AlertDialogTitle,
 } from 'app/components/ui/alert-dialog'
 import { Button } from 'app/components/ui/button'
-import { archiveContestReceipts } from 'app/lib/receipts/api'
 import { useTextScale } from 'app/contexts/TextScaleContext'
-import { BACKEND } from 'app/lib/backend'
 
 export interface SaveButtonProps {
   contestId: string
@@ -180,21 +178,13 @@ export function SaveButton({
         toast.loading(t`Unsaving contest...`, { id: 'unsave-contest' })
 
         try {
-          if (BACKEND === 'supabase') {
-            const { archiveContestReceiptsSupabase } = await import(
-              'app/lib/supabase'
-            )
-            await archiveContestReceiptsSupabase(
-              contestId,
-              'Contest unsaved by user'
-            )
-          } else {
-            await archiveContestReceipts(
-              user.$id,
-              contestId,
-              'Contest unsaved by user'
-            )
-          }
+          const { archiveContestReceiptsSupabase } = await import(
+            'app/lib/supabase'
+          )
+          await archiveContestReceiptsSupabase(
+            contestId,
+            'Contest unsaved by user'
+          )
           // Dismiss loading toast on success
           toast.dismiss('unsave-contest')
         } catch (archiveError) {

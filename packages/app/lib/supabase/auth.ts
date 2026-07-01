@@ -10,6 +10,9 @@ export interface AppUser {
   $id: string
   email: string
   name: string
+  // Account creation timestamp (ISO). Named `$createdAt` to match the
+  // Appwrite-compatible envelope the UI already reads (e.g. referral age check).
+  $createdAt: string
 }
 
 export function mapSupabaseUser(u: User | null | undefined): AppUser | null {
@@ -24,6 +27,7 @@ export function mapSupabaseUser(u: User | null | undefined): AppUser | null {
     $id: u.id,
     email: u.email ?? '',
     name,
+    $createdAt: u.created_at ?? new Date().toISOString(),
   }
 }
 

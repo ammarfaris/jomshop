@@ -1,18 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'app/contexts/AuthContext'
-import { BACKEND } from 'app/lib/backend'
-import {
-  getContestReceipts,
-  getUserReceiptStats,
-  getContestReceiptCount,
-  uploadReceipt,
-  updateReceiptNotes,
-  deleteReceipt,
-  getReceiptFileUrl,
-  type Receipt,
-  type ReceiptStats,
-  type ReceiptUploadResult,
-} from 'app/lib/receipts/api'
 import {
   uploadReceiptSupabase,
   getContestReceiptsSupabase,
@@ -21,6 +8,9 @@ import {
   updateReceiptNotesSupabase,
   deleteReceiptSupabase,
   getReceiptSignedUrlsSupabase,
+  type Receipt,
+  type ReceiptStats,
+  type ReceiptUploadResult,
 } from 'app/lib/supabase'
 
 /**
@@ -33,9 +23,7 @@ export function useContestReceipts(contestId: string) {
     queryKey: ['receipts', 'contest', contestId, user?.$id],
     queryFn: async () => {
       if (!user?.$id) throw new Error('User not authenticated')
-      return BACKEND === 'supabase'
-        ? getContestReceiptsSupabase(contestId)
-        : getContestReceipts(user.$id, contestId)
+      return getContestReceiptsSupabase(contestId)
     },
     enabled: !!user?.$id && !!contestId,
     staleTime: 30 * 1000, // 30 seconds
@@ -58,14 +46,7 @@ export function useReceiptSignedUrls(receipts: Receipt[]) {
     queryKey: ['receipts', 'urls', user?.$id, fileIdsKey],
     queryFn: async () => {
       if (fileIds.length === 0) return {}
-      if (BACKEND === 'supabase') {
-        return getReceiptSignedUrlsSupabase(fileIds)
-      }
-      const map: Record<string, string> = {}
-      receipts.forEach((r) => {
-        map[r.file_id] = getReceiptFileUrl(r.file_id)
-      })
-      return map
+      return getReceiptSignedUrlsSupabase(fileIds)
     },
     enabled: !!user?.$id && receipts.length > 0,
     // Refresh comfortably before the 1h signed-URL expiry.
@@ -84,9 +65,7 @@ export function useReceiptStats() {
     queryKey: ['receipts', 'stats', user?.$id],
     queryFn: async () => {
       if (!user?.$id) throw new Error('User not authenticated')
-      return BACKEND === 'supabase'
-        ? getUserReceiptStatsSupabase()
-        : getUserReceiptStats(user.$id)
+      return getUserReceiptStatsSupabase()
     },
     enabled: !!user?.$id,
     staleTime: 60 * 1000, // 1 minute
@@ -104,9 +83,7 @@ export function useContestReceiptCount(contestId: string) {
     queryKey: ['receipts', 'count', contestId, user?.$id],
     queryFn: async () => {
       if (!user?.$id) return 0
-      return BACKEND === 'supabase'
-        ? getContestReceiptCountSupabase(contestId)
-        : getContestReceiptCount(user.$id, contestId)
+      return getContestReceiptCountSupabase(contestId)
     },
     enabled: !!user?.$id && !!contestId,
     staleTime: 30 * 1000, // 30 seconds
@@ -144,25 +121,15 @@ export function useUploadReceipt() {
       captchaToken,
     }) => {
       if (!user?.$id) throw new Error('User not authenticated')
-      return BACKEND === 'supabase'
-        ? uploadReceiptSupabase(
-            user.$id,
-            contestId,
-            file,
-            notes,
-            fileOrder,
-            fileType,
-            captchaToken
-          )
-        : uploadReceipt(
-            user.$id,
-            contestId,
-            file,
-            notes,
-            fileOrder,
-            fileType,
-            captchaToken
-          )
+      return uploadReceiptSupabase(
+        user.$id,
+        contestId,
+        file,
+        notes,
+        fileOrder,
+        fileType,
+        captchaToken
+      )
     },
     onSuccess: (_data, variables) => {
       // Invalidate relevant queries
@@ -197,9 +164,7 @@ export function useUpdateReceipt() {
   >({
     mutationFn: async ({ receiptId, notes }) => {
       if (!user?.$id) throw new Error('User not authenticated')
-      return BACKEND === 'supabase'
-        ? updateReceiptNotesSupabase(receiptId, notes)
-        : updateReceiptNotes(receiptId, user.$id, notes)
+      return updateReceiptNotesSupabase(receiptId, notes)
     },
     onMutate: async ({ receiptId, contestId, notes }) => {
       // Cancel any outgoing refetches
@@ -257,9 +222,7 @@ export function useDeleteReceipt() {
     { receiptId: string; fileId: string; contestId: string }
   >({
     mutationFn: async ({ receiptId, fileId }) => {
-      return BACKEND === 'supabase'
-        ? deleteReceiptSupabase(receiptId, fileId)
-        : deleteReceipt(receiptId, fileId)
+      return deleteReceiptSupabase(receiptId, fileId)
     },
     onMutate: async ({ receiptId, contestId }) => {
       // Cancel any outgoing refetches

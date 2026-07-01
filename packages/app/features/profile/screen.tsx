@@ -16,8 +16,6 @@ import { BellAlertOutline } from 'app/components/icons-svg/BellAlertOutline'
 import { BellAlertSolid } from 'app/components/icons-svg/BellAlertSolid'
 import { useAuth } from 'app/contexts/AuthContext'
 import { usePoints } from 'app/contexts/PointsContext'
-import { account } from 'app/provider/appwrite/api'
-import { BACKEND } from 'app/lib/backend'
 import { supabaseSignOut } from 'app/lib/supabase/auth'
 import { getUserPrefs, updateUserPrefs } from 'app/lib/prefs'
 import { activateLocale, locales } from 'app/lib/lingui/i18n'
@@ -27,7 +25,6 @@ import {
   TabsList,
   TabsTrigger,
 } from 'app/components/ui/tabs'
-import { useOAuthCallback } from 'app/hooks/useOAuthCallback'
 import GeneralTabContent from 'app/features/profile/components/GeneralTabContent'
 import SavedTabContent from 'app/features/profile/components/SavedTabContent'
 import AlertsTabContent from 'app/features/profile/components/AlertsTabContent'
@@ -39,9 +36,6 @@ export default function ProfileScreen() {
   const queryClient = useQueryClient()
   const { isDarkColorScheme } = useColorScheme()
 
-  // Handle post-OAuth callback to download profile picture
-  useOAuthCallback()
-
   const userDisplayName = user?.name
   const userEmail = user?.email
 
@@ -49,7 +43,7 @@ export default function ProfileScreen() {
   const [currentLocale, setCurrentLocale] = useState<keyof typeof locales>('en')
   const [isLoadingLanguage, setIsLoadingLanguage] = useState(true)
 
-  // Load language preference from Appwrite user preferences
+  // Load language preference from the user's Supabase profile prefs
   useEffect(() => {
     const fetchLanguagePreference = async () => {
       setIsLoadingLanguage(true)
@@ -89,11 +83,7 @@ export default function ProfileScreen() {
   const handleSignOut = async () => {
     setIsLoggingOut(true)
     try {
-      if (BACKEND === 'supabase') {
-        await supabaseSignOut()
-      } else {
-        await account.deleteSession('current')
-      }
+      await supabaseSignOut()
       await refreshUser()
     } finally {
       setIsLoggingOut(false)

@@ -4,11 +4,34 @@ import {
   generateTimestamp,
   getFileExtension,
 } from 'app/utils/receiptFilename'
-import type {
-  Receipt,
-  ReceiptStats,
-  ReceiptUploadResult,
-} from 'app/lib/receipts/api'
+import type { Document } from 'app/lib/types'
+
+/** A saved receipt, in the Appwrite-compatible envelope the UI consumes. */
+export type Receipt = Document & {
+  user_id: string
+  contest_id: string
+  file_id: string
+  notes: string
+  file_order: number
+  file_type: string
+}
+
+export interface ReceiptStats {
+  totalContestsWithReceipts: number
+  /** Contest IDs the user has at least one receipt for. */
+  contestsWithReceipts: string[]
+}
+
+export interface ReceiptUploadResult {
+  receiptId: string
+  fileId: string
+  userId: string
+  contestId: string
+  notes: string
+  fileOrder: number
+  fileType: string
+  createdAt: string
+}
 
 // Supabase `public.receipts` row shape.
 type ReceiptRow = {

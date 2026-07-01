@@ -6,8 +6,8 @@
 **Symptom:** Light and Dark buttons work but UI flickers during transition
 
 **Root Cause:** Two competing theme loaders:
-1. `useThemeSync` in Provider (loading from Appwrite)
-2. `useEffect` in `ThemeSelector.tsx` (also loading from Appwrite)
+1. `useThemeSync` in Provider (loading from the Supabase profile)
+2. `useEffect` in `ThemeSelector.tsx` (also loading from the Supabase profile)
 
 Both were trying to load and apply theme simultaneously, causing conflicts.
 
@@ -16,19 +16,19 @@ Both were trying to load and apply theme simultaneously, causing conflicts.
 ```typescript
 // ❌ REMOVED: Duplicate loading causing flickering
 useEffect(() => {
-  const loadThemeFromAppwrite = async () => {
+  const loadThemeFromProfile = async () => {
     if (!user) return
-    const prefs = await account.getPrefs()
+    const prefs = await getUserPrefs()
     const savedTheme = (prefs as any)?.theme as ThemeMode
     if (savedTheme && savedTheme !== currentThemeMode) {
       setThemeMode(savedTheme) // ← Conflict with useThemeSync!
     }
   }
-  loadThemeFromAppwrite()
+  loadThemeFromProfile()
 }, [user, currentThemeMode, setThemeMode])
 
 // ✅ REPLACED WITH: Comment explaining single source of truth
-// Note: Theme loading from Appwrite is handled by useThemeSync in Provider
+// Note: Theme loading from the Supabase profile is handled by useThemeSync in Provider
 // No need to load here to avoid conflicts and flickering
 ```
 
@@ -233,8 +233,8 @@ Calling setThemeMode with: light
 [useColorScheme] Saved to AsyncStorage: light
 [useColorScheme] Applying theme: light
 setThemeMode called successfully
-Saving to Appwrite...
-Saved to Appwrite successfully
+Saving to Supabase profile...
+Saved to Supabase profile successfully
 
 // User clicks "System"
 handleThemeChange called: system current: light
@@ -252,7 +252,7 @@ Calling setThemeMode with: system
 ## 📁 Files Changed
 
 ### 1. `packages/app/features/profile/components/ThemeSelector.tsx`
-- ❌ Removed duplicate Appwrite loading logic
+- ❌ Removed duplicate Supabase profile loading logic
 - ✅ Added comment explaining single source of truth
 - Result: No more flickering
 

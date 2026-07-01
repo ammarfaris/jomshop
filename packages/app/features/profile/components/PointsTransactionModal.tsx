@@ -16,12 +16,7 @@ import { cn } from 'app/lib/utils'
 import { Trans } from '@lingui/react/macro'
 import { useLingui } from '@lingui/react/macro'
 import { XMarkOutline } from 'app/components/icons-svg/XMarkOutline'
-import { tablesDB } from 'app/provider/appwrite/api'
-import { Query } from 'app/lib/appwrite-universal'
-import {
-  DATABASE_ID,
-  POINTS_TRANSACTIONS_COLLECTION_ID,
-} from 'app/provider/appwrite/constants'
+import { getSupabasePoints } from 'app/lib/supabase/points'
 
 interface PointsTransactionModalProps {
   visible: boolean
@@ -170,21 +165,19 @@ export function PointsTransactionModal({
         //   '[PointsTransactionModal] Fetching transactions for user:',
         //   user.$id
         // )
-        const response = await tablesDB.listRows({
-          databaseId: DATABASE_ID,
-          tableId: POINTS_TRANSACTIONS_COLLECTION_ID,
-          queries: [
-            Query.equal('user_id', user.$id),
-            Query.orderDesc('$createdAt'),
-            Query.limit(100),
-          ],
-        })
-        // console.log(
-        //   '[PointsTransactionModal] Transactions:',
-        //   response.total,
-        //   'records'
-        // )
-        setTransactions(response.rows as unknown as PointsTransaction[])
+        const points = await getSupabasePoints(100, 0)
+        const rows: PointsTransaction[] = (points?.transactions ?? []).map(
+          (tx) => ({
+            $id: tx.id,
+            $createdAt: tx.createdAt,
+            user_id: user.$id,
+            amount: tx.amount,
+            type: tx.type,
+            source: tx.source,
+            description: tx.description,
+          })
+        )
+        setTransactions(rows)
       } catch (err: any) {
         console.error(
           '[PointsTransactionModal] Error fetching transactions:',

@@ -8,7 +8,7 @@ import {
   Pressable,
 } from 'react-native'
 import { FlashList } from '@shopify/flash-list'
-import { Query, Models } from 'app/lib/appwrite-universal'
+import type { Document } from 'app/lib/types'
 import { Trans, useLingui } from '@lingui/react/macro'
 
 import { Text } from 'app/components/ui/text'
@@ -19,18 +19,11 @@ import {
   CardHeader,
 } from 'app/components/ui/card'
 import { Button } from 'app/components/ui/button'
-import { tablesDB, account } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
 import { useRouter } from 'app/lib/router-universal'
 import { useColorScheme } from 'app/hooks/useColorScheme'
 import { useColorThemeValues } from 'app/hooks/useColorThemeValues'
 import { useIsAdmin } from 'app/hooks/useIsAdmin'
-import {
-  DATABASE_ID,
-  CONTESTS_COLLECTION_ID,
-  CONTEST_HOSTS_COLLECTION_ID,
-  CONTEST_CATEGORIES_COLLECTION_ID,
-} from 'app/provider/appwrite/constants'
 
 import { useSafeArea } from 'app/provider/safe-area/use-safe-area'
 import { useContestNavigation } from 'app/hooks/useContestNavigation'
@@ -40,8 +33,7 @@ import { EngagementProvider } from 'app/contexts/EngagementContext'
 import { Skeleton } from 'app/components/ui/skeleton'
 import { useReceiptStats } from 'app/hooks/useReceipts'
 import ReceiptManagerModal from 'app/features/profile/components/ReceiptManagerModal'
-import { usePublicContests } from 'app/hooks/usePublicContests'
-import { BACKEND } from 'app/lib/backend'
+import { fetchPublicContestsSupabase } from 'app/lib/supabase/contests'
 import { getUserPrefs } from 'app/lib/prefs'
 import {
   CategoryFilter,
@@ -54,7 +46,7 @@ const CONTESTS_PER_PAGE = 50
 // Authentication required message component
 
 // Define types for contests and contest files
-type Contest = Models.Document & {
+type Contest = Document & {
   title: string
   title_ms?: string
   summary: string
@@ -71,7 +63,7 @@ type Contest = Models.Document & {
 }
 
 // Host type for contest hosts
-type Host = Models.Document & {
+type Host = Document & {
   name: string
   slug: string
   img_id: string
@@ -80,7 +72,7 @@ type Host = Models.Document & {
   bio?: string
 }
 
-type Category = Models.Document & {
+type Category = Document & {
   slug: string
   name_en: string
   name_ms: string
@@ -129,137 +121,70 @@ export default function ContestsListScreen({
   const { user, isLoading: isLoadingUser } = useAuth()
   const { isAdmin, isLoading: isLoadingAdmin } = useIsAdmin()
 
-  // Spike: only the public (RLS) Supabase path is migrated, so under Supabase we
-  // treat everyone as anonymous for DATA fetching (signed-in users still browse
-  // via the public path). Auth state / UI prompts keep using `user`.
-  // NOTE: dataUser === user under Appwrite, so this is a no-op for that backend.
-  const dataUser = BACKEND === 'supabase' ? null : user
-
   // Category filter state
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null,
   )
 
-  // Fetch prize and winner_selection type categories for the filter bar (authenticated users only)
-  const { data: authFilterCategories = [] } = useQuery<FilterCategory[]>({
-    queryKey: ['filter-categories'],
-    enabled: !!dataUser, // Only run for authenticated users
-    queryFn: async () => {
-      // Fetch prize (🏆 Cash, 💻 Macbook, etc.) and winner_selection (🎟️ Entry Rank, etc.) types
-      const res = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: CONTEST_CATEGORIES_COLLECTION_ID,
-        queries: [
-          Query.contains('type', ['prize', 'winner_selection']),
-          Query.orderAsc('priority_order'),
-          Query.limit(50),
-        ],
-      })
-      return res.rows as unknown as FilterCategory[]
-    },
-    staleTime: 10 * 60 * 1000, // Cache for 10 minutes
-    gcTime: 30 * 60 * 1000,
-  })
-
-  // PUBLIC CONTESTS QUERY (for anonymous users) ------------------------------------
+  // CONTESTS LIST (Supabase, offset-paginated). Admins additionally see hidden
+  // (visibility='admin') contests; RLS enforces that gate for everyone else.
+  // Anonymous users still get the first page but are prompted to sign in for
+  // more (onEndReached only paginates when a user is signed in).
   const {
-    data: publicContestsData,
-    isLoading: isLoadingPublicContests,
-    isError: isErrorPublicContests,
-    refetch: refetchPublicContests,
-  } = usePublicContests({
-    limit: 10, // Show up to 10 public contests for anonymous users
-    enabled: !dataUser && !isLoadingUser, // Only run when user is NOT authenticated
-  })
-
-  // Extract filter categories from public contests for anonymous users
-  const publicFilterCategories = useMemo(() => {
-    if (dataUser || !publicContestsData) return []
-    const categoriesMap = new Map<string, FilterCategory>()
-    publicContestsData.forEach((contest: any) => {
-      ;(contest.categories || []).forEach((cat: any) => {
-        // Only include prize and winner_selection types
-        if (cat.type === 'prize' || cat.type === 'winner_selection') {
-          if (!categoriesMap.has(cat.$id)) {
-            categoriesMap.set(cat.$id, {
-              $id: cat.$id,
-              name_en: cat.name_en,
-              name_ms: cat.name_ms,
-              slug: cat.slug,
-              priority_order: cat.priority_order,
-              type: cat.type, // Include type for two-row layout
-            })
-          }
-        }
-      })
-    })
-    return Array.from(categoriesMap.values())
-  }, [user, publicContestsData])
-
-  // Unified filter categories (authenticated or anonymous)
-  const filterCategories = dataUser
-    ? authFilterCategories
-    : publicFilterCategories
-
-  // MAIN LIST QUERY (for authenticated users) with infinite scroll --------------------------------------
-  const {
-    data: authContestsData,
-    isLoading: isLoadingAuthContests,
-    isError: isErrorAuthContests,
-    refetch: refetchAuthContests,
+    data: contestsData,
+    isLoading: isLoadingContests,
+    isError: isErrorContests,
+    refetch: refetchContests,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useInfiniteQuery({
-    queryKey: ['contests', isAdmin],
-    enabled: !!dataUser && !isLoadingAdmin,
-    initialPageParam: undefined as string | undefined,
+    queryKey: ['contests', 'supabase', isAdmin],
+    enabled: !isLoadingUser && !isLoadingAdmin,
+    initialPageParam: 0 as number,
     queryFn: async ({ pageParam }) => {
-      // Admin users see all contests (any, users, admin visibility)
-      // Regular users see contests with visibility='any' or visibility='users'
-      // Sort by most recently added first
-      const queries = isAdmin
-        ? [Query.orderDesc('$createdAt'), Query.limit(CONTESTS_PER_PAGE)]
-        : [
-            Query.contains('visibility', ['any', 'users']),
-            Query.orderDesc('$createdAt'),
-            Query.limit(CONTESTS_PER_PAGE),
-          ]
-
-      // Add cursor for pagination
-      if (pageParam) {
-        queries.push(Query.cursorAfter(pageParam))
-      }
-
-      const res = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: CONTESTS_COLLECTION_ID,
-        queries,
-      })
-      return res.rows as unknown as Contest[]
+      const rows = await fetchPublicContestsSupabase(
+        CONTESTS_PER_PAGE,
+        pageParam as number,
+        isAdmin,
+      )
+      return rows as unknown as Contest[]
     },
-    getNextPageParam: (lastPage) => {
-      // Return the last item's ID as cursor if we got a full page
-      if (lastPage.length === CONTESTS_PER_PAGE) {
-        return lastPage[lastPage.length - 1]?.$id
-      }
-      return undefined
-    },
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === CONTESTS_PER_PAGE
+        ? allPages.length * CONTESTS_PER_PAGE
+        : undefined,
   })
 
-  // Flatten paginated data into single array
-  const authContests = useMemo(() => {
-    return authContestsData?.pages.flat() ?? []
-  }, [authContestsData])
+  // Flatten paginated data into a single array
+  const allContests = useMemo(
+    () => (contestsData?.pages.flat() ?? []) as Contest[],
+    [contestsData],
+  )
 
-  // Unified contests list (public or authenticated)
-  const allContests = useMemo(() => {
-    if (dataUser) {
-      return authContests
-    }
-    // publicContestsData is EnrichedPublicContest[] directly
-    return (publicContestsData || []) as unknown as Contest[]
-  }, [user, authContests, publicContestsData])
+  // Filter-bar categories: derived from the loaded contests' embedded
+  // categories (prize + winner_selection only), de-duplicated.
+  const filterCategories = useMemo<FilterCategory[]>(() => {
+    const map = new Map<string, FilterCategory>()
+    allContests.forEach((contest: any) => {
+      ;(contest.categories || []).forEach((cat: any) => {
+        if (
+          (cat.type === 'prize' || cat.type === 'winner_selection') &&
+          !map.has(cat.$id)
+        ) {
+          map.set(cat.$id, {
+            $id: cat.$id,
+            name_en: cat.name_en,
+            name_ms: cat.name_ms,
+            slug: cat.slug,
+            priority_order: cat.priority_order,
+            type: cat.type,
+          })
+        }
+      })
+    })
+    return Array.from(map.values())
+  }, [allContests])
 
   // Filter categories to only show those that have at least one contest
   const availableFilterCategories = useMemo(() => {
@@ -330,125 +255,6 @@ export default function ContestsListScreen({
     fetchNextPage,
   ])
 
-  // Unified loading state
-  const isLoadingContests = dataUser
-    ? isLoadingAuthContests || isLoadingAdmin
-    : isLoadingPublicContests
-  const isErrorContests = dataUser ? isErrorAuthContests : isErrorPublicContests
-  const refetchContests = dataUser ? refetchAuthContests : refetchPublicContests
-
-  // Fetch all host docs referenced by ALL contests (batch) --------------------------------
-  // Use allContests (pre-filter) so switching category chips doesn't trigger re-fetches
-  const allHostIds = useMemo(() => {
-    const set = new Set<string>()
-    allContests.forEach((c) => (c.host_ids || []).forEach((id) => set.add(id)))
-    return Array.from(set)
-  }, [allContests])
-
-  // For authenticated users, fetch hosts from database
-  // For anonymous users, hosts are already included in publicContestsData
-  const { data: authHosts = [] } = useQuery<Host[]>({
-    queryKey: ['contest-hosts', allHostIds.sort().join(',')],
-    enabled: !!dataUser && allHostIds.length > 0,
-    queryFn: async () => {
-      const res = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: CONTEST_HOSTS_COLLECTION_ID,
-        queries: [Query.equal('$id', allHostIds), Query.limit(100)],
-      })
-      // Sort hosts to ensure consistent ordering in hostsById map
-      const hosts = res.rows as unknown as Host[]
-      return hosts.sort(
-        (a, b) => allHostIds.indexOf(a.$id) - allHostIds.indexOf(b.$id),
-      )
-    },
-  })
-
-  // Unified hosts list
-  const allHosts = useMemo(() => {
-    if (dataUser) {
-      return authHosts
-    }
-    // Extract hosts from each public contest's embedded hosts
-    const hostsMap = new Map<string, Host>()
-    ;(publicContestsData || []).forEach((c) => {
-      ;(c.hosts || []).forEach((h) => {
-        if (!hostsMap.has(h.$id)) {
-          hostsMap.set(h.$id, {
-            $id: h.$id,
-            name: h.name,
-            slug: h.slug,
-            img_id: h.img_id,
-            img_token_secret: h.img_token_secret,
-            img_blurhash: h.img_blurhash,
-          } as unknown as Host)
-        }
-      })
-    })
-    return Array.from(hostsMap.values())
-  }, [user, authHosts, publicContestsData])
-
-  const hostsById = useMemo(() => {
-    const m = new Map<string, Host>()
-    allHosts.forEach((h) => m.set(h.$id, h))
-    return m
-  }, [allHosts])
-
-  // Fetch all categories referenced by ALL contests (batch)
-  // Use allContests (pre-filter) so switching category chips doesn't trigger re-fetches
-  const allCategoryIds = useMemo(() => {
-    const set = new Set<string>()
-    allContests.forEach((c) =>
-      (c.category_ids || []).forEach((id) => set.add(id)),
-    )
-    return Array.from(set)
-  }, [allContests])
-
-  // For authenticated users, fetch categories from database
-  // For anonymous users, categories are already included in publicContestsData
-  const { data: authCategories = [] } = useQuery<Category[]>({
-    queryKey: ['contest-categories', allCategoryIds.sort().join(',')],
-    enabled: !!dataUser && allCategoryIds.length > 0,
-    queryFn: async () => {
-      const res = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: CONTEST_CATEGORIES_COLLECTION_ID,
-        queries: [Query.equal('$id', allCategoryIds), Query.limit(200)],
-      })
-      return res.rows as unknown as Category[]
-    },
-  })
-
-  // Unified categories list
-  const allCategories = useMemo(() => {
-    if (dataUser) {
-      return authCategories
-    }
-    // Extract categories from each public contest's embedded categories
-    const categoriesMap = new Map<string, Category>()
-    ;(publicContestsData || []).forEach((c) => {
-      ;(c.categories || []).forEach((cat) => {
-        if (!categoriesMap.has(cat.$id)) {
-          categoriesMap.set(cat.$id, {
-            $id: cat.$id,
-            name_en: cat.name_en,
-            name_ms: cat.name_ms,
-            slug: cat.slug,
-            priority_order: cat.priority_order,
-            type: cat.type,
-          } as unknown as Category)
-        }
-      })
-    })
-    return Array.from(categoriesMap.values())
-  }, [user, authCategories, publicContestsData])
-
-  const categoriesById = useMemo(() => {
-    const m = new Map<string, Category>()
-    allCategories.forEach((c) => m.set(c.$id, c))
-    return m
-  }, [allCategories])
-
   // Note: Contest Files query removed - now using main image from contests directly
   // Contest Files will only be fetched when needed for deletion
 
@@ -472,20 +278,12 @@ export default function ContestsListScreen({
       }
 
       const counts: Record<string, number> = {}
-      const getCount =
-        BACKEND === 'supabase'
-          ? async (contestId: string) => {
-              const { getContestReceiptCountSupabase } = await import(
-                'app/lib/supabase'
-              )
-              return getContestReceiptCountSupabase(contestId)
-            }
-          : async (contestId: string) => {
-              const { getContestReceiptCount } = await import(
-                'app/lib/receipts/api'
-              )
-              return getContestReceiptCount(user.$id, contestId)
-            }
+      const getCount = async (contestId: string) => {
+        const { getContestReceiptCountSupabase } = await import(
+          'app/lib/supabase'
+        )
+        return getContestReceiptCountSupabase(contestId)
+      }
 
       // Fetch counts for all contests with receipts
       await Promise.all(
@@ -510,14 +308,13 @@ export default function ContestsListScreen({
     gcTime: 5 * 60 * 1000,
   })
 
-  const [jwt, setJwt] = useState<string | null>(null) // for android only (see notes at bottom)
   const [receiptModalVisible, setReceiptModalVisible] = useState(false)
   const [selectedContestForReceipt, setSelectedContestForReceipt] =
     useState<Contest | null>(null)
 
   // Language preference (backend-agnostic via the prefs abstraction)
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
-    queryKey: ['user-language-preference', BACKEND],
+    queryKey: ['user-language-preference', 'supabase'],
     queryFn: async () => {
       try {
         const prefs = await getUserPrefs()
@@ -531,20 +328,6 @@ export default function ContestsListScreen({
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   })
-  if (Platform.OS === 'android') {
-    useEffect(() => {
-      if (BACKEND !== 'appwrite' || !user) return
-      const fetchJWT = async () => {
-        try {
-          const { jwt } = await account.createJWT()
-          setJwt(jwt)
-        } catch {
-          // Not authenticated or JWT creation failed; jwt stays null
-        }
-      }
-      fetchJWT()
-    }, [user])
-  }
 
   const [refreshing, setRefreshing] = useState(false)
 
@@ -719,63 +502,30 @@ export default function ContestsListScreen({
   }
 
   const renderItem = ({ item: contest }: { item: Contest }) => {
-    // For anonymous users, contest is actually EnrichedPublicContest with embedded hosts/categories
-    // For authenticated users, contest is Contest with host_ids/category_ids
-    let contestHosts: Host[]
-    let badgeCategories: ContestBadgeCategory[]
+    // Supabase contests carry embedded hosts/categories.
+    const publicContest = contest as any
+    const contestHosts = (publicContest.hosts || []).map((h: any) => ({
+      $id: h.$id,
+      name: h.name,
+      slug: h.slug,
+      img_id: h.img_id,
+      img_token_secret: h.img_token_secret,
+      img_blurhash: h.img_blurhash,
+    })) as Host[]
 
-    if (!dataUser) {
-      // Anonymous (and all Supabase-spike users): use embedded hosts/categories
-      const publicContest = contest as any
-      contestHosts = (publicContest.hosts || []).map((h: any) => ({
-        $id: h.$id,
-        name: h.name,
-        slug: h.slug,
-        img_id: h.img_id,
-        img_token_secret: h.img_token_secret,
-        img_blurhash: h.img_blurhash,
-      })) as Host[]
+    const badgeCategories: ContestBadgeCategory[] = (
+      publicContest.categories || []
+    ).map((cat: any, index: number) => ({
+      id: cat.$id,
+      name_en: cat.name_en,
+      name_ms: cat.name_ms,
+      priority_order: cat.priority_order ?? null,
+      originalIndex: index,
+      type: cat.type ?? null,
+    }))
 
-      badgeCategories = (publicContest.categories || []).map(
-        (cat: any, index: number) => ({
-          id: cat.$id,
-          name_en: cat.name_en,
-          name_ms: cat.name_ms,
-          priority_order: cat.priority_order ?? null,
-          originalIndex: index,
-          type: cat.type ?? null,
-        }),
-      )
-    } else {
-      // Authenticated: look up by IDs
-      contestHosts = (contest.host_ids || [])
-        .map((id) => hostsById.get(id))
-        .filter(Boolean) as Host[]
-
-      badgeCategories = []
-      ;(contest.category_ids || []).forEach((id, index) => {
-        const category = categoriesById.get(id)
-        if (!category) return
-
-        badgeCategories.push({
-          id: category.$id,
-          name_en: category.name_en,
-          name_ms: category.name_ms,
-          priority_order: category.priority_order ?? null,
-          originalIndex: index,
-          type: category.type ?? null,
-        })
-      })
-    }
-
-    // Get receipt count for this contest
     const receiptCount = receiptCounts[contest.$id] || 0
-
-    // Get upvote count from public contests data for anonymous users
-    // For anonymous users, contest IS the public contest with upvote_count directly on it
-    const initialUpvoteCount = !dataUser
-      ? (contest as any).upvote_count || 0
-      : undefined
+    const initialUpvoteCount = (contest as any).upvote_count || 0
 
     return (
       <ContestCard
@@ -783,7 +533,6 @@ export default function ContestsListScreen({
         hosts={contestHosts}
         badgeCategories={badgeCategories}
         language={language}
-        jwt={jwt}
         onPress={() => {
           if (contest.slug) navigateToContest(contest.slug as string)
         }}
@@ -974,20 +723,3 @@ export default function ContestsListScreen({
     </EngagementProvider>
   )
 }
-
-/*
-  NOTES:
-
-  On Android the request that the React Native Image component makes is missing the Appwrite session-cookie / JWT that is needed to access a private file.
-
-  Why only Android?
-
-  - iOS/web – the networking stack that loads the <Image/> shares the same cookie-jar that appwrite.account.createSession() writes to, so the request automatically carries a_session_<projectId>=….
-  Server authenticates → 200 → image shows.
-
-  - Android – Image is handled by Fresco. Fresco spins up its own HTTP client (OkHttp) that is not wired to React Native's cookie / header store, so the cookie never goes out. 
-  Appwrite therefore answers 404 (or 401/403) and Fresco renders nothing – you only see a blank rectangle. The same URL therefore works in the browser and on iOS but fails on Android.
-
-  That is why a completely public JPG (picsum) loads everywhere, while the Appwrite …/view URL only loads on platforms that send the auth cookie.
-
-*/

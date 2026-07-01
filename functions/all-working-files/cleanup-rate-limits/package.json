@@ -1,9 +1,0 @@
-{
-  "name": "cleanup-rate-limits",
-  "version": "1.0.0",
-  "description": "Scheduled cleanup of old rate limit and suspicious activity records",
-  "main": "index.js",
-  "dependencies": {
-    "node-appwrite": "^20.3.0"
-  }
-}

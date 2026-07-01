@@ -10,14 +10,9 @@ import { Button } from 'app/components/ui/button'
 import { Input } from 'app/components/ui/input'
 import { Label } from 'app/components/ui/label'
 import { toast } from 'app/lib/sonner-universal'
-import { functions } from 'app/provider/appwrite/api'
-import { ExecutionMethod } from 'app/lib/appwrite-universal'
 import { useAuth } from 'app/contexts/AuthContext'
 import { usePoints } from 'app/contexts/PointsContext'
-import { BACKEND } from 'app/lib/backend'
 import { adminAdjustPointsSupabase } from 'app/lib/supabase/points'
-
-const AWARD_POINTS_FUNCTION_ID = 'fn_award-points_1766476217_551e'
 
 type Props = {
   containerMaxWidth: number
@@ -59,98 +54,33 @@ export default function PointsManagerTabContent({ containerMaxWidth }: Props) {
     setIsAwarding(true)
     const loadingToastId = toast.loading('Awarding points...')
 
-    if (BACKEND === 'supabase') {
-      try {
-        await adminAdjustPointsSupabase(
-          userId.trim(),
-          pointsAmount,
-          description.trim(),
-          {
-            adminUserId: user?.$id,
-            awardedViaAdminPanel: true,
-            description_ms: descriptionMs.trim() || null,
-            timestamp: new Date().toISOString(),
-          }
-        )
-        toast.dismiss(loadingToastId)
-        toast.success(
-          `Successfully ${pointsAmount > 0 ? 'awarded' : 'reduced'} ${Math.abs(
-            pointsAmount
-          )} points to user ${userId.substring(0, 8)}...`
-        )
-        setUserId('')
-        setAmount('')
-        setDescription('')
-        setDescriptionMs('')
-        if (userId.trim() === user?.$id) {
-          refreshPoints()
-        }
-      } catch (error) {
-        toast.dismiss(loadingToastId)
-        toast.error(
-          error instanceof Error ? error.message : 'Failed to award points'
-        )
-      } finally {
-        setIsAwarding(false)
-      }
-      return
-    }
-
     try {
-      // Call the award-points function
-      // Note: This function validates admin access via internal API key on the server
-      // The function itself is protected and can only be called by authenticated users
-      const execution = await functions.createExecution(
-        AWARD_POINTS_FUNCTION_ID,
-        JSON.stringify({
-          userId: userId.trim(),
-          amount: pointsAmount,
-          source: 'admin',
-          description: description.trim(),
+      await adminAdjustPointsSupabase(
+        userId.trim(),
+        pointsAmount,
+        description.trim(),
+        {
+          adminUserId: user?.$id,
+          awardedViaAdminPanel: true,
           description_ms: descriptionMs.trim() || null,
-          metadata: {
-            adminUserId: user?.$id,
-            awardedViaAdminPanel: true,
-            timestamp: new Date().toISOString(),
-          },
-        }),
-        false, // sync
-        '/',
-        ExecutionMethod.POST
+          timestamp: new Date().toISOString(),
+        }
       )
-
-      const responseBody = execution.responseBody || (execution as any).response
-
-      if (!responseBody) {
-        throw new Error('Empty response from server')
-      }
-
-      const data = JSON.parse(responseBody)
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to award points')
-      }
-
       toast.dismiss(loadingToastId)
       toast.success(
         `Successfully ${pointsAmount > 0 ? 'awarded' : 'reduced'} ${Math.abs(
           pointsAmount
         )} points to user ${userId.substring(0, 8)}...`
       )
-
-      // Clear form
       setUserId('')
       setAmount('')
       setDescription('')
       setDescriptionMs('')
-
-      // Refresh points if admin awarded to themselves
       if (userId.trim() === user?.$id) {
         refreshPoints()
       }
     } catch (error) {
       toast.dismiss(loadingToastId)
-      console.error('Award points error:', error)
       toast.error(
         error instanceof Error ? error.message : 'Failed to award points'
       )
@@ -199,7 +129,7 @@ export default function PointsManagerTabContent({ containerMaxWidth }: Props) {
           <View className="gap-2">
             <Label nativeID="userId">User ID *</Label>
             <Input
-              placeholder="Enter user ID (e.g., 6915515900296397d382)"
+              placeholder="Enter user ID (UUID, e.g., 00000000-0000-0000-0000-000000000000)"
               value={userId}
               onChangeText={setUserId}
               autoCapitalize="none"
@@ -207,7 +137,7 @@ export default function PointsManagerTabContent({ containerMaxWidth }: Props) {
               editable={!isAwarding}
             />
             <Text className="text-xs text-gray-500 dark:text-gray-400">
-              Get the user ID from Appwrite console or user profile
+              Get the user ID from the Supabase dashboard or user profile
             </Text>
           </View>
 

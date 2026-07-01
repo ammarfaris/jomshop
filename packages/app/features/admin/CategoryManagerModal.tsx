@@ -11,14 +11,7 @@ import {
 import { Text } from 'app/components/ui/text'
 import { Button } from 'app/components/ui/button'
 import { Input } from 'app/components/ui/input'
-import { Models, Query } from 'app/lib/appwrite-universal'
-import { tablesDB } from 'app/provider/appwrite/api'
-import {
-  DATABASE_ID,
-  CONTESTS_COLLECTION_ID,
-  CONTEST_CATEGORIES_COLLECTION_ID,
-} from 'app/provider/appwrite/constants'
-import { BACKEND } from 'app/lib/backend'
+import type { Document } from 'app/lib/types'
 import {
   listSupabaseCategories,
   createSupabaseCategory,
@@ -43,7 +36,7 @@ import { PortalHost } from '@rn-primitives/portal'
 import { RadioGroup, RadioGroupItem } from 'app/components/ui/radio-group'
 import { Label } from 'app/components/ui/label'
 
-export type CategoryDoc = Models.Document & {
+export type CategoryDoc = Document & {
   slug: string
   name_en: string
   name_ms: string
@@ -104,17 +97,8 @@ export default function CategoryManagerModal(props: {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
 
-  // Backend-agnostic list fetch: Supabase content table vs Appwrite collection.
   const fetchCategories = async (): Promise<CategoryDoc[]> => {
-    if (BACKEND === 'supabase') {
-      return (await listSupabaseCategories()) as unknown as CategoryDoc[]
-    }
-    const res = await tablesDB.listRows({
-      databaseId: DATABASE_ID,
-      tableId: CONTEST_CATEGORIES_COLLECTION_ID,
-      queries: [Query.orderDesc('priority_order'), Query.limit(200)],
-    })
-    return res.rows as unknown as CategoryDoc[]
+    return (await listSupabaseCategories()) as unknown as CategoryDoc[]
   }
 
   useEffect(() => {
@@ -247,30 +231,13 @@ export default function CategoryManagerModal(props: {
     setCreating(true)
     try {
       const priority = Number.parseInt(newPriorityOrder || '0', 10) || 0
-      if (BACKEND === 'supabase') {
-        await createSupabaseCategory({
-          slug: newSlug.trim(),
-          name_en: newNameEn.trim(),
-          name_ms: newNameMs.trim(),
-          priority_order: priority,
-          type: newType,
-        })
-      } else {
-        await tablesDB.createRow({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_CATEGORIES_COLLECTION_ID,
-          rowId: 'unique()',
-          data: {
-            slug: newSlug.trim(),
-            name_en: newNameEn.trim(),
-            name_ms: newNameMs.trim(),
-            priority_order: priority,
-            type: newType,
-            created_by: user.$id,
-            updated_by: user.$id,
-          },
-        })
-      }
+      await createSupabaseCategory({
+        slug: newSlug.trim(),
+        name_en: newNameEn.trim(),
+        name_ms: newNameMs.trim(),
+        priority_order: priority,
+        type: newType,
+      })
 
       // reset
       setNewSlug('')
@@ -300,29 +267,13 @@ export default function CategoryManagerModal(props: {
     setUpdating(true)
     try {
       const priority = Number.parseInt(newPriorityOrder || '0', 10) || 0
-      if (BACKEND === 'supabase') {
-        await updateSupabaseCategory(editing.$id, {
-          slug: newSlug.trim(),
-          name_en: newNameEn.trim(),
-          name_ms: newNameMs.trim(),
-          priority_order: priority,
-          type: newType,
-        })
-      } else {
-        await tablesDB.updateRow({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_CATEGORIES_COLLECTION_ID,
-          rowId: editing.$id,
-          data: {
-            slug: newSlug.trim(),
-            name_en: newNameEn.trim(),
-            name_ms: newNameMs.trim(),
-            priority_order: priority,
-            type: newType,
-            updated_by: user.$id,
-          },
-        })
-      }
+      await updateSupabaseCategory(editing.$id, {
+        slug: newSlug.trim(),
+        name_en: newNameEn.trim(),
+        name_ms: newNameMs.trim(),
+        priority_order: priority,
+        type: newType,
+      })
 
       // refresh & propagate to parent selection
       try {
@@ -354,21 +305,7 @@ export default function CategoryManagerModal(props: {
   const handleDelete = async (categoryId: string) => {
     // Guard against deletion when contests reference this category
     try {
-      const titles =
-        BACKEND === 'supabase'
-          ? await findSupabaseContestsUsingCategory(categoryId)
-          : ((
-              await tablesDB.listRows({
-                databaseId: DATABASE_ID,
-                tableId: CONTESTS_COLLECTION_ID,
-                queries: [
-                  Query.contains('category_ids', categoryId),
-                  Query.limit(50),
-                ],
-              })
-            ).rows as any[])
-              .map((c) => c.title)
-              .filter(Boolean)
+      const titles = await findSupabaseContestsUsingCategory(categoryId)
       if (titles.length > 0) {
         const list = titles.map((t) => `- ${t}`).join('\n')
         alert(
@@ -390,15 +327,7 @@ export default function CategoryManagerModal(props: {
       return next
     })
     try {
-      if (BACKEND === 'supabase') {
-        await deleteSupabaseCategory(categoryId)
-      } else {
-        await tablesDB.deleteRow({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_CATEGORIES_COLLECTION_ID,
-          rowId: categoryId,
-        })
-      }
+      await deleteSupabaseCategory(categoryId)
 
       // refresh after deletion
       try {

@@ -1,6 +1,6 @@
 import { View, Pressable, Platform } from 'react-native'
 import { Image as ExpoImage } from 'expo-image'
-import { Models } from 'app/lib/appwrite-universal'
+import type { Document } from 'app/lib/types'
 import { useLingui, Plural } from '@lingui/react/macro'
 
 import {
@@ -21,15 +21,10 @@ import {
   ContestBadges,
   type ContestBadgeCategory,
 } from 'app/features/contest/components/ContestBadges'
-import {
-  APPWRITE_ENDPOINT,
-  APPWRITE_PROJECT_ID,
-  CONTESTS_BUCKET_ID,
-} from 'app/provider/appwrite/constants'
 import { HostImage } from 'app/components/HostImage'
 
 // Type definitions
-type Contest = Models.Document & {
+type Contest = Document & {
   title: string
   title_ms?: string
   summary: string
@@ -46,7 +41,7 @@ type Contest = Models.Document & {
   visibility?: 'any' | 'users' | 'admin' // Visibility setting for the contest
 }
 
-type Host = Models.Document & {
+type Host = Document & {
   name: string
   slug: string
   img_id: string
@@ -60,7 +55,6 @@ interface ContestCardProps {
   hosts: Host[]
   badgeCategories: ContestBadgeCategory[]
   language: 'en' | 'ms'
-  jwt?: string | null // For Android image loading
   onPress: () => void
   showSavedIndicator?: boolean // Whether to show "Saved X ago" indicator (for profile saved tab)
   numColumns?: number // For responsive layout
@@ -80,7 +74,6 @@ export function ContestCard({
   hosts,
   badgeCategories,
   language,
-  jwt,
   onPress,
   showSavedIndicator = false,
   numColumns = 1,
@@ -233,10 +226,9 @@ export function ContestCard({
                           imgBlurhash={h.img_blurhash}
                           width={60}
                           height={60}
-                          borderRadius={6}
-                          contentFit="contain"
-                          jwt={jwt}
-                        />
+                        borderRadius={6}
+                        contentFit="contain"
+                      />
                       </View>
                     ))}
                   </View>
@@ -272,14 +264,7 @@ export function ContestCard({
             {contest.main_img_id && (
               <View>
                 <ExpoImage
-                  source={(() => {
-                    const raw = contest.main_img_id || ''
-                    // Supabase spike stores a full image URL; Appwrite stores a file id.
-                    const baseUri = /^https?:\/\//i.test(raw)
-                      ? raw
-                      : `${APPWRITE_ENDPOINT}/storage/buckets/${CONTESTS_BUCKET_ID}/files/${raw}/view?project=${APPWRITE_PROJECT_ID}`
-                    return { uri: baseUri }
-                  })()}
+                source={{ uri: contest.main_img_id }}
                   style={{
                     width: '100%',
                     height: 200,

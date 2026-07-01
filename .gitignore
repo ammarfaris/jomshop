@@ -83,9 +83,11 @@ build/**
 # cursor local mcp server
 .cursor/mcp.json
 
-# secret environment variables
+# environment variables (keep .env*.example templates tracked)
 *.secrets.env
 .env*.local
+.env
+apps/*/.env
 
 # Supabase CLI local artifacts (keep migrations/seed/config tracked)
 supabase/.branches

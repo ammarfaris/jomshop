@@ -5,19 +5,12 @@ import {
   useInfiniteQuery,
 } from '@tanstack/react-query'
 import { useAuth } from 'app/contexts/AuthContext'
-import { BACKEND } from 'app/lib/backend'
-import {
-  checkUserSave,
-  removeSave,
-  getUserSavedContests,
-  saveWithAutoUpvote,
-  type SaveWithAutoUpvoteResult,
-} from 'app/lib/saves/api'
 import {
   checkUserSaveSupabase,
   removeSaveSupabase,
   saveWithAutoUpvoteSupabase,
   getUserSavedContestsSupabase,
+  type SaveWithAutoUpvoteResult,
 } from 'app/lib/supabase'
 import { useIsContestBatched } from 'app/contexts/EngagementContext'
 
@@ -39,9 +32,7 @@ export function useSaveStatus(contestId: string) {
       if (!user?.$id) {
         return false
       }
-      return BACKEND === 'supabase'
-        ? checkUserSaveSupabase(contestId)
-        : checkUserSave(contestId, user.$id)
+      return checkUserSaveSupabase(contestId)
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: !!contestId && !!user && !isBatched,
@@ -64,9 +55,7 @@ export function useSaveActions(contestId: string) {
         throw new Error('User not authenticated')
       }
       // Save contest and automatically upvote if not already upvoted
-      return BACKEND === 'supabase'
-        ? saveWithAutoUpvoteSupabase(contestId)
-        : saveWithAutoUpvote(contestId, user.$id)
+      return saveWithAutoUpvoteSupabase(contestId)
     },
     onMutate: async () => {
       // OPTIMISTIC UPDATE: Update UI immediately before API call completes
@@ -155,12 +144,7 @@ export function useSaveActions(contestId: string) {
       if (!user?.$id) {
         throw new Error('User not authenticated')
       }
-      if (BACKEND === 'supabase') {
-        await removeSaveSupabase(contestId)
-        return
-      }
-      // Remove save document
-      await removeSave(contestId, user.$id)
+      await removeSaveSupabase(contestId)
     },
     onMutate: async () => {
       // Cancel any outgoing refetches for save status
@@ -240,12 +224,7 @@ export function useUserSavedContests() {
       if (!user?.$id) {
         return []
       }
-      return BACKEND === 'supabase'
-        ? getUserSavedContestsSupabase({ limit: 20, offset: pageParam })
-        : getUserSavedContests(user.$id, {
-            limit: 20,
-            offset: pageParam,
-          })
+      return getUserSavedContestsSupabase({ limit: 20, offset: pageParam })
     },
     getNextPageParam: (lastPage, allPages) => {
       // If the last page has fewer items than the limit, we've reached the end

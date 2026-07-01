@@ -1,6 +1,5 @@
-import { Avatar, AvatarFallback, AvatarImage } from 'app/components/ui/avatar'
+import { Avatar, AvatarFallback } from 'app/components/ui/avatar'
 import { Text } from 'app/components/ui/text'
-import { useGoogleProfilePicture } from 'app/hooks/useGoogleProfilePicture'
 
 interface UserAvatarProps {
   userId?: string
@@ -56,16 +55,14 @@ function getTextSizeClasses(size: 'sm' | 'md' | 'lg' | 'xl'): string {
 }
 
 /**
- * User Avatar component that fetches Google profile picture
- * and falls back to initials if unavailable
+ * User avatar showing the display-name initials. (Google avatar support can be
+ * re-added later from the Supabase user metadata.)
  */
 export function UserAvatar({
-  userId,
   displayName,
   size = 'md',
   className,
 }: UserAvatarProps) {
-  const { profilePicture } = useGoogleProfilePicture(userId)
   const initials = getInitials(displayName)
   const sizeClasses = getSizeClasses(size)
   const textSizeClasses = getTextSizeClasses(size)
@@ -75,7 +72,6 @@ export function UserAvatar({
       alt={`${displayName || 'User'}'s Avatar`}
       className={`${sizeClasses} ${className || ''}`}
     >
-      {profilePicture && <AvatarImage source={{ uri: profilePicture }} />}
       <AvatarFallback>
         <Text className={`font-semibold ${textSizeClasses}`}>{initials}</Text>
       </AvatarFallback>

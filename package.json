@@ -21,10 +21,6 @@
     "compile": "lingui compile --typescript"
   },
   "packageManager": "yarn@4.14.1",
-  "resolutions": {
-    "react-native-appwrite/react-native": "0.85.3",
-    "react-native-appwrite/expo-file-system": "~56.0.8"
-  },
   "eslintConfig": {
     "extends": "next",
     "settings": {

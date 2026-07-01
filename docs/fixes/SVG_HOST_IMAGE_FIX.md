@@ -11,12 +11,15 @@ Host images (including SVG files) were not displaying correctly on web browsers,
 
 ## Root Cause
 
-The issue was caused by the Appwrite Storage API's `/view` endpoint not properly serving SVG files with correct Content-Type headers for web browsers. When using `expo-image` on web with the `/view` endpoint:
+Host image rendering was scattered across screens, each building its own
+`<ExpoImage>` with slightly different options, and small SVG logos rendered
+blurry on some mobile browsers. There was no single place to apply consistent
+loading, caching, and SVG-sharpness handling.
 
-- **Native (iOS/Android)**: The image loads correctly because native image loaders are more forgiving
-- **Web**: Browsers strictly enforce Content-Type headers, and SVGs served via `/view` without proper headers fail to render
-
-Additionally, the preview worked because it was using local blob URLs (`blob:http://...`) which have correct MIME types already set by the browser.
+> Host logos are stored in **Supabase Storage** (the public `contest-hosts`
+> bucket) and the full public URL is saved on the host row (`img_id`). Because
+> the bucket is public, the object is served with the correct Content-Type and
+> CORS headers and can be loaded directly — no signed URL or auth header needed.
 
 ## Solution
 
@@ -26,25 +29,21 @@ Created a centralized `HostImage` component that intelligently handles host imag
 
 1. **Created `packages/app/components/HostImage.tsx`**
    - Centralized host image rendering logic
-   - Platform-specific URL handling
-   - Proper SVG support on web using `/download` endpoint
+   - Loads the public Supabase Storage URL directly (passed in as `imgId`)
+   - Crisp SVG rendering on mobile web (render at higher resolution, scale down)
 
-2. **Platform-Specific Endpoint Selection**
+2. **Direct Public-URL Loading**
    ```typescript
+   // `imgId` is the full public Supabase Storage URL for the host logo.
+   const source = { uri: imgId }
+
+   // On mobile web, small SVGs can render blurry, so draw them at a higher
+   // resolution and scale back down with a CSS transform.
    if (Platform.OS === 'web') {
-     // Use /download endpoint which properly serves SVGs with correct Content-Type
-     src.uri = `${baseUri}/download?project=${APPWRITE_PROJECT_ID}${
-       imgTokenSecret ? `&token=${imgTokenSecret}` : ''
-     }`
-   } else if (Platform.OS === 'android' && jwt) {
-     // Android: Use JWT header authentication with /view
-     src.uri = `${baseUri}/view?project=${APPWRITE_PROJECT_ID}`
-     src.headers = { 'X-Appwrite-JWT': jwt }
-   } else {
-     // iOS/Android without JWT: Use token in URL with /view
-     src.uri = `${baseUri}/view?project=${APPWRITE_PROJECT_ID}${
-       imgTokenSecret ? `&token=${imgTokenSecret}` : ''
-     }`
+     const isSvgFile = imgId.toLowerCase().includes('.svg')
+     const isMobileBrowser = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+     const renderScale = isSvgFile && isMobileBrowser ? 4 : 1
+     // ...render at width * renderScale, then transform: scale(1 / renderScale)
    }
    ```
 
@@ -57,17 +56,20 @@ Created a centralized `HostImage` component that intelligently handles host imag
 
 ## Technical Details
 
-### Why `/download` vs `/view`?
+### Why load the public URL directly?
 
-- **`/view` endpoint**: Designed for embedding in HTML (e.g., `<img>` tags), but doesn't always set correct Content-Type for SVGs
-- **`/download` endpoint**: Serves files with proper Content-Type headers and CORS headers, making it more reliable for programmatic image loading
+- Host logos live in the **public** `contest-hosts` Supabase Storage bucket, so
+  the object's public URL is served with the correct Content-Type and CORS
+  headers — no signed URL, project param, or auth header required.
+- Storing the full URL on the host row keeps the component trivial: it just
+  renders `imgId` as the image source on every platform.
 
 ### Component API
 
 ```typescript
 <HostImage
-  imgId={string}                    // Required: Appwrite file ID
-  imgTokenSecret={string | null}    // Optional: Token for auth
+  imgId={string}                    // Required: public Supabase Storage URL
+  imgTokenSecret={string | null}    // Optional: legacy, unused for public buckets
   imgBlurhash={string}               // Optional: Blurhash placeholder
   width={number}                     // Required: Image width
   height={number}                    // Required: Image height
@@ -84,7 +86,7 @@ Created a centralized `HostImage` component that intelligently handles host imag
 2. **SVG Support**: SVGs now load correctly on web browsers
 3. **Maintainability**: Single source of truth for host image rendering
 4. **Performance**: Proper caching policy (`memory-disk`) and smooth transitions
-5. **Authentication**: Handles token-based and JWT-based auth correctly per platform
+5. **Simplicity**: Public bucket URLs need no auth tokens or per-platform handling
 
 ## Testing Checklist
 
@@ -95,7 +97,7 @@ Created a centralized `HostImage` component that intelligently handles host imag
 - [ ] Verify host images still work on iOS
 - [ ] Verify host images still work on Android
 - [ ] Test with both PNG and SVG host logos
-- [ ] Test with and without authentication tokens
+- [ ] Test SVG logos at small sizes on mobile web (sharpness)
 
 ## Files Modified
 
@@ -108,14 +110,13 @@ Created a centralized `HostImage` component that intelligently handles host imag
 
 ## Migration Notes
 
-If you need to render host images elsewhere in the app, use the new `HostImage` component instead of directly using `ExpoImage` with Appwrite URLs.
+If you need to render host images elsewhere in the app, use the `HostImage`
+component instead of directly using `ExpoImage` with a raw Storage URL.
 
 **Before:**
 ```typescript
 <ExpoImage
-  source={{
-    uri: `${APPWRITE_ENDPOINT}/storage/buckets/${CONTEST_HOSTS_BUCKET_ID}/files/${host.img_id}/view?project=${APPWRITE_PROJECT_ID}&token=${host.img_token_secret}`
-  }}
+  source={{ uri: host.img_id }} // raw public Supabase Storage URL
   style={{ width: 50, height: 50 }}
   contentFit="contain"
   placeholder={{ blurhash: host.img_blurhash }}
@@ -126,7 +127,6 @@ If you need to render host images elsewhere in the app, use the new `HostImage` 
 ```typescript
 <HostImage
   imgId={host.img_id}
-  imgTokenSecret={host.img_token_secret}
   imgBlurhash={host.img_blurhash}
   width={50}
   height={50}

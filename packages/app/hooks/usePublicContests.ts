@@ -1,13 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'app/contexts/AuthContext'
-import {
-  DATABASE_ID,
-  PUBLIC_CONTESTS_COLLECTION_ID,
-  PUBLIC_CONTEST_TRANSLATIONS_COLLECTION_ID,
-} from 'app/provider/appwrite/constants'
-import { tablesDB } from 'app/provider/appwrite/api'
-import { Query, Models } from 'app/lib/appwrite-universal'
-import { BACKEND } from 'app/lib/backend'
+import type { Document } from 'app/lib/types'
 import {
   fetchPublicContestsSupabase,
   fetchContestDetailSupabase,
@@ -17,7 +10,7 @@ import {
  * Public contest document from publicContests collection
  * This is the denormalized version for anonymous users
  */
-export type PublicContest = Models.Document & {
+export type PublicContest = Document & {
   source_contest_id: string
   title: string
   title_ms?: string | null
@@ -76,7 +69,7 @@ export type PublicCategory = {
  *
  * These are gated behind authentication - anonymous users see "Sign in to view" prompts.
  */
-export type PublicContestTranslation = Models.Document & {
+export type PublicContestTranslation = Document & {
   source_contest_id: string
   locale: 'en' | 'ms'
   prizes: string
@@ -109,29 +102,6 @@ interface UsePublicContestBySlugOptions {
 }
 
 /**
- * Parse hosts_json and categories_json from a public contest
- */
-function enrichPublicContest(contest: PublicContest): EnrichedPublicContest {
-  let hosts: PublicHost[] = []
-  let categories: PublicCategory[] = []
-
-  try {
-    hosts = JSON.parse(contest.hosts_json || '[]')
-  } catch {
-    hosts = []
-  }
-
-  try {
-    categories = JSON.parse(contest.categories_json || '[]')
-  } catch {
-    categories = []
-  }
-
-  const { hosts_json, categories_json, ...rest } = contest
-  return { ...rest, hosts, categories }
-}
-
-/**
  * Hook to fetch public contests directly from the publicContests collection.
  * Uses read("any") permission - no authentication required.
  * Much faster than function-based approach (no cold start).
@@ -140,25 +110,14 @@ export function usePublicContests(options: UsePublicContestsOptions = {}) {
   const { limit = 20, enabled = true } = options
 
   return useQuery({
-    queryKey: ['public-contests', BACKEND, limit],
+    queryKey: ['public-contests', 'supabase', limit],
     enabled,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {
       // Supabase path (Phase 0 spike): read contests via anon RLS — no sync needed.
-      if (BACKEND === 'supabase') {
-        const rows = await fetchPublicContestsSupabase(limit)
-        return rows as unknown as EnrichedPublicContest[]
-      }
-
-      const response = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: PUBLIC_CONTESTS_COLLECTION_ID,
-        queries: [Query.orderDesc('end_date'), Query.limit(limit)],
-      })
-
-      const contests = response.rows as unknown as PublicContest[]
-      return contests.map(enrichPublicContest)
+      const rows = await fetchPublicContestsSupabase(limit)
+      return rows as unknown as EnrichedPublicContest[]
     },
   })
 }
@@ -183,78 +142,20 @@ export function usePublicContestBySlug(
   const { user } = useAuth()
 
   return useQuery({
-    queryKey: ['public-contest', BACKEND, slug, user?.$id ?? 'anon'],
+    queryKey: ['public-contest', 'supabase', slug, user?.$id ?? 'anon'],
     enabled: enabled && !!slug,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {
       // Supabase path: single contest via anon RLS, now with translations +
       // gallery files (premium fields gated by auth inside the fetch).
-      if (BACKEND === 'supabase') {
-        const detail = await fetchContestDetailSupabase(slug)
-        if (!detail) throw new Error('Contest not found')
-        return {
-          contest: detail.contest as unknown as EnrichedPublicContest,
-          translations:
-            detail.translations as unknown as PublicContestTranslation[],
-        }
-      }
-
-      // Fetch contest by slug
-      const contestResponse = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: PUBLIC_CONTESTS_COLLECTION_ID,
-        queries: [Query.equal('slug', slug), Query.limit(1)],
-      })
-
-      if (contestResponse.rows.length === 0) {
-        throw new Error('Contest not found')
-      }
-
-      const contest = contestResponse.rows[0] as unknown as PublicContest
-      const enrichedContest = enrichPublicContest(contest)
-
-      // Fetch translations for this contest
-      const translationsResponse = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: PUBLIC_CONTEST_TRANSLATIONS_COLLECTION_ID,
-        queries: [Query.equal('source_contest_id', contest.source_contest_id)],
-      })
-
-      const translations =
-        translationsResponse.rows as unknown as PublicContestTranslation[]
-
+      const detail = await fetchContestDetailSupabase(slug)
+      if (!detail) throw new Error('Contest not found')
       return {
-        contest: enrichedContest,
-        translations,
+        contest: detail.contest as unknown as EnrichedPublicContest,
+        translations:
+          detail.translations as unknown as PublicContestTranslation[],
       }
-    },
-  })
-}
-
-/**
- * Hook to fetch translations for a specific contest.
- * Useful when you already have the contest and need translations separately.
- */
-export function usePublicContestTranslations(
-  sourceContestId: string,
-  options: { enabled?: boolean } = {},
-) {
-  const { enabled = true } = options
-
-  return useQuery({
-    queryKey: ['public-contest-translations', sourceContestId],
-    enabled: enabled && !!sourceContestId,
-    staleTime: 2 * 60 * 1000,
-    gcTime: 5 * 60 * 1000,
-    queryFn: async () => {
-      const response = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: PUBLIC_CONTEST_TRANSLATIONS_COLLECTION_ID,
-        queries: [Query.equal('source_contest_id', sourceContestId)],
-      })
-
-      return response.rows as unknown as PublicContestTranslation[]
     },
   })
 }

@@ -19,8 +19,8 @@ export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_KEY)
 let client: SupabaseClient | null = null
 
 /**
- * Lazily create the Supabase client so importing this module never throws when
- * the Appwrite backend is active (and env vars are absent).
+ * Lazily create the Supabase client so importing this module never throws at
+ * import time when env vars are absent.
  *
  * - web: supabase-js defaults to localStorage + handles the OAuth redirect URL.
  * - native: AsyncStorage persists the session; the URL polyfill is required.

@@ -2,7 +2,7 @@
 
 ## TL;DR
 
-Theme switcher is now available in the Profile screen! Users can choose between Light, Dark, or System theme modes. The preference syncs across devices via Appwrite.
+Theme switcher is now available in the Profile screen! Users can choose between Light, Dark, or System theme modes. The preference syncs across devices via the user's Supabase profile.
 
 ## For Users
 
@@ -94,7 +94,7 @@ function MyComponent() {
                    └──────────┬────────┘
                               │
                    ┌──────────▼──────────┐
-                   │  Appwrite Prefs     │
+                   │  Supabase Profile   │
                    │  (Cross-device sync)│
                    └─────────────────────┘
 ```
@@ -104,7 +104,7 @@ function MyComponent() {
 ✅ Three modes: Light, Dark, System
 ✅ Works on web and native
 ✅ Persists across sessions
-✅ Syncs across devices (Appwrite)
+✅ Syncs across devices (Supabase profile)
 ✅ Auto-updates when system theme changes
 ✅ Localized (English & Malay)
 ✅ No flash of unstyled content
@@ -187,7 +187,7 @@ See [IMPLEMENTATION.md](./IMPLEMENTATION.md) for detailed documentation.
 **Theme not persisting?**
 - Check AsyncStorage permissions (native)
 - Verify localStorage is enabled (web)
-- Ensure user is logged in for Appwrite sync
+- Ensure user is logged in for Supabase profile sync
 
 **System mode not working?**
 - Check device/OS supports dark mode

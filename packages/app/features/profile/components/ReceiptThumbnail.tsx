@@ -3,9 +3,7 @@ import { Image as ExpoImage } from 'expo-image'
 import { Text } from 'app/components/ui/text'
 import { cn } from 'app/lib/utils'
 import { useColorTheme } from 'app/contexts/ColorThemeContext'
-import type { Receipt } from 'app/lib/receipts/api'
-import { getReceiptFileUrl } from 'app/lib/receipts/api'
-import { BACKEND } from 'app/lib/backend'
+import type { Receipt } from 'app/lib/supabase/receipts'
 import { isImageFile, isPDFFile } from 'app/utils/filePicker'
 import { Trans } from '@lingui/react/macro'
 import { TrashOutline } from 'app/components/icons-svg/TrashOutline'
@@ -13,8 +11,7 @@ import { PencilOutline } from 'app/components/icons-svg/PencilOutline'
 
 interface ReceiptThumbnailProps {
   receipt: Receipt
-  jwt?: string | null
-  /** Pre-resolved display URL (Supabase signed URL). Falls back to Appwrite view URL. */
+  /** Pre-resolved display URL (Supabase signed URL). */
   imageUrl?: string
   onPress?: () => void
   onDelete?: () => void
@@ -28,7 +25,6 @@ interface ReceiptThumbnailProps {
  */
 export function ReceiptThumbnail({
   receipt,
-  jwt,
   imageUrl,
   onPress,
   onDelete,
@@ -48,23 +44,8 @@ export function ReceiptThumbnail({
     return colorTheme === 'blue' ? 'bg-blue-500' : 'bg-green-600'
   }
 
-  // Build image source for images.
-  // Supabase passes a ready signed URL via `imageUrl`; Appwrite computes a view
-  // URL (+ JWT header on Android for private-file auth).
-  const imageSource = isImage
-    ? (() => {
-        const baseUri =
-          imageUrl ??
-          (BACKEND === 'appwrite' ? getReceiptFileUrl(receipt.file_id) : '')
-        const src: any = { uri: baseUri }
-
-        if (BACKEND === 'appwrite' && Platform.OS === 'android' && jwt) {
-          src.headers = { 'X-Appwrite-JWT': jwt }
-        }
-
-        return src
-      })()
-    : null
+  // Images use a ready-to-load Supabase signed URL passed via `imageUrl`.
+  const imageSource = isImage && imageUrl ? { uri: imageUrl } : null
 
   return (
     <View style={{ position: 'relative' }} className={className}>

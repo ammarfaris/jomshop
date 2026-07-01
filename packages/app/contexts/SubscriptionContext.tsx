@@ -7,11 +7,7 @@ import {
   useState,
   useCallback,
 } from 'react'
-import { functions } from 'app/provider/appwrite/api'
-import { ExecutionMethod } from 'app/lib/appwrite-universal'
 import { useAuth } from 'app/contexts/AuthContext'
-import { GET_SUBSCRIPTION_TIER_FUNCTION_ID } from 'app/provider/appwrite/constants'
-import { BACKEND } from 'app/lib/backend'
 import { getSupabaseSubscription } from 'app/lib/supabase'
 
 /**
@@ -72,29 +68,6 @@ const TIER_FEATURES: Record<SubscriptionTier, SubscriptionFeatures> = {
     hasNoAds: true,
     hasPrioritySupport: true,
   },
-}
-
-/**
- * Server response from get-subscription-tier function
- */
-interface SubscriptionTierResponse {
-  success: boolean
-  subscription: {
-    tier: SubscriptionTier
-    source: SubscriptionSource
-    expiresAt: string | null
-    isActive: boolean
-    daysRemaining: number | null
-    autoRenew: boolean
-    autoRenewNextTier: SubscriptionTier | null
-    autoRenewFailedAt: string | null
-    autoRenewFailedDismissed: boolean
-    autoRenewAdjustedAt: string | null
-    autoRenewAdjustedDismissed: boolean
-  }
-  limits: SubscriptionFeatures
-  expiringSoon: boolean
-  error?: string
 }
 
 interface SubscriptionContextType {
@@ -206,127 +179,40 @@ export function SubscriptionProvider({
       return
     }
 
-    if (BACKEND !== 'appwrite') {
-      // Supabase: read the user's real tier from public.subscriptions (self-RLS)
-      // so the UI's limits agree with what the receipts Edge Function enforces.
-      // (Auto-renew *writes* aren't migrated yet, but reads keep limits honest.)
-      try {
-        const sub = await getSupabaseSubscription()
-        const exp = sub?.expiresAt ? new Date(sub.expiresAt) : null
-        // Mirror the receipts Edge Function's getTier(): a lapsed subscription is
-        // the free tier, so the UI's limits/features match what the server allows.
-        const expired = exp != null && exp.getTime() < Date.now()
-        const t: SubscriptionTier = expired ? 'free' : sub?.tier ?? 'free'
-        const days =
-          exp != null
-            ? Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-            : null
-        setTier(t)
-        setSource(expired ? 'none' : sub?.source ?? 'none')
-        setFeatures(TIER_FEATURES[t])
-        setExpiresAt(exp)
-        setDaysRemaining(days)
-        setExpiringSoon(days != null && days >= 0 && days <= 7)
-        setAutoRenew(sub?.autoRenew ?? false)
-        setAutoRenewNextTier(sub?.autoRenewNextTier ?? null)
-        setAutoRenewFailedAt(
-          sub?.autoRenewFailedAt ? new Date(sub.autoRenewFailedAt) : null
-        )
-        // The Supabase subscriptions table has no dismissed/adjusted columns yet.
-        setAutoRenewFailedDismissed(false)
-        setAutoRenewAdjustedAt(null)
-        setAutoRenewAdjustedDismissed(false)
-      } catch (error) {
-        console.error(
-          '[SubscriptionContext] Failed to read Supabase subscription:',
-          error
-        )
-        setTier('free')
-        setSource('none')
-        setFeatures(TIER_FEATURES.free)
-        setExpiresAt(null)
-        setDaysRemaining(null)
-        setExpiringSoon(false)
-        setAutoRenew(false)
-        setAutoRenewNextTier(null)
-        setAutoRenewFailedAt(null)
-        setAutoRenewFailedDismissed(false)
-        setAutoRenewAdjustedAt(null)
-        setAutoRenewAdjustedDismissed(false)
-      } finally {
-        setIsLoading(false)
-      }
-      return
-    }
-
+    // Read the user's real tier from public.subscriptions (self-RLS) so the UI's
+    // limits agree with what the receipts Edge Function enforces. (Auto-renew
+    // *writes* aren't migrated to Supabase yet, but reads keep limits honest.)
     try {
-      // console.log('[SubscriptionContext] Fetching subscription from server...')
-
-      const execution = await functions.createExecution(
-        GET_SUBSCRIPTION_TIER_FUNCTION_ID,
-        JSON.stringify({}),
-        false, // sync
-        '/',
-        ExecutionMethod.POST
-      )
-
-      const responseBody = execution.responseBody || (execution as any).response
-
-      if (!responseBody) {
-        throw new Error('Empty response from server')
-      }
-
-      const data: SubscriptionTierResponse = JSON.parse(responseBody)
-
-      // console.log('[SubscriptionContext] Raw response:', data)
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch subscription')
-      }
-
-      const { subscription, limits, expiringSoon: expiring } = data
-
-      setTier(subscription.tier)
-      setSource(subscription.source)
-      setFeatures(limits)
-      setExpiresAt(
-        subscription.expiresAt ? new Date(subscription.expiresAt) : null
-      )
-      setDaysRemaining(subscription.daysRemaining)
-      setExpiringSoon(expiring)
-      setAutoRenew(subscription.autoRenew || false)
-      setAutoRenewNextTier(
-        subscription.autoRenewNextTier ||
-          (subscription.tier === 'plus' || subscription.tier === 'pro'
-            ? subscription.tier
-            : null)
-      )
+      const sub = await getSupabaseSubscription()
+      const exp = sub?.expiresAt ? new Date(sub.expiresAt) : null
+      // Mirror the receipts Edge Function's getTier(): a lapsed subscription is
+      // the free tier, so the UI's limits/features match what the server allows.
+      const expired = exp != null && exp.getTime() < Date.now()
+      const t: SubscriptionTier = expired ? 'free' : sub?.tier ?? 'free'
+      const days =
+        exp != null
+          ? Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          : null
+      setTier(t)
+      setSource(expired ? 'none' : sub?.source ?? 'none')
+      setFeatures(TIER_FEATURES[t])
+      setExpiresAt(exp)
+      setDaysRemaining(days)
+      setExpiringSoon(days != null && days >= 0 && days <= 7)
+      setAutoRenew(sub?.autoRenew ?? false)
+      setAutoRenewNextTier(sub?.autoRenewNextTier ?? null)
       setAutoRenewFailedAt(
-        subscription.autoRenewFailedAt
-          ? new Date(subscription.autoRenewFailedAt)
-          : null
+        sub?.autoRenewFailedAt ? new Date(sub.autoRenewFailedAt) : null
       )
-      setAutoRenewFailedDismissed(
-        subscription.autoRenewFailedDismissed || false
-      )
-      setAutoRenewAdjustedAt(
-        subscription.autoRenewAdjustedAt
-          ? new Date(subscription.autoRenewAdjustedAt)
-          : null
-      )
-      setAutoRenewAdjustedDismissed(
-        subscription.autoRenewAdjustedDismissed || false
-      )
-
-      // console.log(
-      //   `[SubscriptionContext] Tier: ${subscription.tier}, Source: ${subscription.source}, Expires: ${subscription.expiresAt}`
-      // )
+      // The Supabase subscriptions table has no dismissed/adjusted columns yet.
+      setAutoRenewFailedDismissed(false)
+      setAutoRenewAdjustedAt(null)
+      setAutoRenewAdjustedDismissed(false)
     } catch (error) {
       console.error(
-        '[SubscriptionContext] Failed to fetch subscription:',
+        '[SubscriptionContext] Failed to read Supabase subscription:',
         error
       )
-      // Default to free on error
       setTier('free')
       setSource('none')
       setFeatures(TIER_FEATURES.free)
@@ -412,38 +298,8 @@ export function SubscriptionProvider({
    */
   const dismissAutoRenewFailed = useCallback(async () => {
     if (!user) return
-
-    try {
-      const execution = await functions.createExecution(
-        'fn_update-auto-renew',
-        JSON.stringify({ dismissType: 'failed' }),
-        false,
-        '/',
-        ExecutionMethod.POST
-      )
-
-      const responseBody = execution.responseBody || (execution as any).response
-
-      if (!responseBody) {
-        throw new Error('Empty response from server')
-      }
-
-      const data = JSON.parse(responseBody)
-
-      if (!data.success) {
-        throw new Error(
-          data.error || 'Failed to dismiss auto-renew failed alert'
-        )
-      }
-
-      // Only update the failed dismissed flag
-      setAutoRenewFailedDismissed(true)
-    } catch (error) {
-      console.error(
-        '[SubscriptionContext] Failed to dismiss auto-renew failed alert:',
-        error
-      )
-    }
+    // Auto-renew alerts aren't persisted on Supabase yet; dismiss locally.
+    setAutoRenewFailedDismissed(true)
   }, [user])
 
   /**
@@ -454,38 +310,8 @@ export function SubscriptionProvider({
    */
   const dismissAutoRenewAdjusted = useCallback(async () => {
     if (!user) return
-
-    try {
-      const execution = await functions.createExecution(
-        'fn_update-auto-renew',
-        JSON.stringify({ dismissType: 'adjusted' }),
-        false,
-        '/',
-        ExecutionMethod.POST
-      )
-
-      const responseBody = execution.responseBody || (execution as any).response
-
-      if (!responseBody) {
-        throw new Error('Empty response from server')
-      }
-
-      const data = JSON.parse(responseBody)
-
-      if (!data.success) {
-        throw new Error(
-          data.error || 'Failed to dismiss auto-renew adjusted alert'
-        )
-      }
-
-      // Only update the adjusted dismissed flag
-      setAutoRenewAdjustedDismissed(true)
-    } catch (error) {
-      console.error(
-        '[SubscriptionContext] Failed to dismiss auto-renew adjusted alert:',
-        error
-      )
-    }
+    // Auto-renew alerts aren't persisted on Supabase yet; dismiss locally.
+    setAutoRenewAdjustedDismissed(true)
   }, [user])
 
   /**
@@ -496,53 +322,22 @@ export function SubscriptionProvider({
     async (enabled: boolean): Promise<boolean> => {
       if (!user) return false
 
-      // When enabling, determine which tier to auto-renew into
-      // When disabling, we'll set autoRenewNextTier to null
+      // Auto-renew persistence isn't migrated to Supabase yet, so this updates
+      // local UI state only (it does not survive a reload). Pick the tier to
+      // show as the renew target when enabling; clear it when disabling.
       const nextTierToSend = enabled
         ? autoRenewNextTier && autoRenewNextTier !== 'free'
           ? autoRenewNextTier
           : tier === 'plus' || tier === 'pro'
           ? tier
           : null
-        : null // Clear when disabling
+        : null
 
       setIsUpdatingAutoRenew(true)
       try {
-        const execution = await functions.createExecution(
-          'fn_update-auto-renew',
-          JSON.stringify({
-            autoRenew: enabled,
-            // Always send autoRenewNextTier (null when disabled, tier when enabled)
-            autoRenewNextTier: nextTierToSend,
-          }),
-          false,
-          '/',
-          ExecutionMethod.POST
-        )
-
-        const responseBody =
-          execution.responseBody || (execution as any).response
-
-        if (!responseBody) {
-          throw new Error('Empty response from server')
-        }
-
-        const data = JSON.parse(responseBody)
-
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to update auto-renew')
-        }
-
         setAutoRenew(enabled)
-        // Update local state: set tier when enabled, null when disabled
         setAutoRenewNextTier(nextTierToSend)
         return true
-      } catch (error) {
-        console.error(
-          '[SubscriptionContext] Failed to update auto-renew:',
-          error
-        )
-        return false
       } finally {
         setIsUpdatingAutoRenew(false)
       }
@@ -558,42 +353,16 @@ export function SubscriptionProvider({
     async (nextTier: 'plus' | 'pro'): Promise<boolean> => {
       if (!user) return false
 
+      // Local-only until auto-renew is migrated to Supabase (see updateAutoRenew).
       setIsUpdatingAutoRenew(true)
       try {
-        const execution = await functions.createExecution(
-          'fn_update-auto-renew',
-          JSON.stringify({ autoRenew, autoRenewNextTier: nextTier }),
-          false,
-          '/',
-          ExecutionMethod.POST
-        )
-
-        const responseBody =
-          execution.responseBody || (execution as any).response
-
-        if (!responseBody) {
-          throw new Error('Empty response from server')
-        }
-
-        const data = JSON.parse(responseBody)
-
-        if (!data.success) {
-          throw new Error(data.error || 'Failed to update auto-renew tier')
-        }
-
         setAutoRenewNextTier(nextTier)
         return true
-      } catch (error) {
-        console.error(
-          '[SubscriptionContext] Failed to update auto-renew tier:',
-          error
-        )
-        return false
       } finally {
         setIsUpdatingAutoRenew(false)
       }
     },
-    [user, autoRenew]
+    [user]
   )
 
   const value: SubscriptionContextType = {

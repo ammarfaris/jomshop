@@ -169,7 +169,7 @@ While our enhancements significantly improve quality, CamScanner still has advan
    - Requires more complex algorithms
 
 3. **Server-Side Processing**
-   - Upload to Appwrite Function
+   - Upload to a Supabase Edge Function
    - Use OpenCV with full feature set
    - Apply ML-based enhancements
    - See `OPTIMIZATION_SUMMARY.md` for details

@@ -76,7 +76,7 @@ export function ThemeSelector() {
 - ✅ Proper React hooks usage
 - ✅ Works with existing ThemeProvider
 - ✅ Persists to localStorage automatically
-- ✅ Syncs with Appwrite user preferences
+- ✅ Syncs with the user's Supabase profile preferences
 
 ### ThemeSelector.tsx (Native Platform)
 
@@ -119,8 +119,8 @@ ThemeSelector (web) render - currentThemeMode: system theme: system
 handleThemeChange called: light current: system
 Calling setTheme with: light
 setTheme called successfully
-Saving to Appwrite...
-Saved to Appwrite successfully
+Saving to Supabase profile...
+Saved to Supabase profile successfully
 Cleaning up loading state
 ThemeSelector (web) render - currentThemeMode: light theme: light
 ```
@@ -131,7 +131,7 @@ Added comprehensive console.log statements to track:
 - Component renders with current theme
 - Button click events
 - Theme change function calls
-- Appwrite save operations
+- Supabase profile save operations
 - Loading state changes
 
 Check your browser console to see what's happening!
@@ -153,7 +153,7 @@ Check your browser console to see what's happening!
 ### For Web (Complete ✅):
 - Theme switcher fully functional
 - Persists to localStorage via next-themes
-- Syncs to Appwrite for cross-device
+- Syncs to the Supabase profile for cross-device
 - Auto-updates when system theme changes
 
 ### For Native (TODO):

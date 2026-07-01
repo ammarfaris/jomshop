@@ -83,7 +83,7 @@ Components (SaveButton, UpvoteButton, etc.)
 3. On web: Document class updated (`theme-green` or `theme-blue`)
 4. CSS variables change based on theme class
 5. All components using `text-main`, `bg-main`, etc. update instantly
-6. Theme preference saved to Appwrite user preferences
+6. Theme preference saved to the user's Supabase profile preferences
 
 ### Cross-Platform Support
 
@@ -95,7 +95,7 @@ Components (SaveButton, UpvoteButton, etc.)
 #### Native (Expo/React Native)
 - NativeWind v4 supports CSS variables
 - Same Tailwind classes work on native
-- Theme stored in context and Appwrite
+- Theme stored in context and the Supabase profile
 
 ## Changes Summary
 
@@ -204,7 +204,7 @@ The app will continue to work with the default green theme.
 ## Success Metrics
 
 ### User Engagement
-- Track theme selection in Appwrite preferences
+- Track theme selection in the Supabase profile preferences
 - Monitor user feedback on theme feature
 - Measure user retention after theme implementation
 

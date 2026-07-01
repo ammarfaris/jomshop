@@ -29,7 +29,6 @@ import {
   useDeleteReceipt,
   useReceiptSignedUrls,
 } from 'app/hooks/useReceipts'
-import { BACKEND } from 'app/lib/backend'
 import { useSubscription } from 'app/contexts/SubscriptionContext'
 import {
   pickImages,
@@ -41,10 +40,9 @@ import {
 import { toast } from 'app/lib/sonner-universal'
 import { useAuth } from 'app/contexts/AuthContext'
 import { useTextScale } from 'app/contexts/TextScaleContext'
-import { account } from 'app/provider/appwrite/api'
 import { TURNSTILE_SITE_KEY } from 'app/utils/constants/ConstTurnstile'
 import { TurnstileWidget } from 'app/components/TurnstileWidget'
-import { type Receipt } from 'app/lib/receipts/api'
+import { type Receipt } from 'app/lib/supabase/receipts'
 import { useColorScheme } from 'app/hooks/useColorScheme'
 import Colors from 'app/utils/constants/ConstColors'
 import { cn } from 'app/lib/utils'
@@ -73,7 +71,6 @@ export default function ReceiptManagerModal({
   const { fontSize } = useTextScale()
 
   // State
-  const [jwt, setJwt] = useState<string | null>(null)
   const [galleryVisible, setGalleryVisible] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null)
@@ -168,21 +165,6 @@ export default function ReceiptManagerModal({
   const atContestLimit =
     !isContestLimitUnlimited && isNewContest && contestCount >= maxContests
   const atReceiptLimit = !isReceiptLimitUnlimited && receiptCount >= maxReceipts
-
-  // Get JWT for Android (Appwrite private-image auth only; Supabase uses signed URLs).
-  useEffect(() => {
-    if (Platform.OS === 'android' && user && BACKEND === 'appwrite') {
-      const fetchJWT = async () => {
-        try {
-          const { jwt } = await account.createJWT()
-          setJwt(jwt)
-        } catch (error) {
-          console.error('Failed to create JWT:', error)
-        }
-      }
-      fetchJWT()
-    }
-  }, [user])
 
   // Collapsible starts collapsed by default
 
@@ -439,14 +421,10 @@ export default function ReceiptManagerModal({
 
       // Update file_order for receipts that came after the deleted one
       const reorder = async (receiptId: string, newOrder: number) => {
-        if (BACKEND === 'supabase') {
-          const { updateReceiptFileOrderSupabase } = await import(
-            'app/lib/supabase'
-          )
-          return updateReceiptFileOrderSupabase(receiptId, newOrder)
-        }
-        const { updateReceiptFileOrder } = await import('app/lib/receipts/api')
-        return updateReceiptFileOrder(receiptId, newOrder)
+        const { updateReceiptFileOrderSupabase } = await import(
+          'app/lib/supabase'
+        )
+        return updateReceiptFileOrderSupabase(receiptId, newOrder)
       }
       const updatePromises = remainingReceipts
         .filter((r) => r.file_order > deletedFileOrder)
@@ -654,7 +632,6 @@ export default function ReceiptManagerModal({
                     {/* Thumbnail */}
                     <ReceiptThumbnail
                       receipt={receipt}
-                      jwt={jwt}
                       imageUrl={fileUrls[receipt.file_id]}
                       onPress={() => {
                         if (isImageFile(receipt.file_type)) {

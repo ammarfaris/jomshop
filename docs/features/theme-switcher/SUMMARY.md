@@ -2,7 +2,7 @@
 
 ## What Was Implemented
 
-A complete theme switcher that allows users to choose between **Light**, **Dark**, or **System** theme modes, with full cross-platform support (web and native) and cross-device synchronization via Appwrite.
+A complete theme switcher that allows users to choose between **Light**, **Dark**, or **System** theme modes, with full cross-platform support (web and native) and cross-device synchronization via the user's Supabase profile.
 
 ## Visual Preview
 
@@ -50,7 +50,7 @@ const {
 **Features**:
 - Three visual buttons for theme selection
 - Loading states during theme changes
-- Syncs with Appwrite user preferences
+- Syncs with the user's Supabase profile preferences
 - Fully localized (English & Malay)
 - Responsive design that works on all screen sizes
 
@@ -92,8 +92,9 @@ All icons follow the existing Heroicons pattern used in the app.
    - **Web**: localStorage via next-themes
    - **Native**: AsyncStorage
 
-2. **Appwrite User Preferences** (cross-device sync):
-   - Stored as `theme` preference
+2. **Supabase Profile Preferences** (cross-device sync):
+   - Stored as `theme` in the `prefs` JSON on the user's `profiles` row
+   - Read/written via `getUserPrefs()` / `updateUserPrefs()` (`app/lib/prefs`)
    - Automatically synced when user logs in
 
 ### System Mode Behavior
@@ -123,7 +124,7 @@ The theme is applied using NativeWind's Tailwind CSS integration:
 1. Navigate to Profile → General
 2. Select preferred theme (Light/Dark/System)
 3. Theme changes immediately
-4. Preference is saved to Appwrite
+4. Preference is saved to the Supabase profile
 5. Same theme appears on all devices
 
 ### For Logged-Out Users:
@@ -131,7 +132,7 @@ The theme is applied using NativeWind's Tailwind CSS integration:
 2. Select preferred theme
 3. Theme changes immediately
 4. Preference is saved locally (localStorage/AsyncStorage)
-5. Not synced across devices (no Appwrite account)
+5. Not synced across devices (no signed-in Supabase account)
 
 ## Technical Benefits
 
@@ -139,7 +140,7 @@ The theme is applied using NativeWind's Tailwind CSS integration:
 ✅ **Type-Safe**: Full TypeScript support
 ✅ **Performant**: No flash of unstyled content
 ✅ **Persistent**: Survives app restarts
-✅ **Synchronized**: Syncs across devices via Appwrite
+✅ **Synchronized**: Syncs across devices via the Supabase profile
 ✅ **Reactive**: Auto-updates when system theme changes
 ✅ **Localized**: Supports multiple languages
 ✅ **Well-Documented**: Comprehensive docs and code comments
@@ -164,7 +165,7 @@ The theme is applied using NativeWind's Tailwind CSS integration:
    - [ ] Theme should be remembered
 
 4. **Cross-Device Sync** (Logged-in users):
-   - [ ] Set theme on Device A
+   - [ ] Set theme on Device A (saved to the Supabase profile)
    - [ ] Log in on Device B
    - [ ] Theme should match Device A
 

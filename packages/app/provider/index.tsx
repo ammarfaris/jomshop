@@ -11,7 +11,6 @@ import { I18nProvider } from '@lingui/react'
 import { i18n, defaultLocale, activateLocale } from 'app/lib/lingui/i18n'
 import { useEffect, useState } from 'react'
 import { Platform } from 'react-native'
-import { useOAuthCallback } from 'app/hooks/useOAuthCallback'
 import { useThemeSync } from 'app/hooks/useThemeSync'
 import { Toaster } from 'app/lib/sonner-universal'
 import { useColorScheme } from 'app/hooks/useColorScheme'
@@ -30,10 +29,7 @@ function I18nProviderWrapper({ children }: { children: React.ReactNode }) {
   const [isI18nLoaded, setIsI18nLoaded] = useState(Platform.OS !== 'web')
   const { user, isLoading } = useAuth()
 
-  // Handle post-OAuth callback to download profile picture
-  useOAuthCallback()
-
-  // Sync theme from Appwrite when user logs in (web only, native follows system)
+  // Sync theme when the user logs in (web only; native follows the system).
   useThemeSync() // Hook always called, but will be no-op on native
 
   useEffect(() => {

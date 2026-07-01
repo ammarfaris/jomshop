@@ -107,7 +107,7 @@ Test with various receipts:
    - High Contrast
 
 2. **Server-Side Processing**
-   - Upload to Appwrite Function
+   - Upload to a Supabase Edge Function
    - Use full OpenCV with ML
    - Professional-grade enhancement
 

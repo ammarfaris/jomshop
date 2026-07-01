@@ -1,9 +1,0 @@
-{
-  "name": "validate-captcha",
-  "version": "2.0.0",
-  "description": "Validates Cloudflare Turnstile CAPTCHA with action-specific rate limiting and suspicious activity logging",
-  "main": "index.js",
-  "dependencies": {
-    "node-appwrite": "^20.3.0"
-  }
-}

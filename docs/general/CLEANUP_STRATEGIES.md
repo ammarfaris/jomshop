@@ -2,236 +2,223 @@
 
 ## Problem
 
-The `rateLimits` and `suspiciousActivity` collections will accumulate data over time. Without cleanup, they can grow indefinitely and impact performance.
+The `rate_limits` and `suspicious_activity` tables accumulate rows over time.
+Without cleanup, they can grow indefinitely and impact performance.
+
+Both tables live in Postgres, are **service-role only** (RLS blocks direct client
+access), and have a `created_at` timestamp, so time-based cleanup is easy.
 
 ---
 
-## Option 1: Scheduled Appwrite Function (RECOMMENDED) ✅
+## Option 1: Scheduled cleanup with `pg_cron` (RECOMMENDED) ✅
 
 ### How It Works
 
-- Appwrite Function runs on a schedule (e.g., daily at 3 AM)
-- Automatically deletes records older than retention period
-- No manual intervention needed
+- `pg_cron` runs a SQL statement on a schedule (e.g. daily at 3 AM UTC)
+- Automatically deletes rows older than the retention period
+- No manual intervention, no extra service to deploy
 
 ### Implementation
 
-**File:** `functions/cleanup-rate-limits/index.js`
+Enable the extension (once) and schedule the job:
 
-**Schedule:** Daily at 3:00 AM UTC
+```sql
+-- 1. Enable pg_cron (Supabase Dashboard → Database → Extensions, or SQL)
+create extension if not exists pg_cron;
 
-```
-0 3 * * *
+-- 2. Delete rate-limit rows older than 90 days, every day at 3 AM UTC
+select cron.schedule(
+  'cleanup-rate-limits',
+  '0 3 * * *',
+  $$ delete from public.rate_limits
+     where created_at < now() - interval '90 days' $$
+);
 ```
 
 **Retention Period:**
 
 - Rate Limits: 90 days
 
-**Note:** Suspicious Activity is NOT cleaned up by this function. It should be kept indefinitely for security audits and compliance, or cleaned up manually when needed.
+**Note:** `suspicious_activity` is intentionally **not** auto-deleted. Keep it
+indefinitely for security audits and compliance, or clean it up manually when
+needed.
 
 ### Pros ✅
 
-- **Fully automated** - Set it and forget it
-- **Consistent** - Runs reliably on schedule
-- **Configurable** - Easy to adjust retention periods
-- **Logged** - Function logs show cleanup activity
-- **Safe** - Batched deletions prevent timeouts
-- **No manual work** - Zero maintenance
+- **Fully automated** — set it and forget it
+- **Consistent** — runs reliably on schedule
+- **Configurable** — easy to adjust retention (change the `interval`)
+- **In-database** — no separate function/service to deploy or pay for
+- **Safe** — a single indexed `DELETE` on `created_at`
 
 ### Cons ❌
 
-- Requires deploying one more function
-- Uses function execution credits (minimal)
+- Requires the `pg_cron` extension to be enabled
+- Very large one-shot deletes can be heavy (batch if the backlog is huge)
 
 ### Cost
 
-- **~$0.01/month** - One 10-second execution per day
-- **Negligible** compared to database storage costs
+- **Negligible** — one small `DELETE` per day
 
 ---
 
-## Option 2: Manual Periodic Cleanup Query
+## Option 2: Manual periodic cleanup (SQL editor)
 
 ### How It Works
 
-- Run manual queries in Appwrite Console
-- Delete old records when you remember
+- Run a `DELETE` in the Supabase SQL editor when you remember
 - Requires human intervention
 
 ### Implementation
 
-**Step 1: Go to Appwrite Console → Databases → rateLimits**
+**Supabase Dashboard → SQL Editor:**
 
-**Step 2: Run Query**
-
-```javascript
-// In Console Filters
-$createdAt < '2024-07-26T00:00:00.000Z' // 90 days ago
+```sql
+-- Delete rate-limit rows older than 90 days
+delete from public.rate_limits
+where created_at < now() - interval '90 days';
 ```
-
-**Step 3: Select All → Delete**
-
-**Step 4: Repeat for suspiciousActivity**
 
 ### Pros ✅
 
-- No function deployment needed
+- No extension needed
 - Simple to understand
 - Full control over what gets deleted
 
 ### Cons ❌
 
-- **Manual work** - You have to remember to do it
-- **Inconsistent** - Easy to forget
-- **Time-consuming** - Multiple steps each time
-- **Error-prone** - Might delete wrong data
-- **No logging** - No audit trail
-- **Batch limits** - Can only delete 100 at a time in console
+- **Manual work** — you have to remember to do it
+- **Inconsistent** — easy to forget
+- **No logging** — no audit trail of the cleanup
 
 ---
 
 ## Comparison Table
 
-| Feature              | Scheduled Function   | Manual Query               |
+| Feature              | `pg_cron` job        | Manual SQL                 |
 | -------------------- | -------------------- | -------------------------- |
 | **Automation**       | ✅ Fully automated   | ❌ Manual                  |
 | **Consistency**      | ✅ Runs on schedule  | ❌ When you remember       |
 | **Maintenance**      | ✅ Zero              | ❌ Regular work            |
-| **Logging**          | ✅ Function logs     | ❌ No audit trail          |
-| **Safety**           | ✅ Batched deletions | ⚠️ Risk of mistakes        |
-| **Cost**             | ~$0.01/month         | Free (but costs your time) |
-| **Setup Time**       | 10 minutes           | 0 minutes                  |
-| **Long-term Effort** | 0 minutes/month      | 15 minutes/month           |
+| **Logging**          | ✅ `cron.job_run_details` | ❌ No audit trail     |
+| **Setup Time**       | ~5 minutes           | 0 minutes                  |
+| **Long-term Effort** | 0 minutes/month      | Recurring manual work      |
 
 ---
 
-## Recommendation: Scheduled Function ✅
+## Recommendation: `pg_cron` ✅
 
 **Why?**
 
-1. **Set it once, forget it forever**
-2. **Costs pennies** (~$0.01/month)
-3. **Reliable** - Never forgets to run
-4. **Professional** - Production-grade solution
-5. **Scalable** - Works as your app grows
+1. Set it once, runs forever
+2. Stays inside Postgres — no extra infrastructure
+3. Reliable and logged
+4. Scales as your app grows
 
-**When to use Manual Cleanup:**
+**When manual cleanup is fine:**
 
-- You're in early development
-- You have < 100 users
-- You check your database daily anyway
+- Early development
+- Very low traffic
+- You check the database regularly anyway
 
 ---
 
-## Deployment: Scheduled Function
+## Deployment: `pg_cron` job
 
-### Step 1: Create Function in Appwrite Console
+### Step 1: Enable the extension
 
-```
-Name: cleanup-rate-limits
-Runtime: Node.js (18.0 or higher)
-Entrypoint: index.js
-Execute Access: Server (this function is only triggered by schedule, not by users)
-```
+Supabase Dashboard → **Database → Extensions** → enable `pg_cron`
+(or run `create extension if not exists pg_cron;`).
 
-**Why "Server"?**
+### Step 2: Schedule the job
 
-- This function runs on a schedule (cron job)
-- No users should be able to call it directly
-- "Server" means only Appwrite's internal scheduler can execute it
-- More secure than "Any"
-
-### Step 2: Upload Function
-
-Upload: `functions/cleanup-rate-limits.tar.gz`
-
-### Step 3: Set Environment Variables
-
-```env
-DATABASE_ID=6859b128002afc56c476
-RATE_LIMITS_COLLECTION_ID=rateLimits
+```sql
+select cron.schedule(
+  'cleanup-rate-limits',
+  '0 3 * * *', -- daily at 3 AM UTC (lowest traffic)
+  $$ delete from public.rate_limits
+     where created_at < now() - interval '90 days' $$
+);
 ```
 
-### Step 4: Configure Schedule
+### Step 3: Verify it's registered
 
-Go to **Settings** → **Schedule**:
-
+```sql
+select jobid, schedule, jobname, active
+from cron.job
+where jobname = 'cleanup-rate-limits';
 ```
-Schedule: 0 3 * * *
-Description: Daily cleanup at 3 AM UTC
+
+### Step 4 (optional): Run once to test
+
+```sql
+delete from public.rate_limits
+where created_at < now() - interval '90 days';
 ```
-
-**Schedule Explanation:**
-
-- `0 3 * * *` = Every day at 3:00 AM UTC
-- Runs when traffic is lowest
-- Completes before users wake up
-
-### Step 5: Test Manually
-
-Click **"Execute Now"** to test:
-
-- Check function logs
-- Verify old records are deleted
-- Confirm no errors
 
 ---
 
 ## Adjusting Retention Periods
 
-Edit `functions/cleanup-rate-limits/index.js`:
+Change the `interval` in the scheduled statement:
 
-```javascript
-const RETENTION_DAYS = 90 // ← Change this (days)
+```sql
+-- Example: keep only 30 days
+select cron.unschedule('cleanup-rate-limits');
+select cron.schedule(
+  'cleanup-rate-limits',
+  '0 3 * * *',
+  $$ delete from public.rate_limits
+     where created_at < now() - interval '30 days' $$
+);
 ```
 
 **Recommendations:**
 
-- **Rate Limits**: 30-90 days (short-term abuse tracking)
-- **Suspicious Activity**: Keep indefinitely or clean up manually (security audits, compliance)
+- **Rate Limits**: 30–90 days (short-term abuse tracking)
+- **Suspicious Activity**: keep indefinitely or clean up manually (audits, compliance)
 
 ---
 
 ## Monitoring
 
-**Check Function Logs:**
+Check recent runs of the scheduled job:
 
-1. Go to Functions → cleanup-rate-limits → Executions
-2. View latest execution
-3. Check logs for deletion counts
-
-**Example Log Output:**
-
-```
-Starting cleanup of rate limits...
-Cleaning up rate limits older than 90 days...
-Rate Limits cleanup: 1,234 documents deleted
+```sql
+select runid, status, return_message, start_time, end_time
+from cron.job_run_details
+where jobid = (select jobid from cron.job where jobname = 'cleanup-rate-limits')
+order by start_time desc
+limit 10;
 ```
 
 ---
 
-## Alternative: TTL (Time To Live)
+## Alternative: Scheduled Edge Function
 
-**Note:** Appwrite doesn't currently support automatic TTL on documents. If this feature is added in the future, it would be the best solution (zero-code automatic cleanup).
+If you prefer application code over SQL (e.g. to add custom logging or alerts),
+a Supabase **Edge Function** can perform the same cleanup using the service role
+key, triggered on a schedule (via `pg_cron` calling the function, or an external
+scheduler). For pure time-based deletion, the in-database `pg_cron` `DELETE`
+above is simpler and cheaper.
 
-Until then, the scheduled function is the best approach.
+---
+
+## Alternative: Partitioning
+
+For very high-volume tables, consider **time-based partitioning** (e.g. monthly
+partitions) so old data can be dropped instantly by dropping a partition instead
+of running a large `DELETE`. This is overkill for typical rate-limit volumes but
+worth knowing if the tables grow large.
 
 ---
 
 ## Summary
 
-**For Production:** Use **Scheduled Function** ✅
+**For Production:** Use a **`pg_cron` scheduled DELETE** ✅
 
-- Automated, reliable, professional
-- Costs pennies, saves hours
+- Automated, reliable, in-database
+- Costs effectively nothing
 - Set once, works forever
 
-**For Development:** Either works
-
-- Manual cleanup is fine for testing
-- Scheduled function is better practice
-
----
-
-_Last Updated: October 24, 2025_
+**For Development:** Either works — manual SQL is fine while iterating.

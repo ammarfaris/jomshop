@@ -36,38 +36,11 @@ import { useColorScheme } from 'app/hooks/useColorScheme'
 import { useContestNavigation } from 'app/hooks/useContestNavigation'
 import { FunnelOutline } from 'app/components/icons-svg/FunnelOutline'
 import IconWrapper from 'app/components/icons-svg/utils/IconWrapper'
-import { account, functions } from 'app/provider/appwrite/api'
 import { useAuth } from 'app/contexts/AuthContext'
 import { useRouter } from 'app/lib/router-universal'
 import { useQuery } from '@tanstack/react-query'
-import { BACKEND } from 'app/lib/backend'
 import { getUserPrefs } from 'app/lib/prefs'
 import { searchContestsSupabase } from 'app/lib/supabase/contests'
-
-// ===== SEARCH CONFIGURATION =====
-/**
- * EASY TOGGLE: Switch between search implementations
- *
- * false = Use Appwrite Function (current - slower but more secure)
- * true  = Use Direct Meilisearch API (faster but exposes search key)
- *
- * When switching to Direct Meilisearch (true):
- * 1. Update MEILISEARCH_CONFIG below with your credentials
- * 2. Ensure you're using a search-only API key
- * 3. Consider hosting behind Cloudflare for protection
- */
-const USE_DIRECT_MEILISEARCH = true // Set to true to use direct Meilisearch API
-
-// Direct Meilisearch configuration (only used if USE_DIRECT_MEILISEARCH = true)
-const MEILISEARCH_CONFIG = {
-  host: 'https://edge.meilisearch.com', // Replace with your Meilisearch host
-  searchApiKey:
-    '2d2fe8ed30c0af4552c7e73430fcd137b6276fe68e524ea36f1807322d384cbe', // Replace with your search-only API key
-  indexName: 'contests',
-}
-
-// Appwrite function configuration (only used if USE_DIRECT_MEILISEARCH = false)
-const APPWRITE_FUNCTION_ID = '68c0fb9d00000f1ab95c'
 
 // ===== SEARCH TYPES =====
 export interface SearchParams {
@@ -91,173 +64,15 @@ export interface SearchResult {
   facetDistribution?: Record<string, any>
 }
 
-// ===== SEARCH IMPLEMENTATIONS =====
+// ===== SEARCH IMPLEMENTATION =====
 /**
- * Search using Appwrite Function (current implementation)
- */
-async function searchViaAppwriteFunction(
-  params: SearchParams = {},
-): Promise<SearchResult> {
-  try {
-    const startTime = Date.now()
-    console.log('🔄 Searching via Appwrite Function...')
-
-    const execution = await functions.createExecution(
-      APPWRITE_FUNCTION_ID,
-      JSON.stringify(params),
-    )
-
-    const responseBody =
-      (execution as any).responseBody ??
-      (execution as any).response ??
-      execution
-
-    const result =
-      typeof responseBody === 'string' ? JSON.parse(responseBody) : responseBody
-
-    const endTime = Date.now()
-    console.log(
-      `✅ Appwrite Function search completed in ${endTime - startTime}ms`,
-    )
-
-    return result
-  } catch (error) {
-    console.warn('❌ Error searching via Appwrite Function:', error)
-    throw error
-  }
-}
-
-/**
- * Search using direct Meilisearch API
- */
-async function searchViaDirectMeilisearch(
-  params: SearchParams = {},
-): Promise<SearchResult> {
-  try {
-    const startTime = Date.now()
-    // console.log('🚀 Searching via Direct Meilisearch...')
-
-    const {
-      query = '',
-      filters = {},
-      sort = [],
-      limit = 20,
-      offset = 0,
-      attributesToRetrieve = ['*'],
-      attributesToHighlight = [
-        'title',
-        'title_ms',
-        'summary',
-        'summary_ms',
-        'host_names',
-        'category_names_en',
-        'category_names_ms',
-      ],
-      facets = [],
-    } = params
-
-    // Build search parameters for Meilisearch
-    const searchParams: any = {
-      limit,
-      offset,
-      attributesToRetrieve,
-      attributesToHighlight,
-    }
-
-    // Add facets if provided
-    if (facets && facets.length > 0) {
-      searchParams.facets = facets
-    }
-
-    // Add filters if provided
-    if (Object.keys(filters).length > 0) {
-      const filterStrings: string[] = []
-
-      for (const [key, value] of Object.entries(filters)) {
-        if (Array.isArray(value)) {
-          // Handle array filters (e.g., status IN ['active', 'upcoming'])
-          const valueStrings = value.map((v: any) => `"${v}"`).join(', ')
-          filterStrings.push(`${key} IN [${valueStrings}]`)
-        } else {
-          // Handle single value filters
-          filterStrings.push(`${key} = "${value}"`)
-        }
-      }
-
-      searchParams.filter = filterStrings
-    }
-
-    // Add sorting if provided
-    if (sort.length > 0) {
-      searchParams.sort = sort
-    }
-
-    // Make direct HTTP request to Meilisearch
-    const searchUrl = `${MEILISEARCH_CONFIG.host}/indexes/${MEILISEARCH_CONFIG.indexName}/search`
-
-    const response = await fetch(searchUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${MEILISEARCH_CONFIG.searchApiKey}`,
-      },
-      body: JSON.stringify({
-        q: query,
-        ...searchParams,
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(
-        `Meilisearch API error: ${response.status} ${response.statusText}`,
-      )
-    }
-
-    const searchResults = await response.json()
-
-    const endTime = Date.now()
-    console.log(
-      `🚀 Direct Meilisearch search completed in ${endTime - startTime}ms`,
-    )
-
-    // Return results in consistent format
-    return {
-      hits: searchResults.hits,
-      query: searchResults.query,
-      processingTimeMs: searchResults.processingTimeMs,
-      limit: searchResults.limit,
-      offset: searchResults.offset,
-      estimatedTotalHits: searchResults.estimatedTotalHits,
-      facetDistribution: searchResults.facetDistribution,
-    }
-  } catch (error) {
-    console.warn('❌ Error searching via Direct Meilisearch:', error)
-    throw error
-  }
-}
-
-/**
- * Main search function that routes to the appropriate implementation
+ * Main search function — backed by the Supabase `search_contests` RPC.
  */
 async function searchContests(
   params: SearchParams = {},
 ): Promise<SearchResult> {
-  if (BACKEND === 'supabase') {
-    return searchContestsSupabase(params)
-  }
-  if (USE_DIRECT_MEILISEARCH) {
-    return searchViaDirectMeilisearch(params)
-  } else {
-    return searchViaAppwriteFunction(params)
-  }
+  return searchContestsSupabase(params)
 }
-
-// Log current configuration on module load
-// console.log(
-//   `🔧 Search Mode: ${
-//     USE_DIRECT_MEILISEARCH ? 'Direct Meilisearch' : 'Appwrite Function'
-//   }`
-// )
 
 // Platform-specific storage
 const storage = {
@@ -767,7 +582,6 @@ function Hit({
 }: {
   hit: Contest
   onPress: (contestId: string) => void
-  jwt: string | null
   language: 'en' | 'ms'
 }) {
   const handlePress = () => {
@@ -1075,12 +889,9 @@ export default function SearchScreen() {
   const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
 
-  // JWT for Android image authentication
-  const [jwt, setJwt] = useState<string | null>(null)
-
   // Language preference (backend-agnostic via the prefs abstraction)
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
-    queryKey: ['user-language-preference', BACKEND],
+    queryKey: ['user-language-preference'],
     queryFn: async () => {
       try {
         const prefs = await getUserPrefs()
@@ -1197,25 +1008,6 @@ export default function SearchScreen() {
       })
     }
   }, [user, authLoading, hasRestoredState])
-
-  // Initialize JWT for Android (only for authenticated users)
-  useEffect(() => {
-    const initializeJwt = async () => {
-      if (Platform.OS === 'android') {
-        // Only create JWT for authenticated users
-        if (BACKEND === 'appwrite' && user && !authLoading) {
-          try {
-            const { jwt: token } = await account.createJWT()
-            setJwt(token)
-          } catch (error) {
-            console.warn('Error creating JWT for Android:', error)
-          }
-        }
-      }
-    }
-
-    initializeJwt()
-  }, [user, authLoading])
 
   // Perform search
   const performSearch = useCallback(
@@ -1576,7 +1368,6 @@ export default function SearchScreen() {
                   <Hit
                     hit={item}
                     onPress={navigateToContest}
-                    jwt={jwt}
                     language={language}
                   />
                 )}

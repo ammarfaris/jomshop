@@ -19,7 +19,7 @@ This approach:
 
 ### Web
 - ✅ User can choose: Light, Dark, or System
-- ✅ Preference saved to Appwrite (cross-device sync)
+- ✅ Preference saved to the Supabase profile (cross-device sync)
 - ✅ Preference saved to localStorage (persistence)
 - ✅ Uses `next-themes` for SSR/SSG support
 - ✅ No flash of unstyled content
@@ -108,7 +108,7 @@ export function useThemeSync() {
 2. Sees theme selector with 3 options: ☀️ Light, 🌙 Dark, 💻 System
 3. Clicks preferred theme
 4. Theme changes immediately
-5. Preference saved to Appwrite
+5. Preference saved to the Supabase profile
 6. Works across all web sessions and devices
 
 ### Native User

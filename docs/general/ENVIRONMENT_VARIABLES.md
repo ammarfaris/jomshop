@@ -1,124 +1,149 @@
 # Environment Variables Configuration
 
-This document describes all environment variables used in the JomContest application.
+This document describes all environment variables used in the JomContest
+application. JomContest runs on **Supabase** (Auth, Postgres + RLS, Storage,
+Edge Functions), with Cloudflare Turnstile for CAPTCHA.
 
 ## Overview
 
-JomContest uses environment variables for configuration across different environments (development, staging, production). Variables are organized by application (Next.js web app, Expo mobile app, Appwrite functions).
+Configuration is split across three places:
+
+1. **Next.js web app** (`apps/next`) — `NEXT_PUBLIC_*` client vars + a couple of
+   server-only vars.
+2. **Expo mobile app** (`apps/expo`) — `EXPO_PUBLIC_*` client vars.
+3. **Supabase Edge Function secrets** — server-only secrets set with the Supabase
+   CLI (never shipped in the client bundle).
+
+The shared Supabase client (`packages/app/lib/supabase/client.ts`) reads the
+Supabase URL/key from either the `EXPO_PUBLIC_*` or `NEXT_PUBLIC_*` variables, so
+the same code works on web and native.
+
+> **Key naming:** Supabase's new **publishable** key (`sb_publishable_…`) is
+> preferred and is safe to expose in the client bundle. The legacy `…_ANON_KEY`
+> (anon JWT) is still accepted as a fallback.
+
+---
 
 ## Next.js Web App (`apps/next`)
 
 ### Configuration Files
 
-- `.env.local` - Local development (gitignored)
-- `.env.example` - Template for environment variables (committed)
-- `.env.production` - Production overrides (optional)
+- `.env` / `.env.local` — local development (gitignored)
+- `.env.example` — template committed to the repo
+- Production values are configured in the hosting provider (e.g. Vercel)
 
 ### Required Variables
 
+#### `NEXT_PUBLIC_SUPABASE_URL`
+
+- **Purpose**: Base URL of the Supabase project (Auth, Postgres/PostgREST,
+  Storage, Edge Functions).
+- **Type**: Public (safe in the browser bundle).
+- **Example**: `https://abdaylmwkcmxmsvagfch.supabase.co`
+
+#### `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+
+- **Purpose**: Supabase publishable API key used by the browser client. RLS
+  policies enforce per-user access, so this key is safe to expose.
+- **Type**: Public.
+- **Format**: `sb_publishable_…`
+- **Legacy fallback**: `NEXT_PUBLIC_SUPABASE_ANON_KEY` (anon JWT) is still
+  accepted if the publishable key is not set.
+- **Where to get it**: Supabase Dashboard → Project Settings → API Keys.
+
 #### `NEXT_PUBLIC_BASE_URL`
 
-- **Purpose**: Base URL for the application, used in metadata generation and share URLs
-- **Type**: Public (accessible in browser)
-- **Format**: Full URL with protocol (e.g., `https://jomcontest.com`)
-- **Usage**:
-  - Open Graph metadata generation
-  - Twitter Card metadata
-  - Share URL generation (fallback when `window.location.origin` unavailable)
-  - Canonical URLs
+- **Purpose**: Base URL of the web app, used for metadata and share URLs.
+- **Type**: Public.
+- **Usage**: Open Graph / Twitter Card metadata, canonical URLs, and share URL
+  generation (fallback when `window.location.origin` is unavailable).
 - **Examples**:
   - Development: `http://localhost:19000`
-  - Staging: `https://staging.jomcontest.com`
   - Production: `https://jomcontest.com`
 
-#### `APPWRITE_API_KEY`
+### Server-Only Variables
 
-- **Purpose**: Server-side API key for Appwrite operations
-- **Type**: Private (server-side only)
-- **Security**: Never expose in client-side code
-- **Usage**:
-  - Server-side metadata generation
-  - Fetching contest data for OG tags
-  - Server-side database queries
-- **How to get**: Generate in Appwrite Console → API Keys → Create API Key
-- **Permissions needed**: `databases.read`, `storage.read`
+#### `MAINTENANCE_MODE`
+
+- **Purpose**: Maintenance switch evaluated server-side. When `true`, all pages
+  rewrite to `/maintenance`; when `false`, the app behaves normally.
+- **Type**: Private (server-side only — **no** `NEXT_PUBLIC_` prefix).
+- **Values**: `true` | `false`
 
 ### Optional Variables
 
-#### `APPWRITE_ENDPOINT`
+#### `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
 
-- **Purpose**: Appwrite server endpoint
-- **Default**: Uses public endpoint from client config
-- **Usage**: Server-side Appwrite client initialization
-- **Example**: `https://cloud.appwrite.io/v1`
+- **Purpose**: Cloudflare Turnstile **site** key for the CAPTCHA widget.
+- **Type**: Public (site keys are meant to be public).
+- **Notes**: Read via `packages/app/utils/constants/ConstTurnstile.ts`, which
+  falls back to a built-in default site key if unset. The matching **secret** key
+  lives only in the Edge Function (see below).
 
-#### `APPWRITE_PROJECT_ID`
+#### `NEXT_PUBLIC_ADSENSE_PUBLISHER_ID`
 
-- **Purpose**: Appwrite project ID
-- **Default**: Uses public project ID from client config
-- **Usage**: Server-side Appwrite client initialization
-- **Example**: `your-project-id`
+- **Purpose**: Google AdSense publisher ID used in `apps/next/app/layout.tsx`.
+- **Type**: Public.
+- **Notes**: Falls back to a built-in default if unset.
 
-#### `CONTESTS_BUCKET_ID`
-
-- **Purpose**: Appwrite Storage bucket ID for contest images
-- **Usage**: Constructing image URLs in metadata
-- **Example**: `contests`
+---
 
 ## Expo Mobile App (`apps/expo`)
 
 ### Configuration Files
 
-- `.env` - Environment variables (gitignored)
-- `.env.example` - Template (committed)
+- `.env` — environment variables (gitignored)
+- `.env.example` — template committed to the repo
+- Production/build values can be set in `eas.json` or as EAS secrets.
 
 ### Required Variables
 
-#### `EXPO_PUBLIC_APPWRITE_ENDPOINT`
+#### `EXPO_PUBLIC_SUPABASE_URL`
 
-- **Purpose**: Appwrite server endpoint
-- **Example**: `https://cloud.appwrite.io/v1`
+- **Purpose**: Supabase project URL (same value as the web app).
+- **Type**: Public.
+- **Example**: `https://abdaylmwkcmxmsvagfch.supabase.co`
 
-#### `EXPO_PUBLIC_APPWRITE_PROJECT_ID`
+#### `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-- **Purpose**: Appwrite project ID
-- **Example**: `your-project-id`
+- **Purpose**: Supabase publishable API key for the native client.
+- **Type**: Public.
+- **Format**: `sb_publishable_…`
+- **Legacy fallback**: `EXPO_PUBLIC_SUPABASE_ANON_KEY` is still accepted.
 
-#### `EXPO_PUBLIC_MEILISEARCH_FUNCTION_ID`
+### Optional Variables
 
-- **Purpose**: Appwrite Function ID for Meilisearch search
-- **Example**: `meilisearch-search-function-id`
+#### `EXPO_PUBLIC_TURNSTILE_SITE_KEY`
 
-## Appwrite Functions
+- **Purpose**: Cloudflare Turnstile site key for the CAPTCHA widget on native
+  (rendered in a WebView). Same fallback behavior as the web key.
 
-### `generate-og-for-contest`
+> **RevenueCat (subscriptions):** RevenueCat is integrated in code but the SDK
+> API key is **not** currently supplied via an environment variable (native
+> purchases are stubbed pending custom dev builds, and the web SDK key is passed
+> in at `configure(apiKey, userId)` time). When wiring RevenueCat for production,
+> add its public SDK key here (e.g. `EXPO_PUBLIC_REVENUECAT_API_KEY`) and pass it
+> to the subscription service.
 
-Environment variables configured in Appwrite Console:
+---
 
-#### Auto-configured by Appwrite
+## Supabase Edge Function Secrets
 
-- `APPWRITE_ENDPOINT` - Appwrite server endpoint
-- `APPWRITE_PROJECT_ID` - Project ID
-- `INTERNAL_API_KEY` - Internal API key (auto-generated)
+Edge Functions live in `supabase/functions/` (Deno). Secrets are configured with
+the Supabase CLI and are only available server-side inside the function runtime.
 
-#### Required Configuration
+```bash
+supabase secrets set TURNSTILE_SECRET_KEY=your-cloudflare-turnstile-secret
+```
 
-- `ADMIN_TEAM_ID` - Team ID for admin users
-- `CONTESTS_BUCKET_ID` - Storage bucket for contest images
-- `DATABASE_ID` - Database ID
-- `CONTESTS_COLLECTION_ID` - Contests collection ID
-- `CONTEST_FILES_COLLECTION_ID` - Contest Files collection ID
-- `GENERATE_BLURHASH_AND_TOKEN_FN_ID` - Function ID for blurhash generation
+| Secret | Purpose |
+| ------ | ------- |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile **secret** key. The `receipts` Edge Function verifies CAPTCHA tokens against `https://challenges.cloudflare.com/turnstile/v0/siteverify`. Never expose this in the client. |
+| `SUPABASE_URL` | Injected automatically by the Supabase runtime. |
+| `SUPABASE_ANON_KEY` | Injected automatically. Used to act on behalf of the calling user (respecting RLS). |
+| `SUPABASE_SERVICE_ROLE_KEY` | Injected automatically. Used for privileged, un-bypassable writes (e.g. inserting receipt rows the client is not allowed to insert directly). **Never** expose this key anywhere client-side. |
 
-### `meilisearch-search`
-
-- `MEILISEARCH_HOST` - Meilisearch server URL
-- `MEILISEARCH_SEARCH_KEY` - Read-only search API key
-
-### `meilisearch-admin`
-
-- `MEILISEARCH_HOST` - Meilisearch server URL
-- `MEILISEARCH_ADMIN_KEY` - Admin API key (write access)
+---
 
 ## Setup Instructions
 
@@ -129,7 +154,7 @@ Environment variables configured in Appwrite Console:
    ```bash
    cd apps/next
    cp .env.example .env.local
-   # Edit .env.local with your values
+   # Fill in NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
    ```
 
 2. **Expo Mobile App**:
@@ -137,173 +162,113 @@ Environment variables configured in Appwrite Console:
    ```bash
    cd apps/expo
    cp .env.example .env
-   # Edit .env with your values
+   # Fill in EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY
    ```
 
-3. **Start development servers**:
+3. **Start development servers** (from the repo root):
+
    ```bash
-   # From root directory
-   yarn web    # Next.js on http://localhost:19000
-   yarn native # Expo on http://localhost:19001
+   yarn web    # Next.js  (http://localhost:19000)
+   yarn native # Expo     (http://localhost:19001)
    ```
 
 ### Production Deployment
 
 #### Vercel (Next.js)
 
-1. Go to Vercel Dashboard → Project → Settings → Environment Variables
-2. Add all required variables:
-   - `NEXT_PUBLIC_BASE_URL` (e.g., `https://jomcontest.com`)
-   - `APPWRITE_API_KEY` (from Appwrite Console)
-   - Optional: `APPWRITE_ENDPOINT`, `APPWRITE_PROJECT_ID`, `CONTESTS_BUCKET_ID`
-3. Redeploy application
+1. Dashboard → Project → Settings → Environment Variables.
+2. Add `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+   `NEXT_PUBLIC_BASE_URL`, and `MAINTENANCE_MODE` (plus optional Turnstile /
+   AdSense keys).
+3. Redeploy.
 
 #### Expo EAS (Mobile)
 
-1. Configure in `eas.json`:
+Configure the `EXPO_PUBLIC_*` variables in `eas.json` build profiles or as EAS
+secrets:
 
-   ```json
-   {
-     "build": {
-       "production": {
-         "env": {
-           "EXPO_PUBLIC_APPWRITE_ENDPOINT": "https://cloud.appwrite.io/v1",
-           "EXPO_PUBLIC_APPWRITE_PROJECT_ID": "your-project-id"
-         }
-       }
-     }
-   }
-   ```
+```bash
+eas secret:create --scope project \
+  --name EXPO_PUBLIC_SUPABASE_URL \
+  --value "https://abdaylmwkcmxmsvagfch.supabase.co"
+```
 
-2. Or use EAS Secrets:
-   ```bash
-   eas secret:create --name EXPO_PUBLIC_APPWRITE_ENDPOINT --value "https://cloud.appwrite.io/v1"
-   ```
+#### Supabase Edge Functions
 
-#### Appwrite Functions
+```bash
+supabase secrets set TURNSTILE_SECRET_KEY=your-cloudflare-turnstile-secret
+supabase functions deploy receipts
+```
 
-1. Go to Appwrite Console → Functions → [Function Name] → Settings → Environment Variables
-2. Add required variables for each function
-3. Redeploy function
+---
 
 ## Security Best Practices
 
 ### Public vs Private Variables
 
-**Public Variables** (accessible in browser):
+**Public variables** (safe in the client bundle):
 
-- Prefix with `NEXT_PUBLIC_` (Next.js) or `EXPO_PUBLIC_` (Expo)
-- Safe to expose: endpoints, project IDs, public keys
-- Examples: `NEXT_PUBLIC_BASE_URL`, `EXPO_PUBLIC_APPWRITE_PROJECT_ID`
+- Prefixed with `NEXT_PUBLIC_` (Next.js) or `EXPO_PUBLIC_` (Expo).
+- Examples: `NEXT_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+  `NEXT_PUBLIC_BASE_URL`, `*_TURNSTILE_SITE_KEY`.
+- The Supabase publishable/anon key is safe to expose **because Row Level
+  Security (RLS)** governs what each user can read/write.
 
-**Private Variables** (server-side only):
+**Private variables** (server-side only):
 
-- No prefix (Next.js server-side)
-- Never expose: API keys, secrets, admin credentials
-- Examples: `APPWRITE_API_KEY`, `MEILISEARCH_ADMIN_KEY`
+- No public prefix. Never referenced from client code.
+- Examples: `MAINTENANCE_MODE`, `TURNSTILE_SECRET_KEY`,
+  `SUPABASE_SERVICE_ROLE_KEY`.
 
-### API Key Permissions
+### Guarding the Service Role Key
 
-When creating Appwrite API keys:
+- The service-role key bypasses RLS. Keep it **only** in Edge Function secrets.
+- Sensitive writes (e.g. receipt creation) are revoked for clients and routed
+  through the `receipts` Edge Function, which validates CAPTCHA, tier limits, and
+  rate limits before writing with the service role.
 
-1. **Principle of Least Privilege**: Grant only necessary permissions
-2. **Server-side keys**: Use for metadata generation (read-only)
-3. **Admin keys**: Use only in Appwrite Functions (never in client)
-4. **Rotate regularly**: Update keys periodically for security
-
-### Environment-Specific Values
-
-Use different values per environment:
-
-- **Development**: `localhost` URLs, test API keys
-- **Staging**: Staging URLs, staging API keys
-- **Production**: Production URLs, production API keys
+---
 
 ## Troubleshooting
 
-### Variable Not Found
+### `[supabase] Not configured` error
 
-**Symptom**: `process.env.VARIABLE_NAME` is `undefined`
-
-**Solutions**:
-
-1. Check variable is defined in `.env.local` (Next.js) or `.env` (Expo)
-2. Restart development server after adding variables
-3. Verify variable name matches exactly (case-sensitive)
-4. For public variables, ensure correct prefix (`NEXT_PUBLIC_` or `EXPO_PUBLIC_`)
-
-### Share URLs Using Wrong Domain
-
-**Symptom**: Share URLs point to `localhost` in production
+**Symptom**: The app throws `Not configured. Set EXPO_PUBLIC_SUPABASE_URL/ANON_KEY
+(native) or NEXT_PUBLIC_SUPABASE_URL/ANON_KEY (web).`
 
 **Solutions**:
 
-1. Verify `NEXT_PUBLIC_BASE_URL` is set in production environment
-2. Check Vercel environment variables are configured
-3. Redeploy application after adding variable
-4. Clear browser cache and test again
+1. Ensure the URL and key are set in `.env.local` (Next.js) or `.env` (Expo).
+2. Restart the dev server after editing env files.
+3. Confirm the correct prefix (`NEXT_PUBLIC_` vs `EXPO_PUBLIC_`).
 
-### Metadata Not Showing Images
+### Share URLs use the wrong domain
 
-**Symptom**: Open Graph images not appearing in social media previews
+1. Verify `NEXT_PUBLIC_BASE_URL` is set in the production environment.
+2. Redeploy after adding the variable.
 
-**Solutions**:
+### CAPTCHA always fails server-side
 
-1. Verify `APPWRITE_API_KEY` has `storage.read` permission
-2. Check `CONTESTS_BUCKET_ID` is correct
-3. Ensure OG image exists in Appwrite Storage
-4. Test with Facebook Sharing Debugger
-5. Verify image URL is publicly accessible
+1. Verify `TURNSTILE_SECRET_KEY` is set as an Edge Function secret.
+2. Confirm the client site key (`*_TURNSTILE_SITE_KEY`) matches the same
+   Cloudflare Turnstile widget as the secret.
 
-### Function Execution Fails
-
-**Symptom**: Appwrite Function returns error
-
-**Solutions**:
-
-1. Check all required environment variables are set in Appwrite Console
-2. Verify variable values are correct (no typos)
-3. Review function execution logs in Appwrite Console
-4. Test with simple values first
-5. Ensure function has necessary permissions
+---
 
 ## Validation Checklist
 
 Before deploying to production:
 
-- [ ] All required variables are set
-- [ ] Public variables have correct prefix
-- [ ] Private variables are not exposed in client code
-- [ ] API keys have appropriate permissions
-- [ ] URLs use HTTPS (not HTTP)
-- [ ] Base URL matches actual domain
-- [ ] Function environment variables are configured
-- [ ] Test share functionality works
-- [ ] Test metadata generation works
-- [ ] Verify OG images load correctly
+- [ ] `*_SUPABASE_URL` and `*_SUPABASE_PUBLISHABLE_KEY` set for both apps
+- [ ] `NEXT_PUBLIC_BASE_URL` matches the real domain (HTTPS)
+- [ ] `MAINTENANCE_MODE` is `false` for normal operation
+- [ ] Turnstile site keys set on clients; `TURNSTILE_SECRET_KEY` set on the Edge Function
+- [ ] `SUPABASE_SERVICE_ROLE_KEY` is **not** present in any client bundle
+- [ ] Public variables use the correct `NEXT_PUBLIC_` / `EXPO_PUBLIC_` prefix
+
+---
 
 ## Related Documentation
 
-- [OG Image Integration](./OG_IMAGE_INTEGRATION.md)
-- [OG Implementation Summary](./OG_IMPLEMENTATION_SUMMARY.md)
-- [Deployment Guide](./DEPLOYMENT.md) (if exists)
-- [Appwrite Setup](./APPWRITE_SETUP.md) (if exists)
-
-## Support
-
-For issues with environment variables:
-
-1. Check this documentation
-2. Verify variable names and values
-3. Review application logs
-4. Test in development first
-5. Check Vercel/Appwrite Console settings
-
-## Changelog
-
-### 2025-10-17
-
-- Added `NEXT_PUBLIC_BASE_URL` documentation
-- Added Appwrite Function environment variables
-- Added security best practices
-- Added troubleshooting guide
+- [CAPTCHA Security](./CAPTCHA_SECURITY.md)
+- [Cleanup Strategies](./CLEANUP_STRATEGIES.md)

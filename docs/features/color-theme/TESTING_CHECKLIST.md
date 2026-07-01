@@ -132,11 +132,11 @@
 ### First Time User
 - [ ] App defaults to Green theme
 - [ ] User can select Blue theme
-- [ ] Selection is saved to Appwrite preferences
+- [ ] Selection is saved to the Supabase profile preferences
 
 ### Network Issues
 - [ ] Theme selection works offline (local state)
-- [ ] Theme syncs to Appwrite when connection restored
+- [ ] Theme syncs to the Supabase profile when connection restored
 - [ ] No errors shown to user during network issues
 
 ### Multiple Devices

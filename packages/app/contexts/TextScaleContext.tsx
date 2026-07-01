@@ -62,7 +62,7 @@ export function TextScaleProvider({ children }: { children: React.ReactNode }) {
   const [textScale, setTextScaleState] = useState<TextScale>('regular')
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load text scale preference from Appwrite user preferences
+  // Load text scale preference from the user's Supabase profile prefs
   useEffect(() => {
     const fetchTextScalePreference = async () => {
       setIsLoading(true)

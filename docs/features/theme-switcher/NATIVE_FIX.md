@@ -69,7 +69,7 @@ export function ThemeSelector() {
 - "System" mode updates when you toggle dark mode in device settings
 
 ### ✅ Cross-Device Sync
-- Theme saved to Appwrite user preferences
+- Theme saved to the user's Supabase profile preferences
 - Loads on any device when user logs in
 - Works via `useThemeSync` hook in Provider
 
@@ -257,7 +257,7 @@ Native theme support is now **fully functional** with:
 - ✅ NativeWind integration
 - ✅ System theme detection
 - ✅ Real-time OS theme change tracking
-- ✅ Cross-device sync via Appwrite
+- ✅ Cross-device sync via the Supabase profile
 - ✅ Smooth UX with loading states
 
 The fix was simple: use the existing `useColorScheme` hook instead of the incomplete custom implementation. All the heavy lifting was already done in `packages/app/hooks/useColorScheme.tsx`!

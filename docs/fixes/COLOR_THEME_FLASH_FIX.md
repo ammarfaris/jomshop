@@ -6,10 +6,10 @@ When refreshing the page, users would see a brief flash of the **green theme** b
 
 ### Root Causes
 
-1. **No Local Storage Caching**: The color theme preference was only stored in Appwrite, requiring an async API call on every page load
+1. **No Local Storage Caching**: The color theme preference was only stored in the Supabase profile, requiring an async API call on every page load
 2. **Race Condition**: The component initialized with `'green'` as default, then made an async call to load the actual preference
 3. **Auth Loading State**: During auth initialization, the `!user` check would reset the theme to green, clearing localStorage
-4. **Missing Sync**: When loading from Appwrite, the theme wasn't being saved to localStorage for future use
+4. **Missing Sync**: When loading from the Supabase profile, the theme wasn't being saved to localStorage for future use
 
 ## ✅ The Solution
 
@@ -29,7 +29,7 @@ Modified `ColorThemeContext` to:
 
 - Load theme from **local storage first** (instant, no API call)
 - Apply theme immediately on component mount
-- Sync with Appwrite in the background
+- Sync with the Supabase profile in the background
 
 ### 3. **Auth-Aware Logic**
 
@@ -43,8 +43,8 @@ Fixed race conditions by:
 
 Ensured theme is always in sync:
 
-- **User changes theme** → Save to localStorage + Appwrite
-- **Load from Appwrite** → Also save to localStorage for next refresh
+- **User changes theme** → Save to localStorage + Supabase profile
+- **Load from the Supabase profile** → Also save to localStorage for next refresh
 - **User logs out** → Clear localStorage and reset to green
 
 ## 📝 Implementation Details
@@ -72,7 +72,7 @@ Mark as initialized
     ↓
 If auth loaded and user exists:
     ↓
-Load from Appwrite (background sync)
+Load from the Supabase profile (background sync)
     ↓
 Save to localStorage (for next refresh)
 ```
@@ -83,7 +83,7 @@ Save to localStorage (for next refresh)
 
 ```typescript
 const [colorTheme, setColorThemeState] = useState<ColorTheme>('green') // Always starts green
-// ... async load from Appwrite
+// ... async load from the Supabase profile
 // Result: Green → Blue flash
 ```
 
@@ -130,7 +130,7 @@ if (!user && isInitialized && !isAuthLoading) {
 
    - Added optimistic initialization from localStorage
    - Added auth loading state checks
-   - Added bidirectional sync (Appwrite ↔ localStorage)
+   - Added bidirectional sync (Supabase profile ↔ localStorage)
    - Fixed logout detection logic
 
 2. **`apps/next/app/layout.tsx`**
@@ -149,13 +149,13 @@ if (!user && isInitialized && !isAuthLoading) {
 1. Open app for first time
 2. ✅ Should show green theme (default)
 3. Change to blue theme
-4. ✅ Should save to localStorage and Appwrite
+4. ✅ Should save to localStorage and the Supabase profile
 5. Refresh page
 6. ✅ Should show blue immediately (no flash)
 
 ### Test Scenario 2: Existing User with Blue Theme
 
-1. User already has blue theme in Appwrite
+1. User already has blue theme in the Supabase profile
 2. Open app on new device/browser
 3. ✅ First load: Shows green briefly, then blue (localStorage empty)
 4. ✅ Saves to localStorage in background
@@ -175,7 +175,7 @@ if (!user && isInitialized && !isAuthLoading) {
 3. ✅ Theme resets to green
 4. ✅ localStorage cleared
 5. Login again
-6. ✅ Theme loads from Appwrite
+6. ✅ Theme loads from the Supabase profile
 
 ## 🎯 Performance Impact
 
@@ -188,7 +188,7 @@ if (!user && isInitialized && !isAuthLoading) {
 ### After:
 
 - **Initial Render**: Blue theme (from localStorage, ~1-5ms)
-- **Background Sync**: Updates from Appwrite (no visual change)
+- **Background Sync**: Updates from the Supabase profile (no visual change)
 - **Result**: No flash
 
 ## 🔍 Debugging
@@ -220,7 +220,7 @@ If the flash still occurs, check:
 1. **No Flash**: Theme loads instantly from localStorage
 2. **Better UX**: Smooth, consistent experience on refresh
 3. **Offline Support**: Works even without internet
-4. **Cross-Device Sync**: Still maintains Appwrite synchronization
+4. **Cross-Device Sync**: Still maintains Supabase profile synchronization
 5. **Platform Agnostic**: Same experience on web and native
 
 ## 🔮 Future Enhancements

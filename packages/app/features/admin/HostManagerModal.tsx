@@ -13,17 +13,7 @@ import { Button } from 'app/components/ui/button'
 import { Input } from 'app/components/ui/input'
 import { Textarea } from 'app/components/ui/textarea'
 import { Image as ExpoImage } from 'expo-image'
-import { Models, Permission, Query, Role } from 'app/lib/appwrite-universal'
-import { tablesDB, storage, functions } from 'app/provider/appwrite/api'
-import {
-  DATABASE_ID,
-  CONTESTS_COLLECTION_ID,
-  CONTEST_HOSTS_COLLECTION_ID,
-  CONTEST_HOSTS_BUCKET_ID,
-  ADMIN_TEAM_ID,
-  GENERATE_IMG_BLURHASH_IMG_TOKEN_FN_ID,
-} from 'app/provider/appwrite/constants'
-import { BACKEND } from 'app/lib/backend'
+import type { Document } from 'app/lib/types'
 import {
   listSupabaseHosts,
   createSupabaseHost,
@@ -47,7 +37,7 @@ import {
 import { PortalHost } from '@rn-primitives/portal'
 import { HostImage } from 'app/components/HostImage'
 
-export type HostDoc = Models.Document & {
+export type HostDoc = Document & {
   name: string
   slug: string
   img_id: string
@@ -55,8 +45,6 @@ export type HostDoc = Models.Document & {
   img_blurhash: string
   bio?: string
 }
-
-const DEFAULT_BLURHASH = 'LEHV6nWB2yk8pyo0adR*.7kCMdnj'
 
 export default function HostManagerModal(props: {
   visible: boolean
@@ -105,17 +93,8 @@ export default function HostManagerModal(props: {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '')
 
-  // Backend-agnostic list fetch: Supabase content table vs Appwrite collection.
   const fetchHosts = async (): Promise<HostDoc[]> => {
-    if (BACKEND === 'supabase') {
-      return (await listSupabaseHosts()) as unknown as HostDoc[]
-    }
-    const res = await tablesDB.listRows({
-      databaseId: DATABASE_ID,
-      tableId: CONTEST_HOSTS_COLLECTION_ID,
-      queries: [Query.orderAsc('name'), Query.limit(100)],
-    })
-    return res.rows as unknown as HostDoc[]
+    return (await listSupabaseHosts()) as unknown as HostDoc[]
   }
 
   useEffect(() => {
@@ -257,112 +236,12 @@ export default function HostManagerModal(props: {
     }
     setCreatingHost(true)
     try {
-      if (BACKEND === 'supabase') {
-        await createSupabaseHost({
-          name: newHostName.trim(),
-          slug: newHostSlug.trim(),
-          bio: newHostBio || '',
-          imageAsset: newHostImageAsset,
-        })
-      } else {
-      // Prepare file object for upload
-      let fileToUpload: any
-      const asset = newHostImageAsset
-      const getFileExtension = (fileName: string | undefined): string => {
-        if (!fileName) return 'jpg'
-        const match = fileName.match(/\.([a-zA-Z0-9]+)$/)
-        return match && typeof match[1] === 'string'
-          ? match[1].toLowerCase()
-          : 'jpg'
-      }
-      const getImageFileName = (
-        fileName: string | undefined,
-        base: string,
-      ): string => {
-        const baseSlug = slugify(base || 'host')
-        const safeDate = new Date().toISOString().split('T')[0]
-        const ext = getFileExtension(fileName)
-        return `${baseSlug}-${safeDate}.${ext}`
-      }
-      if (Platform.OS === 'web') {
-        if (asset instanceof File) {
-          fileToUpload = asset
-        } else {
-          const response = await fetch(asset.uri)
-          const blob = await response.blob()
-          fileToUpload = new File(
-            [blob],
-            getImageFileName(asset.fileName, newHostName),
-            {
-              type: asset.type || 'image/jpeg',
-            },
-          )
-        }
-      } else {
-        fileToUpload = {
-          uri: asset.uri,
-          name: getImageFileName(asset.fileName, newHostName),
-          type: asset.mimeType || asset.type || 'image/jpeg',
-          size: (asset as any).fileSize ?? undefined,
-        } as any
-      }
-
-      const uploaded = await storage.createFile(
-        CONTEST_HOSTS_BUCKET_ID,
-        'unique()',
-        fileToUpload,
-        [Permission.write(Role.team(ADMIN_TEAM_ID))],
-      )
-
-      // Call function to generate blurhash and token for host image
-      let tokenSecret: string | undefined
-      let blurhash: string | undefined
-      try {
-        const exec = await functions.createExecution(
-          GENERATE_IMG_BLURHASH_IMG_TOKEN_FN_ID,
-          JSON.stringify({
-            fileId: uploaded.$id,
-            bucketId: CONTEST_HOSTS_BUCKET_ID,
-            file_label: 'host',
-          }),
-        )
-        const raw =
-          (exec as any).responseBody ??
-          (exec as any).response ??
-          (exec as any).stdout
-        if (typeof raw === 'string' && raw.trim()) {
-          const parsed = JSON.parse(raw)
-          tokenSecret = parsed.tokenSecret
-          blurhash = parsed.blurhash
-        }
-        if (!tokenSecret) {
-          alert(
-            'Warning: Token generation failed for the host image. The image may appear blurred for some users. Please re-save this host to retry.',
-          )
-        }
-      } catch (fnErr: any) {
-        alert(
-          'Warning: Token generation failed for the host image. The image may appear blurred for some users. Please re-save this host to retry.\n\nError: ' +
-            (fnErr?.message || String(fnErr)),
-        )
-      }
-
-      // Create host document
-      await tablesDB.createRow({
-        databaseId: DATABASE_ID,
-        tableId: CONTEST_HOSTS_COLLECTION_ID,
-        rowId: 'unique()',
-        data: {
-          name: newHostName.trim(),
-          slug: newHostSlug.trim(),
-          img_id: uploaded.$id,
-          img_token_secret: tokenSecret ?? null,
-          img_blurhash: blurhash ?? DEFAULT_BLURHASH,
-          bio: newHostBio || '',
-        },
-        permissions: [Permission.write(Role.team(ADMIN_TEAM_ID))],
+      await createSupabaseHost({
+        name: newHostName.trim(),
+        slug: newHostSlug.trim(),
+        bio: newHostBio || '',
+        imageAsset: newHostImageAsset,
       })
-      }
 
       // Reset local form
       setNewHostName('')
@@ -390,126 +269,12 @@ export default function HostManagerModal(props: {
     }
     setUpdatingHost(true)
     try {
-      if (BACKEND === 'supabase') {
-        await updateSupabaseHost(editingHost.$id, {
-          name: newHostName.trim(),
-          slug: newHostSlug.trim(),
-          bio: newHostBio || '',
-          imageAsset: newHostImageAsset ?? undefined,
-        })
-      } else {
-      let imgId = editingHost.img_id
-      let tokenSecret: string | undefined =
-        (editingHost.img_token_secret as string | undefined) || undefined
-      let blurhash: string | undefined = editingHost.img_blurhash || undefined
-
-      if (newHostImageAsset) {
-        // Prepare file object for upload (same as create)
-        const asset = newHostImageAsset
-        const getFileExtension = (fileName: string | undefined): string => {
-          if (!fileName) return 'jpg'
-          const match = fileName.match(/\.([a-zA-Z0-9]+)$/)
-          return match && typeof match[1] === 'string'
-            ? match[1].toLowerCase()
-            : 'jpg'
-        }
-        const getImageFileName = (
-          fileName: string | undefined,
-          base: string,
-        ): string => {
-          const baseSlug = slugify(base || 'host')
-          const safeDate = new Date().toISOString().split('T')[0]
-          const ext = getFileExtension(fileName)
-          return `${baseSlug}-${safeDate}.${ext}`
-        }
-
-        let fileToUpload: any
-        if (Platform.OS === 'web') {
-          if (asset instanceof File) {
-            fileToUpload = asset
-          } else {
-            const response = await fetch(asset.uri)
-            const blob = await response.blob()
-            fileToUpload = new File(
-              [blob],
-              getImageFileName(asset.fileName, newHostName),
-              {
-                type: asset.type || 'image/jpeg',
-              },
-            )
-          }
-        } else {
-          fileToUpload = {
-            uri: asset.uri,
-            name: getImageFileName(asset.fileName, newHostName),
-            type: asset.mimeType || asset.type || 'image/jpeg',
-            size: (asset as any).fileSize ?? undefined,
-          } as any
-        }
-
-        const uploaded = await storage.createFile(
-          CONTEST_HOSTS_BUCKET_ID,
-          'unique()',
-          fileToUpload,
-          [Permission.write(Role.team(ADMIN_TEAM_ID))],
-        )
-
-        // Generate blurhash and token for new image
-        try {
-          const exec = await functions.createExecution(
-            GENERATE_IMG_BLURHASH_IMG_TOKEN_FN_ID,
-            JSON.stringify({
-              fileId: uploaded.$id,
-              bucketId: CONTEST_HOSTS_BUCKET_ID,
-              file_label: 'host',
-            }),
-          )
-          const raw =
-            (exec as any).responseBody ??
-            (exec as any).response ??
-            (exec as any).stdout
-          if (typeof raw === 'string' && raw.trim()) {
-            const parsed = JSON.parse(raw)
-            tokenSecret = parsed.tokenSecret
-            blurhash = parsed.blurhash
-          }
-          if (!tokenSecret) {
-            alert(
-              'Warning: Token generation failed for the host image. The image may appear blurred for some users. Please re-save this host to retry.',
-            )
-          }
-        } catch (fnErr: any) {
-          alert(
-            'Warning: Token generation failed for the host image. The image may appear blurred for some users. Please re-save this host to retry.\n\nError: ' +
-              (fnErr?.message || String(fnErr)),
-          )
-        }
-
-        // Replace image id
-        const oldImgId = editingHost.img_id
-        imgId = uploaded.$id
-        // Best-effort delete old file
-        if (oldImgId && oldImgId !== imgId) {
-          try {
-            await storage.deleteFile(CONTEST_HOSTS_BUCKET_ID, oldImgId)
-          } catch {}
-        }
-      }
-
-      await tablesDB.updateRow({
-        databaseId: DATABASE_ID,
-        tableId: CONTEST_HOSTS_COLLECTION_ID,
-        rowId: editingHost.$id,
-        data: {
-          name: newHostName.trim(),
-          slug: newHostSlug.trim(),
-          bio: newHostBio || '',
-          img_id: imgId,
-          img_token_secret: tokenSecret ?? null,
-          img_blurhash: blurhash ?? DEFAULT_BLURHASH,
-        },
+      await updateSupabaseHost(editingHost.$id, {
+        name: newHostName.trim(),
+        slug: newHostSlug.trim(),
+        bio: newHostBio || '',
+        imageAsset: newHostImageAsset ?? undefined,
       })
-      }
 
       // Refresh hosts list and update selection refs so parent gets fresh objects
       try {
@@ -540,18 +305,7 @@ export default function HostManagerModal(props: {
   const handleDeleteHost = async (hostId: string) => {
     // Guard: prevent deletion if any contests reference this host
     try {
-      const contestTitles =
-        BACKEND === 'supabase'
-          ? await findSupabaseContestsUsingHost(hostId)
-          : ((
-              await tablesDB.listRows({
-                databaseId: DATABASE_ID,
-                tableId: CONTESTS_COLLECTION_ID,
-                queries: [Query.contains('host_ids', hostId), Query.limit(50)],
-              })
-            ).rows as any[])
-              .map((c) => c.title)
-              .filter(Boolean)
+      const contestTitles = await findSupabaseContestsUsingHost(hostId)
       if (contestTitles.length > 0) {
         const titlesList = contestTitles.map((t) => `- ${t}`).join('\n')
         alert(
@@ -571,22 +325,7 @@ export default function HostManagerModal(props: {
       return next
     })
     try {
-      if (BACKEND === 'supabase') {
-        await deleteSupabaseHost(hostId)
-      } else {
-        // best-effort delete associated image (requires reading host doc)
-        const current = allHosts.find((h) => h.$id === hostId)
-        if (current?.img_id) {
-          try {
-            await storage.deleteFile(CONTEST_HOSTS_BUCKET_ID, current.img_id)
-          } catch {}
-        }
-        await tablesDB.deleteRow({
-          databaseId: DATABASE_ID,
-          tableId: CONTEST_HOSTS_COLLECTION_ID,
-          rowId: hostId,
-        })
-      }
+      await deleteSupabaseHost(hostId)
 
       // Auto-refresh hosts list after deletion
       try {

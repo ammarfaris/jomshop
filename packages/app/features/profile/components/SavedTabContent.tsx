@@ -12,10 +12,8 @@ import { useColorScheme } from 'app/hooks/useColorScheme'
 import { cn } from 'app/lib/utils'
 import Colors from 'app/utils/constants/ConstColors'
 import { useLingui, Trans } from '@lingui/react/macro'
-import { Query, Models } from 'app/lib/appwrite-universal'
-import { tablesDB, account } from 'app/provider/appwrite/api'
+import type { Document } from 'app/lib/types'
 import { useQuery } from '@tanstack/react-query'
-import { BACKEND } from 'app/lib/backend'
 import { getUserPrefs } from 'app/lib/prefs'
 
 import { Text } from 'app/components/ui/text'
@@ -47,15 +45,10 @@ import { ContestCard } from 'app/features/contest/components/ContestCard'
 import { EngagementProvider } from 'app/contexts/EngagementContext'
 import { toast } from 'app/lib/sonner-universal'
 import ReceiptManagerModal from 'app/features/profile/components/ReceiptManagerModal'
-import {
-  DATABASE_ID,
-  CONTEST_HOSTS_COLLECTION_ID,
-  CONTEST_CATEGORIES_COLLECTION_ID,
-} from 'app/provider/appwrite/constants'
 import { type ContestBadgeCategory } from 'app/features/contest/components/ContestBadges'
 
 // Type definitions
-type Contest = Models.Document & {
+type Contest = Document & {
   title: string
   title_ms?: string
   summary: string
@@ -71,7 +64,7 @@ type Contest = Models.Document & {
   savedAt?: string // Timestamp when the contest was saved
 }
 
-type Host = Models.Document & {
+type Host = Document & {
   name: string
   slug: string
   img_id: string
@@ -80,7 +73,7 @@ type Host = Models.Document & {
   bio?: string
 }
 
-type Category = Models.Document & {
+type Category = Document & {
   slug: string
   name_en: string
   name_ms: string
@@ -125,7 +118,6 @@ function SavedTabContent() {
   } = useUserSavedContests()
 
   const [refreshing, setRefreshing] = useState(false)
-  const [jwt, setJwt] = useState<string | null>(null)
   const [hasShownInitialData, setHasShownInitialData] = useState(false)
 
   // Segmented control state
@@ -175,34 +167,18 @@ function SavedTabContent() {
     try {
       // Archive receipts first if any exist (moves files to the archive bucket).
       if (receiptCount > 0) {
-        if (BACKEND === 'supabase') {
-          const { archiveContestReceiptsSupabase } = await import(
-            'app/lib/supabase'
-          )
-          await archiveContestReceiptsSupabase(
-            contestId,
-            'Contest unsaved by user'
-          )
-        } else {
-          const { archiveContestReceipts } = await import(
-            'app/lib/receipts/api'
-          )
-          await archiveContestReceipts(
-            userId,
-            contestId,
-            'Contest unsaved by user'
-          )
-        }
+        const { archiveContestReceiptsSupabase } = await import(
+          'app/lib/supabase'
+        )
+        await archiveContestReceiptsSupabase(
+          contestId,
+          'Contest unsaved by user'
+        )
       }
 
       // Perform actual API call in background
-      if (BACKEND === 'supabase') {
-        const { removeSaveSupabase } = await import('app/lib/supabase')
-        await removeSaveSupabase(contestId)
-      } else {
-        const { removeSave: removeSaveAPI } = await import('app/lib/saves/api')
-        await removeSaveAPI(contestId, userId)
-      }
+      const { removeSaveSupabase } = await import('app/lib/supabase')
+      await removeSaveSupabase(contestId)
 
       // Invalidate queries to ensure data is fresh
       queryClient.invalidateQueries({
@@ -256,48 +232,6 @@ function SavedTabContent() {
     refetch()
   }, [])
 
-  // Fetch all host docs referenced by contests (batch)
-  const allHostIds = savedContests
-    .flatMap((c) => c.host_ids || [])
-    .filter((id, index, self) => self.indexOf(id) === index)
-
-  const { data: allHosts = [] } = useQuery<Host[]>({
-    queryKey: ['contest-hosts', allHostIds.sort().join(',')],
-    enabled: allHostIds.length > 0,
-    queryFn: async () => {
-      const res = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: CONTEST_HOSTS_COLLECTION_ID,
-        queries: [Query.equal('$id', allHostIds), Query.limit(100)],
-      })
-      return res.rows as unknown as Host[]
-    },
-  })
-
-  const hostsById = new Map<string, Host>()
-  allHosts.forEach((h) => hostsById.set(h.$id, h))
-
-  // Fetch all categories referenced by contests (batch)
-  const allCategoryIds = savedContests
-    .flatMap((c) => c.category_ids || [])
-    .filter((id, index, self) => self.indexOf(id) === index)
-
-  const { data: allCategories = [] } = useQuery<Category[]>({
-    queryKey: ['contest-categories', allCategoryIds.sort().join(',')],
-    enabled: allCategoryIds.length > 0,
-    queryFn: async () => {
-      const res = await tablesDB.listRows({
-        databaseId: DATABASE_ID,
-        tableId: CONTEST_CATEGORIES_COLLECTION_ID,
-        queries: [Query.equal('$id', allCategoryIds), Query.limit(200)],
-      })
-      return res.rows as unknown as Category[]
-    },
-  })
-
-  const categoriesById = new Map<string, Category>()
-  allCategories.forEach((c) => categoriesById.set(c.$id, c))
-
   // Language preference
   const { data: language = 'en' } = useQuery<'en' | 'ms'>({
     queryKey: ['user-language-preference'],
@@ -323,12 +257,8 @@ function SavedTabContent() {
     queryKey: ['receipts', 'stats', user?.$id],
     queryFn: async () => {
       if (!user?.$id) throw new Error('User not authenticated')
-      if (BACKEND === 'supabase') {
-        const { getUserReceiptStatsSupabase } = await import('app/lib/supabase')
-        return getUserReceiptStatsSupabase()
-      }
-      const { getUserReceiptStats } = await import('app/lib/receipts/api')
-      return getUserReceiptStats(user.$id)
+      const { getUserReceiptStatsSupabase } = await import('app/lib/supabase')
+      return getUserReceiptStatsSupabase()
     },
     enabled: !!user?.$id,
     staleTime: 60 * 1000,
@@ -349,20 +279,12 @@ function SavedTabContent() {
       }
 
       const counts: Record<string, number> = {}
-      const getCount =
-        BACKEND === 'supabase'
-          ? async (contestId: string) => {
-              const { getContestReceiptCountSupabase } = await import(
-                'app/lib/supabase'
-              )
-              return getContestReceiptCountSupabase(contestId)
-            }
-          : async (contestId: string) => {
-              const { getContestReceiptCount } = await import(
-                'app/lib/receipts/api'
-              )
-              return getContestReceiptCount(user.$id, contestId)
-            }
+      const getCount = async (contestId: string) => {
+        const { getContestReceiptCountSupabase } = await import(
+          'app/lib/supabase'
+        )
+        return getContestReceiptCountSupabase(contestId)
+      }
 
       // Fetch counts for all contests with receipts
       await Promise.all(
@@ -404,18 +326,6 @@ function SavedTabContent() {
     setSelectedContestForReceipt(null)
   }
 
-  // Android JWT for images (Appwrite private-image auth only).
-  if (Platform.OS === 'android') {
-    useEffect(() => {
-      if (BACKEND !== 'appwrite') return
-      const fetchJWT = async () => {
-        const { jwt } = await account.createJWT()
-        setJwt(jwt)
-      }
-      fetchJWT()
-    }, [])
-  }
-
   const onRefresh = async () => {
     setRefreshing(true)
     await refetch()
@@ -427,12 +337,6 @@ function SavedTabContent() {
       fetchNextPage()
     }
   }
-
-  // Check if we're loading hosts or categories (only show if we have contests)
-  const isLoadingRelatedData =
-    savedContests.length > 0 &&
-    ((allHostIds.length > 0 && allHosts.length === 0) ||
-      (allCategoryIds.length > 0 && allCategories.length === 0))
 
   // Show skeleton loaders if:
   // 1. Initial loading (isLoading = true)
@@ -550,8 +454,8 @@ function SavedTabContent() {
     )
   }
 
-  // Check if we're updating (refetching or loading related data)
-  const isUpdating = (isFetching && !isLoading) || isLoadingRelatedData
+  // Check if we're updating (refetching)
+  const isUpdating = isFetching && !isLoading
 
   // Calculate counts for each category
   const contestCounts = savedContests.reduce(
@@ -715,15 +619,8 @@ function SavedTabContent() {
 
         <View className="gap-4">
           {filteredContests.map((contest: Contest) => {
-            // Supabase saved contests carry embedded hosts/categories; the
-            // Appwrite path resolves them from host_ids/category_ids batches.
-            const embeddedHosts = (contest as any).hosts as Host[] | undefined
-            const contestHosts =
-              embeddedHosts && embeddedHosts.length > 0
-                ? embeddedHosts
-                : ((contest.host_ids || [])
-                    .map((id) => hostsById.get(id))
-                    .filter(Boolean) as Host[])
+            // Supabase saved contests carry embedded hosts/categories.
+            const contestHosts = ((contest as any).hosts as Host[]) || []
 
             const embeddedCategories = (contest as any).categories as
               | Array<{
@@ -736,32 +633,16 @@ function SavedTabContent() {
               | undefined
 
             const badgeCategories: ContestBadgeCategory[] = []
-            if (embeddedCategories && embeddedCategories.length > 0) {
-              embeddedCategories.forEach((category, index) => {
-                badgeCategories.push({
-                  id: category.$id,
-                  name_en: category.name_en,
-                  name_ms: category.name_ms,
-                  priority_order: category.priority_order ?? null,
-                  originalIndex: index,
-                  type: category.type ?? null,
-                })
+            ;(embeddedCategories || []).forEach((category, index) => {
+              badgeCategories.push({
+                id: category.$id,
+                name_en: category.name_en,
+                name_ms: category.name_ms,
+                priority_order: category.priority_order ?? null,
+                originalIndex: index,
+                type: category.type ?? null,
               })
-            } else {
-              ;(contest.category_ids || []).forEach((id, index) => {
-                const category = categoriesById.get(id)
-                if (!category) return
-
-                badgeCategories.push({
-                  id: category.$id,
-                  name_en: category.name_en,
-                  name_ms: category.name_ms,
-                  priority_order: category.priority_order ?? null,
-                  originalIndex: index,
-                  type: category.type ?? null,
-                })
-              })
-            }
+            })
 
             return (
               <View
@@ -773,7 +654,6 @@ function SavedTabContent() {
                   hosts={contestHosts}
                   badgeCategories={badgeCategories}
                   language={language}
-                  jwt={jwt}
                   onPress={() => {
                     if (contest.slug) navigateToContest(contest.slug)
                   }}

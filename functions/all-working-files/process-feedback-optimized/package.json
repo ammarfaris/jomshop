@@ -1,9 +1,0 @@
-{
-  "name": "process-feedback-optimized",
-  "version": "1.0.0",
-  "description": "Optimized feedback processing with parallel execution (no rate limiting)",
-  "main": "index.js",
-  "dependencies": {
-    "node-appwrite": "^20.3.0"
-  }
-}

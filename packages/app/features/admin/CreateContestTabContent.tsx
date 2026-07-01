@@ -9,7 +9,6 @@ import {
 import { useForm, Controller } from 'react-hook-form'
 import { useColorThemeValues } from 'app/hooks/useColorThemeValues'
 import { valibotResolver } from '@hookform/resolvers/valibot'
-import { Permission, Role } from 'app/lib/appwrite-universal'
 import { Image as ExpoImage } from 'expo-image'
 
 import { Button } from 'app/components/ui/button'
@@ -26,21 +25,10 @@ import {
   SelectValue,
 } from 'app/components/ui/select'
 
-import { tablesDB, storage, functions } from 'app/provider/appwrite/api'
 import * as ImagePicker from 'expo-image-picker'
-import {
-  DATABASE_ID,
-  CONTESTS_COLLECTION_ID,
-  CONTESTS_BUCKET_ID,
-  GENERATE_IMG_BLURHASH_IMG_TOKEN_FN_ID,
-  ADMIN_TEAM_ID,
-  CONTEST_TRANSLATIONS_COLLECTION_ID,
-} from 'app/provider/appwrite/constants'
-import { BACKEND } from 'app/lib/backend'
 import { createSupabaseContest } from 'app/lib/supabase/admin'
 import SingleDateTimePicker from 'app/components/SingleDateTimePicker'
 import SingleDateTimePickerMobile from 'app/components/SingleDateTimePickerMobile'
-import { addContestToMeilisearch } from 'app/lib/meilisearch/api'
 import HostManagerModal, { HostDoc as HostModalDoc } from './HostManagerModal'
 import CategoryManagerModal, {
   CategoryDoc as CategoryModalDoc,
@@ -554,241 +542,13 @@ export default function CreateContestTabContent({
     const loadingToastId = toast.loading('Creating contest...')
 
     try {
-      if (BACKEND === 'supabase') {
-        setUploadingImages(true)
-        await createSupabaseContest(data, {
-          hostIds: selectedHostIds,
-          categoryIds: selectedCategoryIds,
-          galleryAssets,
-          mainUri,
-        })
-      } else {
-      // Create the contest document first (without images)
-      const contestDoc = await tablesDB.createRow({
-        databaseId: DATABASE_ID,
-        tableId: CONTESTS_COLLECTION_ID,
-        rowId: 'unique()',
-        data: {
-          title: data.title,
-          title_ms: data.title_ms || null,
-          summary: data.summary,
-          summary_ms: data.summary_ms || null,
-          start_date: new Date(data.start_date).toISOString(),
-          end_date: new Date(data.end_date).toISOString(),
-          host_ids: selectedHostIds,
-          category_ids: selectedCategoryIds,
-          slug: data.slug,
-          total_prizes_value_rm: data.total_prizes_value_rm
-            ? parseFloat(data.total_prizes_value_rm)
-            : null,
-          link_aff_shopee: data.link_aff_shopee || null,
-          link_aff_lazada: data.link_aff_lazada || null,
-          link_aff_tiktok_shop: data.link_aff_tiktok_shop || null,
-          link_media_instagram: data.link_media_instagram || null,
-          link_media_facebook: data.link_media_facebook || null,
-          link_media_tiktok: data.link_media_tiktok || null,
-          link_media_x: data.link_media_x || null,
-          link_media_youtube: data.link_media_youtube || null,
-          link_media_linkedin: data.link_media_linkedin || null,
-          link_media_website: data.link_media_website || null,
-          visibility: data.visibility ?? 'users',
-        },
-        permissions: [Permission.write(Role.team(ADMIN_TEAM_ID))],
-      })
-      const contestId = contestDoc.$id
-
-      // Upload each selected image & invoke backend function
       setUploadingImages(true)
-
-      // Ensure the asset marked as main goes first in the sequence order (0)
-      const orderedAssets = [...galleryAssets].sort((a, b) => {
-        if (a.uri === mainUri) return -1
-        if (b.uri === mainUri) return 1
-        return 0
+      await createSupabaseContest(data, {
+        hostIds: selectedHostIds,
+        categoryIds: selectedCategoryIds,
+        galleryAssets,
+        mainUri,
       })
-
-      for (let i = 0; i < orderedAssets.length; i++) {
-        const asset = orderedAssets[i]
-        const isMain = asset.uri === mainUri
-        const label = isMain ? 'main-gallery' : 'gallery'
-
-        const getFileExtension = (fileName: string | undefined): string => {
-          if (!fileName) return 'jpg'
-          const match = fileName.match(/\.([a-zA-Z0-9]+)$/)
-          return match && typeof match[1] === 'string'
-            ? match[1].toLowerCase()
-            : 'jpg'
-        }
-        const getImageFileName = (
-          fileName: string | undefined,
-          title: string
-        ): string => {
-          const slug = (title || 'contest')
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/(^-|-$)/g, '')
-          const safeDate = new Date().toISOString().split('T')[0]
-          const ext = getFileExtension(fileName)
-          return `${slug}-${safeDate}-${i + 1}.${ext}`
-        }
-
-        let fileToUpload: any
-        if (Platform.OS === 'web') {
-          if (asset instanceof File) {
-            fileToUpload = asset
-          } else {
-            const fileName = getImageFileName(asset.fileName, data.title)
-            const response = await fetch(asset.uri)
-            const blob = await response.blob()
-            fileToUpload = new File([blob], fileName, {
-              type: asset.type || 'image/jpeg',
-            })
-          }
-        } else {
-          const fileName = getImageFileName(asset.fileName, data.title)
-          fileToUpload = {
-            uri: asset.uri,
-            name: fileName,
-            type: asset.mimeType || asset.type || 'image/jpeg',
-            size: (asset as any).fileSize ?? undefined,
-          } as any
-        }
-
-        const uploaded = await storage.createFile(
-          CONTESTS_BUCKET_ID,
-          'unique()',
-          fileToUpload,
-          [Permission.write(Role.team(ADMIN_TEAM_ID))]
-        )
-
-        const exec = await functions.createExecution(
-          GENERATE_IMG_BLURHASH_IMG_TOKEN_FN_ID,
-          JSON.stringify({
-            fileId: uploaded.$id,
-            contestId,
-            file_label: label,
-            file_order: i + 1,
-            skipToken: true, // Contest images are public, no token needed
-          })
-        )
-
-        let tokenSecret: string | undefined
-        let blurhash: string | undefined
-        try {
-          const raw =
-            (exec as any).responseBody ??
-            (exec as any).response ??
-            (exec as any).stdout
-          if (typeof raw === 'string' && raw.trim()) {
-            const parsed = JSON.parse(raw)
-            tokenSecret = parsed.tokenSecret
-            blurhash = parsed.blurhash
-          }
-        } catch {
-          /* ignore JSON parse errors */
-        }
-
-        if (isMain) {
-          await tablesDB.updateRow({
-            databaseId: DATABASE_ID,
-            tableId: CONTESTS_COLLECTION_ID,
-            rowId: contestId,
-            data: {
-              main_img_id: uploaded.$id,
-              main_img_token_secret: tokenSecret ?? null,
-              main_img_blurhash: blurhash ?? null,
-            },
-          })
-        }
-      }
-
-      // Create translations documents
-      try {
-        const translationsPayloads: Array<{
-          locale: 'en' | 'ms'
-          data: any
-        }> = []
-
-        const enData: any = {
-          contest_id: contestId,
-          locale: 'en',
-          // Required fields
-          prizes: data.prizes_en.trim(),
-          eligible_products_and_purchases: data.eligible_products_en.trim(),
-          eligible_participants: data.eligible_participants_en.trim(),
-          eligible_stores: data.eligible_stores_en.trim(),
-          winners_selection_method: data.winners_selection_method_en.trim(),
-          winners_comm_and_timeline: data.winners_comm_and_timeline_en.trim(),
-          entry_method_and_submission: data.entry_method_en.trim(),
-          winners_list_and_announcement:
-            data.winners_list_and_announcement_en.trim(),
-        }
-        // Optional fields
-        if (data.link_tnc_en?.trim()) enData.link_tnc = data.link_tnc_en.trim()
-        if (data.link_faq_en?.trim()) enData.link_faq = data.link_faq_en.trim()
-        if (data.eligible_participants_exclusion_en?.trim())
-          enData.eligible_participants_exclusion =
-            data.eligible_participants_exclusion_en.trim()
-
-        translationsPayloads.push({ locale: 'en', data: enData })
-
-        const msData: any = { contest_id: contestId, locale: 'ms' }
-        if (data.prizes_ms?.trim()) msData.prizes = data.prizes_ms.trim()
-        if (data.link_tnc_ms?.trim()) msData.link_tnc = data.link_tnc_ms.trim()
-        if (data.link_faq_ms?.trim()) msData.link_faq = data.link_faq_ms.trim()
-        if (data.eligible_products_ms?.trim())
-          msData.eligible_products_and_purchases =
-            data.eligible_products_ms.trim()
-        if (data.eligible_participants_ms?.trim())
-          msData.eligible_participants = data.eligible_participants_ms.trim()
-        if (data.eligible_participants_exclusion_ms?.trim())
-          msData.eligible_participants_exclusion =
-            data.eligible_participants_exclusion_ms.trim()
-        if (data.eligible_stores_ms?.trim())
-          msData.eligible_stores = data.eligible_stores_ms.trim()
-        if (data.winners_selection_method_ms?.trim())
-          msData.winners_selection_method =
-            data.winners_selection_method_ms.trim()
-        if (data.winners_comm_and_timeline_ms?.trim())
-          msData.winners_comm_and_timeline =
-            data.winners_comm_and_timeline_ms.trim()
-        if (data.entry_method_ms?.trim())
-          msData.entry_method_and_submission = data.entry_method_ms.trim()
-        if (data.winners_list_and_announcement_ms?.trim())
-          msData.winners_list_and_announcement =
-            data.winners_list_and_announcement_ms.trim()
-        if (Object.keys(msData).length > 2)
-          translationsPayloads.push({ locale: 'ms', data: msData })
-
-        for (const t of translationsPayloads) {
-          await tablesDB.createRow({
-            databaseId: DATABASE_ID,
-            tableId: CONTEST_TRANSLATIONS_COLLECTION_ID,
-            rowId: 'unique()',
-            data: t.data,
-            permissions: [Permission.write(Role.team(ADMIN_TEAM_ID))],
-          })
-        }
-      } catch (translationErr) {
-        console.warn('Failed to create translation docs:', translationErr)
-      }
-
-      // Update Meilisearch index
-      try {
-        const completeContest = await tablesDB.getRow({
-          databaseId: DATABASE_ID,
-          tableId: CONTESTS_COLLECTION_ID,
-          rowId: contestId,
-        })
-        await addContestToMeilisearch(completeContest)
-        console.log('✅ Contest added to Meilisearch index')
-      } catch (meilisearchError) {
-        console.error(
-          '⚠️ Failed to update Meilisearch index:',
-          meilisearchError
-        )
-      }
-      }
 
       // Note: Using main image as OG image (no custom OG generation needed)
 

@@ -13,7 +13,6 @@ import { Gallery } from 'react-native-zoom-toolkit'
 import { ImageGalleryProps } from './ImageGallery'
 import { Text } from 'app/components/ui/text'
 import { useSafeArea } from 'app/provider/safe-area/use-safe-area'
-import { account } from 'app/provider/appwrite/api'
 
 export const ImageGalleryNative: React.FC<ImageGalleryProps> = ({
   images,
@@ -24,10 +23,6 @@ export const ImageGalleryNative: React.FC<ImageGalleryProps> = ({
   const { top } = useSafeArea()
   const { width, height } = useWindowDimensions()
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
-
-  // JWT for Android authentication (same as ContestsListScreen)
-  const [jwt, setJwt] = useState<string | null>(null)
-  const [jwtReady, setJwtReady] = useState<boolean>(Platform.OS !== 'android')
 
   // Wrap setCurrentIndex to avoid Reanimated warnings
   const handleIndexChange = useCallback((index: number) => {
@@ -52,24 +47,6 @@ export const ImageGalleryNative: React.FC<ImageGalleryProps> = ({
     }
   }, [isVisible, initialIndex])
 
-  useEffect(() => {
-    if (Platform.OS === 'android') {
-      const fetchJWT = async () => {
-        try {
-          const { jwt } = await account.createJWT()
-          setJwt(jwt)
-          setJwtReady(true)
-          // console.log('JWT fetched successfully for gallery')
-        } catch (error) {
-          console.log('Failed to create JWT:', error)
-          setJwtReady(true) // Still mark as ready to prevent infinite loading
-        }
-      }
-      // Fetch JWT immediately when component mounts
-      fetchJWT()
-    }
-  }, [])
-
   const renderItem = useCallback(
     (_uri: string, index: number) => {
       try {
@@ -79,26 +56,8 @@ export const ImageGalleryNative: React.FC<ImageGalleryProps> = ({
           return <View style={{ width, height, backgroundColor: 'black' }} />
         }
 
-        // Build source object similar to ContestsListScreen logic
-        let source: any = { uri: imageData.uri }
-
-        if (Platform.OS === 'android') {
-          const hasTokenInUri = imageData.uri.includes('token=')
-
-          if (jwt) {
-            // Strip token parameter safely when using JWT headers
-            const uriWithoutToken = imageData.uri.replace(
-              /([&?])token=[^&]+/,
-              ''
-            )
-            source.uri = uriWithoutToken
-            source.headers = { 'X-Appwrite-JWT': jwt }
-            // no console on prod
-          } else if (!jwtReady && hasTokenInUri) {
-            // No JWT yet, keep token in URI so image can still load
-            // no console on prod
-          }
-        }
+        // Contest gallery images are public URLs on Supabase.
+        const source: any = { uri: imageData.uri }
 
         // Calculate proper image size for zoom functionality
         // The image should fill the container but maintain aspect ratio
@@ -129,7 +88,7 @@ export const ImageGalleryNative: React.FC<ImageGalleryProps> = ({
         return <View style={{ width, height, backgroundColor: 'black' }} />
       }
     },
-    [width, height, images, jwt, jwtReady]
+    [width, height, images]
   )
 
   // Memoize the data array to prevent Gallery re-renders
@@ -153,23 +112,6 @@ export const ImageGalleryNative: React.FC<ImageGalleryProps> = ({
       <GestureHandlerRootView style={{ flex: 1, backgroundColor: 'black' }}>
         {Platform.OS === 'ios' && (
           <StatusBar barStyle="light-content" backgroundColor="black" />
-        )}
-
-        {/* Show loading indicator for Android while JWT is being fetched */}
-        {Platform.OS === 'android' && !jwtReady && (
-          <View
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: [{ translateX: -20 }, { translateY: -20 }],
-              zIndex: 1001,
-            }}
-          >
-            <Text style={{ color: 'white', textAlign: 'center' }}>
-              Loading authentication...
-            </Text>
-          </View>
         )}
 
         {/* Close button */}

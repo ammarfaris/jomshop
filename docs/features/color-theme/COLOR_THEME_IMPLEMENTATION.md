@@ -7,7 +7,7 @@ This document describes the implementation of the color theme system in JomConte
 ## Features
 
 - **Two Color Themes**: Green (default) and Blue
-- **Persistent Preferences**: Theme choice is saved to Appwrite user preferences
+- **Persistent Preferences**: Theme choice is saved to the user's Supabase profile preferences
 - **Cross-Platform**: Works on both web (Next.js) and native (Expo/React Native)
 - **Seamless Switching**: Theme changes apply instantly across the entire app
 - **Dark Mode Support**: Both themes work properly in light and dark modes
@@ -21,7 +21,7 @@ The `ColorThemeContext` manages the global color theme state and provides:
 - Current color theme (`'green'` or `'blue'`)
 - Function to change the theme
 - Loading state
-- Automatic persistence to Appwrite user preferences
+- Automatic persistence to the user's Supabase profile preferences
 - Automatic theme application on web (via document class manipulation)
 
 **Location**: `packages/app/contexts/ColorThemeContext.tsx`
@@ -190,27 +190,26 @@ The following components have been updated to use the theme color system:
 ### Web (Next.js)
 - Theme is applied by adding/removing CSS classes on `document.documentElement`
 - Theme changes are instant and affect all CSS variables
-- Theme preference is loaded from Appwrite on mount
+- Theme preference is loaded from the Supabase profile on mount
 
 ### Native (Expo/React Native)
 - NativeWind v4 supports CSS variables on native
-- Theme is stored in context and Appwrite preferences
+- Theme is stored in context and the Supabase profile preferences
 - Components use the same Tailwind classes as web
 - For ActivityIndicator and other native components that need raw color values, use `hsl(var(--main))`
 
 ## Data Persistence
 
-Theme preferences are stored in Appwrite user preferences:
+Theme preferences are stored in the user's Supabase profile (`prefs` JSON column on `profiles`):
 
 ```typescript
+import { getUserPrefs, updateUserPrefs } from 'app/lib/prefs'
+
 // Save theme
-await account.updatePrefs({ 
-  ...currentPrefs, 
-  colorTheme: 'blue' 
-})
+await updateUserPrefs({ colorTheme: 'blue' })
 
 // Load theme
-const prefs = await account.getPrefs()
+const prefs = await getUserPrefs()
 const savedTheme = prefs.colorTheme // 'green' or 'blue'
 ```
 
@@ -302,9 +301,9 @@ Check these components in both themes:
 - Clear browser cache and reload
 
 ### Theme not persisting
-- Check Appwrite connection
+- Check Supabase connection
 - Verify user is logged in
-- Check browser console for Appwrite API errors
+- Check browser console for Supabase API errors
 
 ### Colors not updating on native
 - Restart the app
