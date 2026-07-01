@@ -12,16 +12,6 @@ import {
 import { Text } from 'app/components/ui/text'
 import { Button } from 'app/components/ui/button'
 import { Label } from 'app/components/ui/label'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from 'app/components/ui/alert-dialog'
 import { ImageGallery, ImageItem } from 'app/components/gallery/ImageGallery'
 import { ReceiptThumbnail } from './ReceiptThumbnail'
 import {
@@ -1069,6 +1059,78 @@ export default function ReceiptManagerModal({
               </Collapsible>
             )}
           </ScrollView>
+
+          {/* Delete confirmation — a plain overlay rendered LAST inside the
+              fullscreen modal so it paints on top and captures its own taps. We
+              deliberately avoid the portal-based AlertDialog here: opened from a
+              controlled state (not an AlertDialogTrigger), its web focus-scope
+              tries to aria-hidden the still-focused modal close button, which
+              Chrome blocks — leaving the dialog invisible and the UI unresponsive
+              until reload. This overlay has no portal / focus-scope / aria-hidden. */}
+          {deleteDialogOpen && (
+            <View
+              className="absolute inset-0"
+              style={{ zIndex: 50, elevation: 50 }}
+            >
+              <Pressable
+                className="flex-1 items-center justify-center bg-black/60 p-4"
+                onPress={() => {
+                  if (deleteMutation.isPending) return
+                  setDeleteDialogOpen(false)
+                  setReceiptToDelete(null)
+                }}
+              >
+                <Pressable
+                  // Absorb taps on the card so the backdrop press can't dismiss it.
+                  onPress={(e) => e.stopPropagation()}
+                  className="w-full rounded-lg border border-border bg-white dark:bg-gray-900 p-6"
+                  style={{ maxWidth: 420 }}
+                >
+                  <Text className="text-lg font-bold text-black dark:text-white">
+                    <Trans>Delete Receipt?</Trans>
+                  </Text>
+                  <Text className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                    <Trans>
+                      Are you sure you want to delete this receipt? This action
+                      cannot be undone.
+                    </Trans>
+                  </Text>
+                  <View className="mt-6 flex-row justify-end gap-3">
+                    <View>
+                      <Button
+                        variant="outline"
+                        onPress={() => {
+                          setDeleteDialogOpen(false)
+                          setReceiptToDelete(null)
+                        }}
+                        disabled={deleteMutation.isPending}
+                        className="h-10 px-5"
+                      >
+                        <Text>
+                          <Trans>Cancel</Trans>
+                        </Text>
+                      </Button>
+                    </View>
+                    <View>
+                      <Button
+                        onPress={handleDeleteConfirm}
+                        disabled={deleteMutation.isPending}
+                        className="h-10 px-5 bg-red-500"
+                      >
+                        {deleteMutation.isPending ? (
+                          <ActivityIndicator size="small" color="white" />
+                        ) : (
+                          <Text className="text-white">
+                            <Trans>Delete</Trans>
+                          </Text>
+                        )}
+                      </Button>
+                    </View>
+                  </View>
+                </Pressable>
+              </Pressable>
+            </View>
+          )}
         </View>
       </RNModal>
 
@@ -1079,49 +1141,6 @@ export default function ReceiptManagerModal({
         isVisible={galleryVisible}
         onClose={() => setGalleryVisible(false)}
       />
-
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              <Trans>Delete Receipt?</Trans>
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              <Trans>
-                Are you sure you want to delete this receipt? This action cannot
-                be undone.
-              </Trans>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onPress={() => {
-                setDeleteDialogOpen(false)
-                setReceiptToDelete(null)
-              }}
-              disabled={deleteMutation.isPending}
-            >
-              <Text>
-                <Trans>Cancel</Trans>
-              </Text>
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onPress={handleDeleteConfirm}
-              disabled={deleteMutation.isPending}
-              className="bg-red-500"
-            >
-              {deleteMutation.isPending ? (
-                <ActivityIndicator size="small" color="white" />
-              ) : (
-                <Text className="text-white">
-                  <Trans>Delete</Trans>
-                </Text>
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
       {/* Document Scanner Modal - Web Only */}
       {Platform.OS === 'web' && (

@@ -8,7 +8,7 @@ import { getReceiptFileUrl } from 'app/lib/receipts/api'
 import { BACKEND } from 'app/lib/backend'
 import { isImageFile, isPDFFile } from 'app/utils/filePicker'
 import { Trans } from '@lingui/react/macro'
-import { XMarkOutline } from 'app/components/icons-svg/XMarkOutline'
+import { TrashOutline } from 'app/components/icons-svg/TrashOutline'
 import { PencilOutline } from 'app/components/icons-svg/PencilOutline'
 
 interface ReceiptThumbnailProps {
@@ -137,12 +137,13 @@ export function ReceiptThumbnail({
         {onDelete && (
           <Pressable
             onPress={onDelete}
+            accessibilityLabel="Delete receipt"
             className="bg-red-600 rounded-full p-2 shadow-md"
             style={({ pressed }) => ({
               opacity: pressed ? 0.7 : 1,
             })}
           >
-            <XMarkOutline className="w-4 h-4 text-white" />
+            <TrashOutline className="w-4 h-4 text-white" />
           </Pressable>
         )}
       </View>

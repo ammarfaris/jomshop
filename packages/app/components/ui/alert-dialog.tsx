@@ -21,12 +21,6 @@ function AlertDialogOverlayWeb({
   ref?: React.RefObject<AlertDialogPrimitive.OverlayRef>
 }) {
   const { open } = AlertDialogPrimitive.useRootContext()
-  console.log(
-    'AlertDialogOverlayWeb rendering, open:',
-    open,
-    'children:',
-    children
-  )
   return (
     <AlertDialogPrimitive.Overlay
       className={cn(
