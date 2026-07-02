@@ -6,6 +6,33 @@ import { Platform } from 'react-native'
  * On native, requires expo-clipboard (install with: npx expo install expo-clipboard)
  */
 
+/**
+ * Read text from the clipboard. Returns null when unavailable (permission
+ * denied, no expo-clipboard on native, or empty clipboard).
+ */
+export async function readFromClipboard(): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    try {
+      const text = await navigator.clipboard.readText()
+      return text || null
+    } catch (error) {
+      console.error('Failed to read clipboard:', error)
+      return null
+    }
+  }
+  try {
+    // @ts-ignore - expo-clipboard may not be installed during development
+    const ExpoClipboard = await import('expo-clipboard')
+    const text = await ExpoClipboard.getStringAsync()
+    return text || null
+  } catch {
+    console.warn(
+      'Clipboard not available. Install expo-clipboard with: npx expo install expo-clipboard'
+    )
+    return null
+  }
+}
+
 export async function copyToClipboard(text: string): Promise<boolean> {
   if (Platform.OS === 'web') {
     try {

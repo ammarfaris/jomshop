@@ -272,15 +272,15 @@ export function isPDFFile(mimeType: string): boolean {
 }
 
 /**
- * Pick a Markdown (.md / text) file using expo-document-picker.
- * Used by the contest admin "Import T&C from .md" feature.
+ * Pick a JSON (.json / text) file using expo-document-picker.
+ * Used by the contest admin "Import (.json)" feature.
  */
-export async function pickMarkdownFile(): Promise<FilePickerResult> {
+export async function pickJsonFile(): Promise<FilePickerResult> {
   try {
     const result = await DocumentPicker.getDocumentAsync({
-      // Some browsers don't honor a non-standard "text/markdown" mime; we
-      // include the .md extension and text/plain as fallbacks.
-      type: ['text/markdown', 'text/plain', 'application/octet-stream', '*/*'],
+      // Some browsers don't honor specific mimes reliably; include
+      // text/plain and octet-stream as fallbacks (extension checked below).
+      type: ['application/json', 'text/plain', 'application/octet-stream', '*/*'],
       copyToCacheDirectory: true,
       multiple: false,
     })
@@ -291,11 +291,11 @@ export async function pickMarkdownFile(): Promise<FilePickerResult> {
     const asset = result.assets[0]
     if (!asset) return { success: false, error: 'No file selected' }
 
-    const name = asset.name || `imported-${Date.now()}.md`
-    if (!/\.(md|markdown|txt)$/i.test(name)) {
+    const name = asset.name || `imported-${Date.now()}.json`
+    if (!/\.(json|txt)$/i.test(name)) {
       return {
         success: false,
-        error: `Unsupported file type: ${name}. Please pick a .md, .markdown, or .txt file.`,
+        error: `Unsupported file type: ${name}. Please pick a .json (or .txt) file.`,
       }
     }
 
@@ -304,16 +304,16 @@ export async function pickMarkdownFile(): Promise<FilePickerResult> {
       file: {
         uri: asset.uri,
         name,
-        type: asset.mimeType || 'text/markdown',
+        type: asset.mimeType || 'application/json',
         size: asset.size,
       },
     }
   } catch (error) {
-    console.error('Markdown picker error:', error)
+    console.error('JSON picker error:', error)
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : 'Failed to pick markdown file',
+        error instanceof Error ? error.message : 'Failed to pick JSON file',
     }
   }
 }

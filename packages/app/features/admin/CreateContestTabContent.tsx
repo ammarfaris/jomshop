@@ -41,13 +41,14 @@ import {
 import { DraggableHostBadge } from 'app/components/admin/DraggableHostBadge'
 import { DraggableCategoryBadge } from 'app/components/admin/DraggableCategoryBadge'
 import { detectSuspiciousLineBreaks } from 'app/utils/lineBreakDetection'
-import { pickMarkdownFile, readFileAsText } from 'app/utils/filePicker'
+import { pickJsonFile, readFileAsText } from 'app/utils/filePicker'
 import {
-  parseContestMarkdown,
-  buildContestMarkdownTemplate,
-  CONTEST_MD_SECTION_KEYS,
-} from './contestMarkdownIO'
-import { copyToClipboard } from 'app/lib/clipboard'
+  parseContestJson,
+  CONTEST_JSON_TEXT_KEYS,
+  type ParseReport,
+} from './contestJsonIO'
+import { CONTEST_JSON_PROMPT } from './contestJsonPrompt'
+import { copyToClipboard, readFromClipboard } from 'app/lib/clipboard'
 
 interface CreateContestTabContentProps {
   user: any
@@ -302,42 +303,15 @@ export default function CreateContestTabContent({
     )
   }
 
-  // ---- Import T&C from .md ------------------------------------------------
-  const FORM_KEYS_TO_CHECK_DIRTY = [
-    'title',
-    'title_ms',
-    'summary',
-    'summary_ms',
-    'total_prizes_value_rm',
-    ...CONTEST_MD_SECTION_KEYS,
-  ] as const
-
-  const handleImportMarkdown = async () => {
-    const picked = await pickMarkdownFile()
-    if (!picked.success || !picked.file) {
-      if (picked.error && picked.error !== 'File selection canceled') {
-        toast.error(picked.error)
-      }
-      return
-    }
-
-    let raw: string
-    try {
-      raw = await readFileAsText(picked.file.uri)
-    } catch (err: any) {
-      toast.error(`Could not read file: ${err?.message || 'unknown error'}`)
-      return
-    }
-
-    const report = parseContestMarkdown(raw)
-
+  // ---- Import contest JSON (same payload the ingest-contest function takes) --
+  const applyImportReport = (report: ParseReport, sourceLabel: string) => {
     if (report.errors.length > 0) {
       report.errors.forEach((e) => toast.error(e))
       return
     }
 
     // Confirm if the form already has content in the fields we're about to write.
-    const willOverwrite = FORM_KEYS_TO_CHECK_DIRTY.some((k) => {
+    const willOverwrite = CONTEST_JSON_TEXT_KEYS.some((k) => {
       const cur = (watch(k as any) as string) || ''
       const next = (report.values as any)[k]
       return (
@@ -369,7 +343,7 @@ export default function CreateContestTabContent({
     toast.success(
       `Imported ${report.filled.length} field${
         report.filled.length === 1 ? '' : 's'
-      } from ${picked.file.name}`
+      } from ${sourceLabel}`
     )
     if (report.overLimit.length) {
       report.overLimit.forEach((o) =>
@@ -380,7 +354,7 @@ export default function CreateContestTabContent({
     }
     if (report.unknownSections.length) {
       toast.warning(
-        `Ignored unknown sections: ${report.unknownSections.join(', ')}`
+        `Ignored unknown keys: ${report.unknownSections.join(', ')}`
       )
     }
     if (report.warnings.length) {
@@ -390,63 +364,52 @@ export default function CreateContestTabContent({
       const sample = report.missing.slice(0, 4).join(', ')
       const more =
         report.missing.length > 4 ? ` (+${report.missing.length - 4} more)` : ''
-      toast(`Not provided in file: ${sample}${more}`)
+      toast(`Not provided in JSON: ${sample}${more}`)
     }
   }
 
-  // Canonical static URL served from apps/next/public/. The runtime helper
-  // buildContestMarkdownTemplate() is only used as a last-resort fallback
-  // (offline / fetch failure / native).
-  const TEMPLATE_PUBLIC_URL = '/contest-md-import/contest-template.md'
-
-  const handleDownloadTemplate = async () => {
-    if (Platform.OS === 'web') {
-      try {
-        const res = await fetch(TEMPLATE_PUBLIC_URL, { cache: 'no-cache' })
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        const md = await res.text()
-        const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'contest-template.md'
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-        setTimeout(() => URL.revokeObjectURL(url), 0)
-        toast.success('Template downloaded as contest-template.md')
-        return
-      } catch (err: any) {
-        toast.warning(
-          `Couldn't fetch the canonical template (${
-            err?.message || 'unknown'
-          }) — using built-in fallback.`
-        )
-        try {
-          const md = buildContestMarkdownTemplate()
-          const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = 'contest-template.md'
-          document.body.appendChild(a)
-          a.click()
-          document.body.removeChild(a)
-          setTimeout(() => URL.revokeObjectURL(url), 0)
-          toast.success('Template (fallback) downloaded')
-          return
-        } catch {
-          // fall through to clipboard fallback
-        }
+  const handleImportJson = async () => {
+    const picked = await pickJsonFile()
+    if (!picked.success || !picked.file) {
+      if (picked.error && picked.error !== 'File selection canceled') {
+        toast.error(picked.error)
       }
+      return
     }
 
-    const md = buildContestMarkdownTemplate()
-    const ok = await copyToClipboard(md)
+    let raw: string
+    try {
+      raw = await readFileAsText(picked.file.uri)
+    } catch (err: any) {
+      toast.error(`Could not read file: ${err?.message || 'unknown error'}`)
+      return
+    }
+
+    applyImportReport(parseContestJson(raw), picked.file.name)
+  }
+
+  const handlePasteJson = async () => {
+    const raw = await readFromClipboard()
+    if (!raw) {
+      toast.error(
+        'Clipboard is empty or unreadable — copy the JSON from your AI chat first.'
+      )
+      return
+    }
+    applyImportReport(parseContestJson(raw), 'clipboard')
+  }
+
+  // Copies the T&C → JSON conversion prompt for any browser chatbot
+  // (Perplexity / ChatGPT / Claude). Paste it there with the contest's T&C,
+  // then bring the returned JSON back via Import (.json) or Paste JSON.
+  const handleCopyPrompt = async () => {
+    const ok = await copyToClipboard(CONTEST_JSON_PROMPT)
     if (ok) {
-      toast.success('Template copied to clipboard')
+      toast.success(
+        'AI prompt copied — paste it into Perplexity/ChatGPT together with the T&C.'
+      )
     } else {
-      toast.error('Could not download or copy the template')
+      toast.error('Could not copy the prompt to the clipboard')
     }
   }
 
@@ -827,21 +790,25 @@ export default function CreateContestTabContent({
               size="sm"
               variant="secondary"
               className="px-3 py-1"
-              onPress={handleImportMarkdown}
+              onPress={handleImportJson}
             >
-              <Text className="text-xs font-semibold">Import T&C (.md)</Text>
+              <Text className="text-xs font-semibold">Import (.json)</Text>
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="px-3 py-1"
+              onPress={handlePasteJson}
+            >
+              <Text className="text-xs font-semibold">Paste JSON</Text>
             </Button>
             <Button
               size="sm"
               variant="outline"
               className="px-3 py-1"
-              onPress={handleDownloadTemplate}
+              onPress={handleCopyPrompt}
             >
-              <Text className="text-xs font-semibold">
-                {Platform.OS === 'web'
-                  ? 'Download .md Template'
-                  : 'Copy .md Template'}
-              </Text>
+              <Text className="text-xs font-semibold">Copy AI Prompt</Text>
             </Button>
             <Button
               size="sm"
