@@ -9,7 +9,7 @@ icons-svg/
 ├── utils/
 │   ├── IconWrapper.tsx        # Main wrapper component
 │   ├── iconUtils.ts           # Icon configuration utilities
-│   └── iconWIthClassName.ts   # NativeWind integration
+│   └── iconWIthClassName.ts   # Legacy no-op (kept for compatibility)
 ├── [IconName].tsx             # Individual icon components
 └── README.md                  # This file
 ```
@@ -143,15 +143,18 @@ configureIcon(SvgComponent, {
 })
 ```
 
-### NativeWind Integration
+### Icon Coloring
 
-All icons are configured with `iconWithClassName` for NativeWind support:
+Icons are colored via explicit `stroke` / `fill` props computed in `IconWrapper`
+(driven by `useColorScheme` and the `color` prop). The `iconWithClassName` call
+in icon modules is a legacy no-op kept so existing icons don't need to change:
 
 ```tsx
 iconWithClassName(ConfiguredIcon)
 ```
 
-This enables className props to work on native platforms.
+On web, `className` still passes through to the DOM and `icon.tsx` maps common
+Tailwind text colors to a concrete `color`.
 
 ## 🎨 IconWrapper Props
 
@@ -182,7 +185,6 @@ This enables className props to work on native platforms.
 4. **Use semantic classNames** for better theme support
 5. **Memoize icon components** for performance
 6. **Configure icon metadata** using `configureIcon`
-7. **Apply `iconWithClassName`** for NativeWind support
 
 ## 🔄 Migration from Default Exports
 
@@ -200,7 +202,6 @@ import { CheckOutline } from 'app/components/icons-svg/CheckOutline'
 
 ✅ All icons standardized to named exports
 ✅ Full TypeScript support
-✅ NativeWind integration
 ✅ Theme-aware coloring
 ✅ Cross-platform compatible
 ✅ Documented and tested

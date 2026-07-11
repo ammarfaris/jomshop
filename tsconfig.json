@@ -6,7 +6,6 @@
     "paths": {
       "app/*": ["./packages/app/*"]
     },
-    "baseUrl": ".",
     "jsx": "react-jsx",
     "esModuleInterop": true
   },

@@ -27,7 +27,7 @@ const uniwindConfig = withUniwindConfig(config, {
   cssEntryFile: './global.css',
   // Auto-generated className typings.
   dtsFile: './uniwind-types.d.ts',
-  // Keep NativeWind's 14px rem so native spacing/sizing is unchanged
+  // Keep the app's original 14px rem so native spacing/sizing is unchanged
   // (Uniwind defaults to 16px). Web keeps the browser's 16px, as before.
   polyfills: { rem: 14 },
 })

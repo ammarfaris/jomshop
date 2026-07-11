@@ -3,10 +3,9 @@
 ## 📋 Table of Contents
 
 1. [Quick Start](#quick-start)
-2. [Documentation](#documentation)
-3. [Implementation](#implementation)
-4. [Testing](#testing)
-5. [Support](#support)
+2. [Implementation](#implementation)
+3. [Testing](#testing)
+4. [Support](#support)
 
 ## 🚀 Quick Start
 
@@ -44,19 +43,6 @@ import { MarkdownText } from 'app/components/MarkdownText'
   {contestTranslation.entry_method_and_submission}
 </MarkdownText>
 ```
-
-## 📚 Documentation
-
-### User Guides
-
-- **[MARKDOWN_LINKS_USAGE.md](./MARKDOWN_LINKS_USAGE.md)** - Complete usage guide with syntax and examples
-- **[MARKDOWN_LINKS_EXAMPLE.md](./MARKDOWN_LINKS_EXAMPLE.md)** - Visual examples and real-world use cases
-- **[MARKDOWN_LINKS_QUICK_REFERENCE.md](./MARKDOWN_LINKS_QUICK_REFERENCE.md)** - Quick reference card for admins
-
-### Technical Documentation
-
-- **[MARKDOWN_LINKS_IMPLEMENTATION.md](./MARKDOWN_LINKS_IMPLEMENTATION.md)** - Technical implementation details
-- **[CHANGELOG_MARKDOWN_LINKS.md](./CHANGELOG_MARKDOWN_LINKS.md)** - Complete changelog
 
 ## 🔧 Implementation
 
@@ -177,9 +163,9 @@ A: Ensure the path starts with `/` (e.g., `/tnc` not `tnc`).
 
 ### Getting Help
 
-1. Check the [Quick Reference](./MARKDOWN_LINKS_QUICK_REFERENCE.md)
-2. Review [Examples](./MARKDOWN_LINKS_EXAMPLE.md)
-3. See [Implementation Details](./MARKDOWN_LINKS_IMPLEMENTATION.md)
+See the component source and tests:
+`packages/app/components/MarkdownText.tsx`,
+`packages/app/components/__tests__/MarkdownText.test.tsx`
 
 ## 🔮 Future Enhancements
 

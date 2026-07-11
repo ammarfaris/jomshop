@@ -316,14 +316,12 @@ test('reorders hosts when dragged', () => {
 ## Support
 
 For issues or questions:
-1. Check the [Implementation Summary](./IMPLEMENTATION_SUMMARY.md)
-2. Review [Pragmatic Drag and Drop docs](https://atlassian.design/components/pragmatic-drag-and-drop)
-3. Check browser console for errors
-4. Verify you're testing on web platform
+1. Review [Pragmatic Drag and Drop docs](https://atlassian.design/components/pragmatic-drag-and-drop)
+2. Check browser console for errors
+3. Verify you're testing on web platform
 
 ## Related Documentation
 
-- [Implementation Summary](./IMPLEMENTATION_SUMMARY.md)
 - [Pragmatic Drag and Drop Comparison](https://atlassian.design/components/pragmatic-drag-and-drop/comparison)
 - [Element Adapter API](https://atlassian.design/components/pragmatic-drag-and-drop/element-adapter)
 

@@ -15,8 +15,6 @@ self-contained write-up of a problem, its root cause, and the solution.
   across devices from the user's Supabase profile preferences.
 - [COLOR_THEME_FLASH_FIX.md](./COLOR_THEME_FLASH_FIX.md) — Eliminate the green→blue
   color-theme flash on web page refresh with local caching + a blocking script.
-- [COLOR_THEME_NATIVE_FIX.md](./COLOR_THEME_NATIVE_FIX.md) — Native color-theme
-  behavior fixes.
 - [SVG_HOST_IMAGE_FIX.md](./SVG_HOST_IMAGE_FIX.md) — Reliable host-logo rendering
   (including SVGs) from Supabase Storage public URLs across web and native.
 

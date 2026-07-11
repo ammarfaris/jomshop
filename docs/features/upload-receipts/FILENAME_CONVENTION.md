@@ -340,12 +340,6 @@ When archiving receipts:
 
 ---
 
-## Related Documentation
-
-- [Receipt Upload Flow](../upload-receipts/)
-
----
-
 **Last Updated:** 2025-01-09  
 **Status:** ✅ Implemented and tested  
 **Version:** 1.0

@@ -15,10 +15,9 @@ The theme switcher allows users to choose between **Light**, **Dark**, and **Sys
 - ✅ Supabase profile cross-device sync
 
 ### Native (React Native / Expo)
-- ✅ Full AsyncStorage persistence
-- ✅ NativeWind integration
-- ✅ System theme detection via Appearance API
-- ✅ Supabase profile cross-device sync
+- ✅ Uniwind integration (`Uniwind.setTheme()`, adaptive/system mode on cold start)
+- ✅ System theme detection (Uniwind adaptive mode)
+- ✅ Supabase profile cross-device sync (via `useThemeSync`)
 - ✅ Automatic system theme changes tracking
 
 ## 📁 Key Files
@@ -27,7 +26,9 @@ The theme switcher allows users to choose between **Light**, **Dark**, and **Sys
 ```
 packages/app/
 ├── hooks/
-│   ├── useColorScheme.tsx        # Unified theme hook (web + native)
+│   ├── useColorScheme.ts          # Shared types + web/native split:
+│   ├── useColorScheme.native.ts   #   native (Uniwind-backed)
+│   ├── useColorScheme.web.tsx     #   web (next-themes-backed)
 │   └── useThemeSync.ts            # Supabase profile sync hook
 ├── features/profile/components/
 │   ├── ThemeSelector.tsx          # Native theme selector
@@ -62,7 +63,7 @@ packages/app/locales/
 │  ┌─────────────────────┐        ┌──────────────────────┐   │
 │  │      Web (Next)     │        │   Native (RN/Expo)   │   │
 │  │                     │        │                      │   │
-│  │  - next-themes      │        │  - NativeWind        │   │
+│  │  - next-themes      │        │  - Uniwind           │   │
 │  │  - localStorage     │        │  - AsyncStorage      │   │
 │  │  - prefers-color-   │        │  - Appearance API    │   │
 │  │    scheme media     │        │                      │   │
@@ -92,7 +93,7 @@ useColorScheme.setThemeMode(theme)
 ┌──────────────────────────────────┬──────────────────────────────────┐
 │              WEB                 │            NATIVE                │
 │  next-themes.setTheme()          │  AsyncStorage.setItem()          │
-│  document.html.classList         │  NativeWind.setColorScheme()     │
+│  document.html.classList         │  Uniwind.setTheme()              │
 └──────────────────────────────────┴──────────────────────────────────┘
 ```
 
@@ -322,7 +323,7 @@ msgstr "Sistem"
 - `tailwindcss` - Styling with dark mode support
 
 ### Native
-- `nativewind` - Tailwind CSS for React Native
+- `uniwind` - Tailwind CSS for React Native
 - `@react-native-async-storage/async-storage` - Local persistence
 - `react-native` - Appearance API for system theme
 

@@ -1,0 +1,18 @@
+{
+  "name": "jomshop-branding-pipeline",
+  "private": true,
+  "description": "Vectorizes the AI-painted JomContest logo reference and regenerates all app icon/splash/favicon assets. See README.md.",
+  "scripts": {
+    "masks": "python3 1-make-masks.py",
+    "trace": "node 2-trace-masters.mjs",
+    "render": "node 3-render-assets.mjs",
+    "ico": "python3 4-make-ico.py",
+    "all": "npm run masks && npm run trace && npm run render && npm run ico"
+  },
+  "dependencies": {
+    "@fontsource/baloo-2": "^5.2.7",
+    "@resvg/resvg-js": "^2.6.2",
+    "opentype.js": "^2.0.0",
+    "potrace": "^2.1.8"
+  }
+}

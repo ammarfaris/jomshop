@@ -1,5 +1,5 @@
 /**
- * After the NativeWind -> Uniwind migration, the custom SVG icons are colored
+ * Since the migration to Uniwind, the custom SVG icons are colored
  * via the explicit `stroke` / `fill` props computed in IconWrapper (driven by
  * `useColorScheme` and the `color` prop), so no per-icon className interop is
  * required. This is intentionally a no-op so the ~41 icon modules that call it

@@ -82,6 +82,7 @@ build/**
 
 # cursor local mcp server
 .cursor/mcp.json
+.cursor/.pre-commit-passed
 
 # environment variables (keep .env*.example templates tracked)
 *.secrets.env

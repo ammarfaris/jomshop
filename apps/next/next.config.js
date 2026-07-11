@@ -1,5 +1,6 @@
 const fs = require('fs')
 const path = require('path')
+const webpack = require('webpack')
 const { withUniwind } = require('uniwind-plugin-next')
 
 /**
@@ -93,6 +94,16 @@ const withWebpack = {
           })
       },
     })
+
+    // react-native-reanimated's web build still references `global` in some
+    // codepaths. Webpack 5 no longer injects it by default, so map it to
+    // `globalThis` to prevent runtime "global is not defined" crashes.
+    config.plugins = config.plugins || []
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        global: 'globalThis',
+      })
+    )
 
     return config
   },

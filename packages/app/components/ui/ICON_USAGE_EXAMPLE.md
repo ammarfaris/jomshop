@@ -199,7 +199,7 @@ To add new icons to the `icons-svg` system:
 1. Create a new file in `packages/app/components/icons-svg/`
 2. Use the pattern from existing icons (e.g., `CheckOutline.tsx`)
 3. Configure the icon with `configureIcon` utility
-4. Apply `iconWithClassName` for NativeWind support
+4. Call `iconWithClassName` (legacy no-op, kept for consistency with existing icons)
 
 Example:
 
@@ -231,5 +231,5 @@ export default ConfiguredIcon
 2. **Modular**: Easy to replace icons across all React Native Reusables components
 3. **Type-safe**: Full TypeScript support with proper type definitions
 4. **Platform-agnostic**: Works seamlessly on web, iOS, and Android
-5. **NativeWind compatible**: Full support for Tailwind utility classes
+5. **Tailwind compatible**: Full support for Tailwind utility classes via Uniwind
 6. **Customizable**: Extensive props for fine-tuned control over appearance

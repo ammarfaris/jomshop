@@ -4,6 +4,7 @@
     "slug": "jomcontest",
     "version": "0.1.0",
     "scheme": "jomshop",
+    "icon": "./assets/images/icon.png",
     "platforms": [
       "ios",
       "android"
@@ -16,7 +17,11 @@
       }
     },
     "android": {
-      "package": "com.jomcontest"
+      "package": "com.jomcontest",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "experiments": {
       "reactCompiler": true
@@ -26,7 +31,15 @@
       "expo-web-browser",
       "@react-native-community/datetimepicker",
       "expo-image",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 240,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
+        }
+      ],
       "expo-status-bar"
     ],
     "userInterfaceStyle": "automatic",

@@ -109,9 +109,10 @@ To test the feature:
 
 ## Additional Documentation
 - **[QUALITY_ENHANCEMENTS.md](./QUALITY_ENHANCEMENTS.md)**: Detailed explanation of image enhancement pipeline
-- **[PREVIEW_FEATURE.md](./PREVIEW_FEATURE.md)**: Preview step implementation details
-- **[MOBILE_TESTING.md](./MOBILE_TESTING.md)**: Guide for testing on mobile browsers
-- **[LIBRARY_SWAP.md](./LIBRARY_SWAP.md)**: Why we switched from jscanify to opencv-document-scanner
+- **[MOBILE_TESTING.md](./MOBILE_TESTING.md)**: Guide for testing on mobile browsers (camera requires HTTPS)
+
+> History: the scanner originally used `jscanify` and was swapped to
+> `opencv-document-scanner` for better detection quality and maintenance.
 
 ## References
 - [opencv-document-scanner GitHub](https://github.com/tony-xlh/opencvjs-document-scanner)

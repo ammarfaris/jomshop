@@ -2,15 +2,19 @@
 
 ## Overview
 
-This document describes the implementation of the color theme system in JomContest, which allows users to switch between Green (default) and Blue color themes. The implementation is inspired by [shadcn/ui themes](https://ui.shadcn.com/themes) and uses CSS variables with Tailwind CSS and NativeWind for cross-platform support.
+This document describes the implementation of the color theme system in JomContest, which allows users to switch between Green (default), Blue, and Purple color themes. The implementation is inspired by [shadcn/ui themes](https://ui.shadcn.com/themes) and uses CSS variables with Tailwind CSS.
+
+> **Platform note:** color themes are a **web-only** feature. The base (green)
+> scheme is shared by both platforms via `packages/app/styles/tokens.css`;
+> the blue/purple overrides live in `apps/next/app/globals.css` and only
+> override the `--main` accent. Native always uses the base green scheme.
 
 ## Features
 
-- **Two Color Themes**: Green (default) and Blue
+- **Three Color Themes**: Green (default), Blue, and Purple
 - **Persistent Preferences**: Theme choice is saved to the user's Supabase profile preferences
-- **Cross-Platform**: Works on both web (Next.js) and native (Expo/React Native)
 - **Seamless Switching**: Theme changes apply instantly across the entire app
-- **Dark Mode Support**: Both themes work properly in light and dark modes
+- **Dark Mode Support**: All themes work properly in light and dark modes
 
 ## Architecture
 
@@ -18,7 +22,7 @@ This document describes the implementation of the color theme system in JomConte
 
 The `ColorThemeContext` manages the global color theme state and provides:
 
-- Current color theme (`'green'` or `'blue'`)
+- Current color theme (`'green'`, `'blue'`, or `'purple'`)
 - Function to change the theme
 - Loading state
 - Automatic persistence to the user's Supabase profile preferences
@@ -27,7 +31,7 @@ The `ColorThemeContext` manages the global color theme state and provides:
 **Location**: `packages/app/contexts/ColorThemeContext.tsx`
 
 ```typescript
-export type ColorTheme = 'green' | 'blue'
+export type ColorTheme = 'green' | 'blue' | 'purple'
 
 interface ColorThemeContextType {
   colorTheme: ColorTheme
@@ -41,12 +45,13 @@ interface ColorThemeContextType {
 Color themes are implemented using CSS variables that change based on the theme class applied to the document root.
 
 **Files**:
-- `apps/expo/global.css` (for Expo/React Native)
-- `apps/next/app/globals.css` (for Next.js)
+- `packages/app/styles/tokens.css` (base green scheme, shared by both platforms)
+- `apps/next/app/globals.css` (web-only blue/purple `--main` overrides)
 
 **Theme Classes**:
 - `.theme-green` - Green theme (default)
 - `.theme-blue` - Blue theme
+- `.theme-purple` - Purple theme
 
 **Main Color Variables**:
 - `--main`: Primary theme color
@@ -193,7 +198,7 @@ The following components have been updated to use the theme color system:
 - Theme preference is loaded from the Supabase profile on mount
 
 ### Native (Expo/React Native)
-- NativeWind v4 supports CSS variables on native
+- Uniwind supports CSS variables on native
 - Theme is stored in context and the Supabase profile preferences
 - Components use the same Tailwind classes as web
 - For ActivityIndicator and other native components that need raw color values, use `hsl(var(--main))`
@@ -307,7 +312,7 @@ Check these components in both themes:
 
 ### Colors not updating on native
 - Restart the app
-- Verify NativeWind is properly configured
+- Verify Uniwind is properly configured
 - Check that `global.css` is imported in the app entry point
 
 ## Future Enhancements
@@ -325,6 +330,6 @@ Potential improvements for the color theme system:
 
 - [shadcn/ui Themes](https://ui.shadcn.com/themes)
 - [React Native Reusables](https://github.com/founded-labs/react-native-reusables)
-- [NativeWind Documentation](https://www.nativewind.dev/)
+- [Uniwind Documentation](https://uniwind.dev/)
 - [Tailwind CSS Custom Properties](https://tailwindcss.com/docs/customizing-colors#using-css-variables)
 

@@ -236,7 +236,6 @@ Potential improvements:
 
 - [Color Theme Implementation](../features/color-theme/COLOR_THEME_IMPLEMENTATION.md)
 - [Theme Sync Fix](./THEME_SYNC_FIX.md)
-- [Color Theme Native Fix](./COLOR_THEME_NATIVE_FIX.md)
 
 ---
 
