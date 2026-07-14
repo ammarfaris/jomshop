@@ -7,30 +7,43 @@ produce the **same JSON payload** (the `ingest-contest` contract, see
 
 | | Who runs the LLM | Who submits |
 | --- | --- | --- |
-| **Prompt A** | OpenClaw on the Mac Mini | OpenClaw POSTs to the Edge Function |
-| **Prompt B** | You, in a browser chatbot (Perplexity/ChatGPT/...) | You — paste/upload in Admin → Create ("Paste JSON" / "Import (.json)"), or hand the JSON to OpenClaw |
+| **Prompt A** | The Mac-Mini agent (OpenClaw / AutoClaw) | The agent POSTs to the Edge Function |
+| **Prompt B** | You, in a browser chatbot (Perplexity/ChatGPT/...) | You — paste/upload in Admin → Create ("Paste JSON" / "Import (.json)"), or hand the JSON to the Mac-Mini agent |
+
+Only have a *lead* (a Facebook post pointing at a contest, or the campaign
+page URL) and not the T&C yet? **Prompt S** makes the Mac-Mini agent gather
+the official T&C + images into a review package first — full version
+[`scout-prompt.md`](./scout-prompt.md) (agent discovers everything, builds
+the JSON) or token-saving [`scout-lite-prompt.md`](./scout-lite-prompt.md)
+(you supply the URLs, agent only fetches; JSON via Prompt B). Guide:
+[`SCOUT.md`](./SCOUT.md).
 
 Prompt A lives in this file only. Prompt B lives in the app only
 (`packages/app/features/admin/contestJsonPrompt.ts`, surfaced by the
 **Copy AI Prompt** button) — each prompt has exactly one home, nothing to
 keep in sync.
 
-## One-time setup: the ingest key on the OpenClaw machine
+## One-time setup: the ingest key on the Mac Mini
 
-OpenClaw automatically loads env vars from `~/.openclaw/.env` (global
-fallback) or a `.env` in its working directory. So on the Mac Mini:
+Keep the key in one file that the SUBMIT snippets below source explicitly —
+independent of which agent runtime (OpenClaw, AutoClaw, …) happens to run
+them:
 
 ```bash
-echo 'INGEST_CONTEST_KEY=<the key set in Supabase Edge Function secrets>' >> ~/.openclaw/.env
+mkdir -p ~/JomContest
+echo 'INGEST_CONTEST_KEY=<the key set in Supabase Edge Function secrets>' >> ~/JomContest/.env
 ```
 
-Easy to find and edit later; not committed anywhere. Restart the OpenClaw
-gateway after editing so the new env is picked up. (Only needed for Prompt A /
-OpenClaw submission — Prompt B in a browser never sees the key.)
+Easy to find and edit later; not committed anywhere; no gateway restart
+needed, because the snippets read the file at submit time. (OpenClaw — and
+AutoClaw, which is Z.AI's packaged OpenClaw distribution — also auto-loads
+`~/.openclaw/.env` at startup; that still works, but the explicit file
+survives any runtime switch.) Only submission needs the key — Prompt B in a
+browser and Prompt S scouting never see it.
 
 ---
 
-## Prompt A — OpenClaw end-to-end (convert + submit)
+## Prompt A — Mac-Mini agent end-to-end (convert + submit)
 
 First test / dry run: append this line —
 `DRY RUN: skip the SUBMIT step and just show me contest.json.`
@@ -97,6 +110,7 @@ SUMMARY RULES (summary and summary_ms)
 SUBMIT
 Save the payload to contest.json, then run:
 
+set -a; [ -f ~/JomContest/.env ] && . ~/JomContest/.env; set +a
 curl -s -X POST "https://abdaylmwkcmxmsvagfch.supabase.co/functions/v1/ingest-contest" \
   -H "content-type: application/json" \
   -H "x-ingest-key: $INGEST_CONTEST_KEY" \
@@ -108,12 +122,13 @@ curl -s -X POST "https://abdaylmwkcmxmsvagfch.supabase.co/functions/v1/ingest-co
 - 401 → stop; tell me INGEST_CONTEST_KEY is missing or wrong.
 ```
 
-### Prompt A½ — you already have the JSON, OpenClaw only submits
+### Prompt A½ — you already have the JSON, the agent only submits
 
 ```text
 Here is a ready contest.json payload for JomContest ingestion. Save it to
 contest.json exactly as given (do not edit the content), then run:
 
+set -a; [ -f ~/JomContest/.env ] && . ~/JomContest/.env; set +a
 curl -s -X POST "https://abdaylmwkcmxmsvagfch.supabase.co/functions/v1/ingest-contest" \
   -H "content-type: application/json" \
   -H "x-ingest-key: $INGEST_CONTEST_KEY" \
@@ -135,7 +150,7 @@ Not duplicated here — the single source of truth is the app:
   chatbot never sees the ingest key and outputs one `json` code block.
 - **Then**: bring the JSON back via Create Contest → **Paste JSON** /
   **Import (.json)** → review → add images/hosts/categories → Create; or hand
-  it to OpenClaw with Prompt A½ above.
+  it to the Mac-Mini agent with Prompt A½ above.
 
 It is Prompt A minus the SUBMIT step and minus `images` (the admin form
 imports text fields only — images/hosts/categories are added with their

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import {
   ActivityIndicator,
   View,
@@ -13,6 +13,7 @@ import { Tabs, TabsList, TabsTrigger } from 'app/components/ui/tabs'
 
 import { useAuth } from 'app/contexts/AuthContext'
 import CreateContestTabContent from './CreateContestTabContent'
+import DraftsTabContent from './DraftsTabContent'
 import EditContestTabContent from './EditContestTabContent'
 import PointsManagerTabContent from './PointsManagerTabContent'
 import ReferralManagerTabContent from './ReferralManagerTabContent'
@@ -35,19 +36,27 @@ export default function AdminScreen() {
   )
 
   // Honor review deep-links from the ingest-contest function:
-  // /admin?tab=edit&slug=<slug>. Web-only (the review link targets the web admin
-  // panel); native simply falls back to the default Create tab.
+  // /admin?tab=edit&slug=<slug>, and the Drafts tab /admin?tab=drafts.
+  // Web-only (the review link targets the web admin panel); native simply
+  // falls back to the default Create tab.
   useEffect(() => {
     if (typeof window === 'undefined' || !window.location?.search) return
     const params = new URLSearchParams(window.location.search)
     const tab = params.get('tab')
     const slug = params.get('slug')
     if (slug) setInitialEditSlug(slug)
-    if (tab && ['create', 'edit', 'points', 'referrals'].includes(tab)) {
+    if (tab && ['create', 'edit', 'points', 'referrals', 'drafts'].includes(tab)) {
       setTabValue(tab)
     } else if (slug) {
       setTabValue('edit')
     }
+  }, [])
+
+  // Drafts tab → Edit tab handoff: switch tabs and pre-fill the Edit tab's
+  // slug search so the admin can review/publish the draft in one motion.
+  const handleOpenInEditTab = useCallback((slug: string) => {
+    setInitialEditSlug(slug)
+    setTabValue('edit')
   }, [])
 
   if (isLoading || isLoadingAdmin) {
@@ -94,6 +103,9 @@ export default function AdminScreen() {
           <TabsTrigger value="referrals">
             <Text>Referral Limits</Text>
           </TabsTrigger>
+          <TabsTrigger value="drafts">
+            <Text>Drafts</Text>
+          </TabsTrigger>
         </TabsList>
 
         {/* Keep both tab contents mounted to preserve state */}
@@ -135,6 +147,16 @@ export default function AdminScreen() {
             style={{ display: tabValue === 'referrals' ? 'flex' : 'none' }}
           >
             <ReferralManagerTabContent containerMaxWidth={containerMaxWidth} />
+          </View>
+
+          <View
+            className="flex-1"
+            style={{ display: tabValue === 'drafts' ? 'flex' : 'none' }}
+          >
+            <DraftsTabContent
+              containerMaxWidth={containerMaxWidth}
+              onOpenInEditTab={handleOpenInEditTab}
+            />
           </View>
         </View>
       </Tabs>

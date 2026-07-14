@@ -659,6 +659,43 @@ export async function searchSupabaseContestsForEdit(
   return { contests, hostsByContest }
 }
 
+/**
+ * List contests sitting at visibility='admin' — i.e. agent-ingested drafts
+ * awaiting human review. Backs the Admin → Drafts tab. Same shape as a
+ * title-mode search result (contest + hostsByContest), ordered newest-first.
+ */
+export async function listSupabaseDraftContests(): Promise<ContestSearchResult> {
+  const supabase = getSupabase()
+  const { data, error } = await supabase
+    .from('contests')
+    .select(CONTEST_COLUMNS)
+    .eq('visibility', 'admin')
+    .order('created_at', { ascending: false })
+    .limit(100)
+  if (error) throw error
+
+  const rows: any[] = data ?? []
+  const contests = rows.map((r) => mapContestRow(r))
+  const ids = rows.map((r) => r.id)
+
+  const hostsByContest: Record<string, SupabaseHostDoc[]> = {}
+  if (ids.length) {
+    const { data: hostMaps, error: hmErr } = await supabase
+      .from('contest_hosts_map')
+      .select(`contest_id, ${HOST_MAP_SELECT}`)
+      .in('contest_id', ids)
+    if (hmErr) throw hmErr
+    for (const m of hostMaps ?? []) {
+      const host = (m as any).contest_hosts
+      if (!host) continue
+      const cid = (m as any).contest_id as string
+      ;(hostsByContest[cid] ??= []).push(mapHostRow(host))
+    }
+  }
+
+  return { contests, hostsByContest }
+}
+
 export interface EditContestData {
   contest: Record<string, any>
   translations: Record<string, any>[]

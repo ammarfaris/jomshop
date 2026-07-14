@@ -1,10 +1,21 @@
 # `ingest-contest` Edge Function
 
-Machine-editor entry point for the **OpenClaw** contest-ingestion pipeline. It
-accepts a structured contest payload (core fields + the 9 T&C fields × 2 locales
-+ images) and creates a full contest **exactly like the admin "Create Contest"
+Machine-editor entry point for the contest-ingestion pipeline. It accepts a
+structured contest payload (core fields + the 9 T&C fields × 2 locales +
+images) and creates a full contest **exactly like the admin "Create Contest"
 flow**, but forces `visibility = 'admin'` so nothing goes live until a human
 approves it in the Admin panel. It returns a review deep-link.
+
+The AI-side prompts that produce the payload live in
+[`ai-assist/`](./ai-assist/):
+
+| Folder | Use case |
+| --- | --- |
+| [`ai-assist/direct-prompting-end-to-end/`](./ai-assist/direct-prompting-end-to-end/) | **curl + `pdftotext` only** — for direct campaign websites (no social media, no Cloudflare). Validated 2026-07-13. |
+| [`ai-assist/autoclaw-needs-tuning/`](./ai-assist/autoclaw-needs-tuning/) | **Browser-assisted** (OpenClaw / AutoClaw) — for Facebook / Instagram leads and bot-blocked pages. ⚠️ needs tuning: AutoClaw still can't reliably grab FB images. |
+
+See [`ai-assist/README.md`](./ai-assist/README.md) for the index and
+the safety invariant (AI = draft factory, human = publisher).
 
 ## Endpoint
 

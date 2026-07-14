@@ -212,7 +212,10 @@ export default function ContestDetailScreen({
     data: publicContestData,
     isLoading: isLoadingPublicContest,
     isError: isErrorPublicContest,
-  } = usePublicContestBySlug(id || '', !isLoadingUser && !!id)
+  } = usePublicContestBySlug(
+    id || '',
+    !isLoadingUser && !isLoadingAdmin && !!id,
+  )
 
   // Unified contest data
   const contest = useMemo(
@@ -676,7 +679,12 @@ export default function ContestDetailScreen({
   }
 
   // Only show "Contest not found" if we're done loading and there's an error or no contest
-  if (!isLoadingUser && !isLoadingContest && (isErrorContest || !contest)) {
+  if (
+    !isLoadingUser &&
+    !isLoadingAdmin &&
+    !isLoadingContest &&
+    (isErrorContest || !contest)
+  ) {
     return (
       <View
         className="flex-1 justify-center items-center dark:bg-black bg-white"

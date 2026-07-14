@@ -139,11 +139,19 @@ export function usePublicContestBySlug(
   // Premium translations + affiliate links are gated by auth inside the Supabase
   // fetch, so the cache must be keyed by auth state. Otherwise an anonymous view
   // followed by sign-in keeps serving the stale (non-premium) payload.
-  const { user } = useAuth()
+  const { user, isAdmin, isLoadingAdmin } = useAuth()
 
   return useQuery({
-    queryKey: ['public-contest', 'supabase', slug, user?.$id ?? 'anon'],
-    enabled: enabled && !!slug,
+    queryKey: [
+      'public-contest',
+      'supabase',
+      slug,
+      user?.$id ?? 'anon',
+      isAdmin ? 'admin' : 'nonadmin',
+    ],
+    // Wait for the admin-role check when signed in so draft previews don't
+    // fetch (and cache) a public-only miss before is_admin() is known.
+    enabled: enabled && !!slug && !isLoadingAdmin,
     staleTime: 2 * 60 * 1000, // 2 minutes
     gcTime: 5 * 60 * 1000, // 5 minutes
     queryFn: async () => {

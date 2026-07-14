@@ -410,15 +410,15 @@ export default function EditContestTabContent({
     }
   }, [searchQuery, searchContests, extractSlugFromQuery])
 
-  // Deep-link prefill: when arriving via /admin?tab=edit&slug=..., search for the
-  // pending contest by slug once (the debounced effect above then runs it). The
-  // admin still clicks the result to load it into the form — no auto-load.
-  const appliedInitialSlugRef = useRef(false)
+  // Deep-link prefill: when arriving via /admin?tab=edit&slug=... (or from the
+  // Drafts tab Review button), search for that contest by slug. Re-applies when
+  // initialEditSlug changes so successive Drafts → Edit handoffs work.
+  const lastAppliedInitialSlugRef = useRef<string | null>(null)
   useEffect(() => {
-    if (appliedInitialSlugRef.current) return
     const s = (initialEditSlug ?? '').trim()
     if (!s) return
-    appliedInitialSlugRef.current = true
+    if (lastAppliedInitialSlugRef.current === s) return
+    lastAppliedInitialSlugRef.current = s
     setSearchMode('slug')
     setSearchQuery(s)
   }, [initialEditSlug])

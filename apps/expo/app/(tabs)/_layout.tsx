@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router'
 import { msg } from '@lingui/core/macro'
 import { i18n } from '@lingui/core'
-import { Platform, View, Text, StyleSheet } from 'react-native'
+import { Platform, View, StyleSheet } from 'react-native'
 import { Image as ExpoImage } from 'expo-image'
 
 import { useColorScheme } from 'app/hooks/useColorScheme'
@@ -79,9 +79,6 @@ export default function TabLayout() {
         contentFit="contain"
         accessibilityLabel="JomContest"
       />
-      <View style={[styles.betaBadge, { backgroundColor: main }]}>
-        <Text style={styles.betaText}>BETA</Text>
-      </View>
     </View>
   )
 
@@ -186,16 +183,5 @@ const styles = StyleSheet.create({
   headerLogo: {
     width: 58,
     height: 36,
-  },
-  betaBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  betaText: {
-    color: '#ffffff',
-    fontSize: 9,
-    fontWeight: '600',
-    letterSpacing: 0.5,
   },
 })

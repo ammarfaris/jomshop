@@ -81,11 +81,8 @@ export default function Navbar({ maintenanceMode = false }: { maintenanceMode?: 
       <nav className="fixed top-0 left-0 w-full z-30 backdrop-blur bg-white/70 dark:bg-black/60 border-b border-gray-200 dark:border-gray-800 shadow-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-center h-16">
           <span className="flex items-center gap-2">
-            <img src="/logo.svg" alt="JomContest" className="h-10 w-auto dark:hidden" />
-            <img src="/logo-dark.svg" alt="JomContest" className="h-10 w-auto hidden dark:block" />
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-main text-main-foreground rounded uppercase tracking-wide">
-              BETA
-            </span>
+            <img src="/logo.svg" alt="JomContest" className="h-8 w-auto dark:hidden" />
+            <img src="/logo-dark.svg" alt="JomContest" className="h-8 w-auto hidden dark:block" />
           </span>
         </div>
       </nav>
@@ -326,11 +323,8 @@ export default function Navbar({ maintenanceMode = false }: { maintenanceMode?: 
             href="/"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <img src="/logo.svg" alt="JomContest" className="h-10 w-auto dark:hidden" />
-            <img src="/logo-dark.svg" alt="JomContest" className="h-10 w-auto hidden dark:block" />
-            <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-main text-main-foreground rounded uppercase tracking-wide">
-              BETA
-            </span>
+            <img src="/logo.svg" alt="JomContest" className="h-8 w-auto dark:hidden" />
+            <img src="/logo-dark.svg" alt="JomContest" className="h-8 w-auto hidden dark:block" />
           </Link>
         </div>
       </div>

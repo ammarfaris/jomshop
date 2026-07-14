@@ -1,4 +1,5 @@
 import type { SearchParams, SearchResult } from 'app/lib/meilisearch/api'
+import { isSupabaseAdmin } from './auth'
 import { getSupabase } from './client'
 
 const PUBLIC_VISIBILITY = ['users', 'any']
@@ -337,6 +338,7 @@ export async function fetchContestDetailSupabase(
     data: { user },
   } = await supabase.auth.getUser()
   const authed = !!user
+  const admin = user ? await isSupabaseAdmin(user.id) : false
 
   const contestCols = authed
     ? [...CONTEST_BASE_COLS, ...CONTEST_PREMIUM_COLS]
@@ -347,13 +349,12 @@ export async function fetchContestDetailSupabase(
 
   const select = `${contestCols.join(', ')}, contest_hosts_map(contest_hosts(id,name,slug,img_id,img_blurhash)), contest_categories_map(contest_categories(id,name_en,name_ms,slug,priority_order,type)), contest_translations(${translationCols.join(',')}), contest_files(id,storage_path,blurhash,file_order)`
 
-  const { data, error } = await supabase
-    .from('contests')
-    .select(select)
-    .eq('slug', slug)
-    .in('visibility', PUBLIC_VISIBILITY)
-    .limit(1)
-    .maybeSingle()
+  // Public callers only see published contests; admins can preview drafts
+  // (visibility='admin') — RLS on contests / translations / files enforces that.
+  let query = supabase.from('contests').select(select).eq('slug', slug).limit(1)
+  if (!admin) query = query.in('visibility', PUBLIC_VISIBILITY)
+
+  const { data, error } = await query.maybeSingle()
 
   if (error) throw error
   if (!data) return null

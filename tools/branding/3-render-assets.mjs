@@ -64,11 +64,15 @@ for (const f of fs.readdirSync(BRAND).filter(f => f.startsWith('jomcontest-logo'
 const full = loadMaster(MASTER);
 const fullDark = loadMaster(MASTER.replace('.svg', '-dark.svg'));
 const compact = loadMaster('jomcontest-logo-compact.svg');
+// Web navbar uses the one-line lockup (fits the 40px-tall header better than
+// the stacked lockup); icons/splash stay on MASTER.
+const NAV = 'jomcontest-logo-oneline.svg';
+const nav = loadMaster(NAV);
 
 // --- in-app logos (light + dark mode) ---
-fs.copyFileSync(path.join(BRAND, MASTER), path.join(NEXT_PUB, 'logo.svg'));
-fs.copyFileSync(path.join(BRAND, MASTER.replace('.svg', '-dark.svg')), path.join(NEXT_PUB, 'logo-dark.svg'));
-console.log('wrote apps/next/public/logo.svg + logo-dark.svg');
+fs.copyFileSync(path.join(BRAND, NAV), path.join(NEXT_PUB, 'logo.svg'));
+fs.copyFileSync(path.join(BRAND, NAV.replace('.svg', '-dark.svg')), path.join(NEXT_PUB, 'logo-dark.svg'));
+console.log('wrote apps/next/public/logo.svg + logo-dark.svg (from ' + NAV + ')');
 render(canvas(720, 440, null, place(full, 360, 220, 700, 420)), path.join(EXPO, 'logo-light.png'), 720);
 render(canvas(720, 440, null, place(fullDark, 360, 220, 700, 420)), path.join(EXPO, 'logo-dark.png'), 720);
 
@@ -116,7 +120,7 @@ let p3 = `<g transform="translate(1032 0)"><rect width="504" height="1024" fill=
 p3 += `<rect x="40" y="150" width="520" height="64" rx="18" fill="#F1F2F4"/><rect x="40" y="196" width="520" height="18" fill="#F1F2F4"/>`;
 p3 += `<circle cx="72" cy="182" r="7" fill="#FF5F57"/><circle cx="96" cy="182" r="7" fill="#FEBC2E"/><circle cx="120" cy="182" r="7" fill="#28C840"/>`;
 p3 += `<rect x="152" y="168" width="330" height="28" rx="14" fill="#FFF" stroke="#DDDFE3"/>` + lbl('jomcontest.app', 18, 168, 187, '#9AA1AB');
-p3 += place(full, 128, 268, 130, 84);
+p3 += place(nav, 128, 268, 130, 84);
 p3 += lbl('Contests', 24, 226, 277, '#3C4450') + lbl('Hosts', 24, 340, 277, '#3C4450') + lbl('Profile', 24, 420, 277, '#3C4450');
 p3 += `<rect x="40" y="312" width="520" height="2" fill="#ECEDEF"/><rect x="80" y="352" width="440" height="300" rx="14" fill="#EFF0F2"/>`;
 p3 += `<rect x="80" y="684" width="440" height="56" rx="10" fill="#EFF0F2"/><rect x="80" y="760" width="360" height="20" rx="8" fill="#EFF0F2"/><rect x="80" y="796" width="300" height="20" rx="8" fill="#EFF0F2"/></g>`;

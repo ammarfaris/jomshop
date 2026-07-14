@@ -1,20 +1,24 @@
 #!/usr/bin/env bash
 # Gates agent-initiated `git commit` until /pre-commit has passed.
-# Reads JSON from stdin (beforeShellExecution hook payload).
+# Invoked by beforeShellExecution with matcher `git\s+commit`. When stdin
+# carries the hook payload, non-commit commands are allowed through (smoke tests);
+# when stdin is empty (some Cursor runtimes), we assume commit and check the stamp.
 set -euo pipefail
 
-STAMP=".cursor/.pre-commit-passed"
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+STAMP="$ROOT/.cursor/.pre-commit-passed"
+cd "$ROOT"
 
-read -r input
-
-command=$(node -e "
-  const d = JSON.parse(process.argv[1] || '{}');
-  process.stdout.write(d.command || '');
-" "$input")
-
-if [[ ! "$command" =~ git[[:space:]]+commit ]]; then
-  echo '{"permission":"allow"}'
-  exit 0
+is_commit=true
+if read -r input; then
+  command=$(node -e "
+    const d = JSON.parse(process.argv[1] || '{}');
+    process.stdout.write(d.command || '');
+  " "$input")
+  if [[ ! "$command" =~ git[[:space:]]+commit ]]; then
+    echo '{"permission":"allow"}'
+    exit 0
+  fi
 fi
 
 if [[ ! -f "$STAMP" ]]; then

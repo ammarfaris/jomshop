@@ -39,10 +39,12 @@ export async function generateMetadata({
   let description = 'Discover contests in Malaysia'
 
   // Verify existence against Supabase (public visibility only). `exists` stays
-  // null when we can't reach Supabase, so a transient outage fails open (keeps
-  // slug-derived metadata) rather than 404-ing a possibly-valid page. Only a
-  // definitive empty result triggers notFound() — and that must run OUTSIDE the
-  // try/catch, since notFound() throws a control-flow error we must not swallow.
+  // null when we can't reach Supabase or the slug is admin-only (draft), so a
+  // transient outage or admin preview fails open (keeps slug-derived metadata)
+  // rather than 404-ing before the client can load the row for signed-in admins.
+  // Only a definitive empty result for a *published* contest triggers notFound()
+  // — and that must run OUTSIDE the try/catch, since notFound() throws a
+  // control-flow error we must not swallow.
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
@@ -73,7 +75,8 @@ export async function generateMetadata({
           if (rows[0]?.title) title = rows[0].title as string
           if (rows[0]?.summary) description = rows[0].summary as string
         } else {
-          exists = false
+          // Not publicly visible — may be an admin draft; client resolves for admins.
+          exists = null
         }
       }
     } catch {

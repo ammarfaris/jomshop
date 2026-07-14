@@ -81,6 +81,7 @@ ${pillLayer}`);
 // The excl dot is sized off the j's own dot (slightly larger, for optical
 // parity — it must never read smaller). The bar's width scales with the dot;
 // its height absorbs whatever room is left, keeping the j-dot's gap rhythm.
+let compactExcl; // transforms + metrics, reused by the one-line master below
 {
   const mSub = letters.reduce((a, b) => (b.x2 > a.x2 ? b : a)); // rightmost letter = m
   const baseline = mSub.y2, wordTop = lettersBB.y1;
@@ -97,6 +98,7 @@ ${pillLayer}`);
   const barCx = (bar.x1 + bar.x2) / 2 * sx + btx;
   const dtx = barCx - (dot.x1 + dot.x2) / 2 * sd, dty = baseline - dot.y2 * sd;
   const right = Math.max(bar.x2 * sx + btx, dot.x2 * sd + dtx);
+  compactExcl = { sx, fy, sd, btx, bty, dtx, dty, right, wordTop, baseline, xTop: mSub.y1 };
   writeMaster('jomcontest-logo-compact.svg',
     { x1: lettersBB.x1, y1: wordTop, x2: right, y2: Math.max(lettersBB.y2, baseline) }, `${jomLayer}
   <g id="exclamation" fill="${GREEN}">
@@ -128,4 +130,39 @@ ${pillLayer}`);
   </g>`;
   writeMaster('jomcontest-logo-short-excl-dark.svg', bbox, `${jomLayer}\n${exclLayer}\n${darkPillLayer}`);
   console.log(`short-excl: dot raised ${delta.toFixed(0)}px, bar shortened to ${(f * 100).toFixed(1)}%`);
+}
+
+// ---- master 4: one-line lockup "jom! contest" — compact "jom!" + pill on the same line ----
+// The exclamation reuses the compact master's transforms (fitted word-top →
+// baseline). The pill scales to the x-height band with a hair of overshoot
+// (rounded ends need it to look level with flat letter bottoms) and sits a
+// word-space to the right of the "!".
+{
+  const { sx, fy, sd, btx, bty, dtx, dty, right, wordTop, baseline, xTop } = compactExcl;
+  const xH = baseline - xTop;
+  const over = xH * 0.02;
+  const sp = (xH + 2 * over) / (pill.y2 - pill.y1);
+  const gap = xH * 0.2;
+  const ptx = right + gap - pill.x1 * sp;
+  const pty = (xTop - over) - pill.y1 * sp;
+  const exclLayer = `  <g id="exclamation" fill="${GREEN}">
+    <path id="excl-bar" transform="translate(${btx.toFixed(2)} ${bty.toFixed(2)}) scale(${sx.toFixed(4)} ${fy.toFixed(4)})" d="${bar.d}"/>
+    <path id="excl-dot" transform="translate(${dtx.toFixed(2)} ${dty.toFixed(2)}) scale(${sd.toFixed(4)})" d="${dot.d}"/>
+  </g>`;
+  const pillT = `translate(${ptx.toFixed(2)} ${pty.toFixed(2)}) scale(${sp.toFixed(4)})`;
+  const bbox = {
+    x1: lettersBB.x1, y1: wordTop,
+    x2: pill.x2 * sp + ptx, y2: Math.max(lettersBB.y2, baseline, pill.y2 * sp + pty),
+  };
+  writeMaster('jomcontest-logo-oneline.svg', bbox, `${jomLayer}\n${exclLayer}
+  <g id="contest-pill" transform="${pillT}">
+    <path id="pill" fill="${CHARCOAL}" d="${pill.d}"/>
+    <path id="contest-text" fill="#FFFFFF" fill-rule="evenodd" d="${textD}"/>
+  </g>`);
+  writeMaster('jomcontest-logo-oneline-dark.svg', bbox, `${jomLayer}\n${exclLayer}
+  <g id="contest-pill" transform="${pillT}">
+    <path id="pill" fill="#F3F5F7" d="${pill.d}"/>
+    <path id="contest-text" fill="${CHARCOAL}" fill-rule="evenodd" d="${textD}"/>
+  </g>`);
+  console.log(`oneline: pill scaled to ${(sp * 100).toFixed(1)}% (${(xH + 2 * over).toFixed(0)}px tall), gap ${gap.toFixed(0)}px`);
 }

@@ -11,8 +11,9 @@ The JomContest logo was originally **painted by an image-generation model** — 
 **Folder layout:** `masters/` holds the reference raster + the SVG masters (the editable brand sources); `generated/` holds rendered PNG reviews and previews; `build/` is gitignored intermediates. App-consumed assets are written directly into `apps/expo` and `apps/next`.
 
 **Brand rules currently in force:**
-- Home-screen icon, splash, apple-touch-icon, web header → **full lockup** (jom + contest pill + !).
-- App assets build from the **short-excl master** (approved 2026-07-10): exclamation dot bottom level with the pill bottom. `jomcontest-logo.svg` (exact trace) stays as ground truth only.
+- Home-screen icon, splash, apple-touch-icon → **full lockup** (jom + contest pill + !).
+- App icons/splash build from the **short-excl master** (approved 2026-07-10): exclamation dot bottom level with the pill bottom. `jomcontest-logo.svg` (exact trace) stays as ground truth only.
+- Web navbar (`apps/next/public/logo{,-dark}.svg`) → **one-line lockup** (`oneline` master): "jom!" + contest pill on one line, fits the 40px header.
 - Favicons (`favicon.ico`, expo `favicon.png`, next `icon.png`) → **compact "jom!" only, no pill**. Its exclamation dot is sized off the j's dot (1.1×) so it never reads smaller than the letter's dot.
 - **Dark mode**: green stays; the charcoal pill flips to near-white `#F3F5F7` with charcoal text (`*-dark.svg` masters). Light/dark logo pairs are wired in-app: Next navbar uses `public/logo.svg` + `public/logo-dark.svg` swapped with Tailwind `dark:` classes (`apps/next/app/navbar.tsx`, two places incl. maintenance mode); the Expo tabs header uses `assets/images/logo-{light,dark}.png` picked via `useColorScheme` (`apps/expo/app/(tabs)/_layout.tsx` HeaderTitle).
 - Brand colors are *sampled from the reference*, not hardcoded: green `#0E9C47`, charcoal `#222A36` (stage 1 writes `build/colors.json`).
@@ -32,6 +33,8 @@ Masters written to `masters/`:
 - `jomcontest-logo-compact.svg` — "jom!" favicon variant (excl fitted word-top→baseline, width kept chunky)
 - `jomcontest-logo-short-excl.svg` — production lockup: excl dot bottom level with pill bottom, bar shortened at the bottom by the same delta
 - `jomcontest-logo-short-excl-dark.svg` — dark-mode version of the production lockup
+- `jomcontest-logo-oneline.svg` — one-line lockup "jom! contest": compact-style short excl, pill scaled to the x-height band sitting a word-space to the right
+- `jomcontest-logo-oneline-dark.svg` — dark-mode version of the one-line lockup
 
 Each master: named layer groups (`#jom`, `#exclamation` → `#excl-bar`/`#excl-dot`, `#contest-pill` → `#pill`/`#contest-text`) — Illustrator and Figma open them directly — plus a `data-bbox="x1 y1 x2 y2"` attribute (tight content bounds) that stage 3 requires for placement. **If you hand-edit an SVG's geometry, keep `data-bbox` accurate.**
 
