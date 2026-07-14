@@ -52,6 +52,9 @@ import { usePublicContestBySlug } from 'app/hooks/usePublicContests'
 import { getUserPrefs } from 'app/lib/prefs'
 import { Button } from 'app/components/ui/button'
 import { useRouter } from 'app/lib/router-universal'
+import { toast } from 'app/lib/sonner-universal'
+import { I18nProvider } from '@lingui/react'
+import { getLocaleScopedI18n } from 'app/lib/lingui/locale-scoped-i18n'
 
 // AdSense configuration
 const ADSENSE_PUBLISHER_ID = 'ca-pub-3985532721810420' // JomContest publisher ID
@@ -122,13 +125,106 @@ type Category = Document & {
 
 const useContestDetailParams = useRouteParams<{ id: string }>
 
+// Resolved translation view for a single locale. `processContestTranslations`
+// picks the doc for `lang` and resolves T&C / FAQ links with locale fallback.
+type ContestTranslationView = {
+  prizes?: string
+  link_tnc?: string
+  link_tnc_locale?: 'en' | 'ms'
+  link_faq?: string
+  link_faq_locale?: 'en' | 'ms'
+  eligible_products_and_purchases?: string
+  eligible_participants?: string
+  eligible_participants_exclusion?: string
+  eligible_stores?: string
+  winners_selection_method?: string
+  winners_comm_and_timeline?: string
+  entry_method_and_submission?: string
+  winners_list_and_announcement?: string
+}
+
+function processContestTranslations(
+  translations: any[],
+  lang: 'en' | 'ms',
+): ContestTranslationView {
+  const enDoc = translations?.find((r: any) => r.locale === 'en') as any
+  const msDoc = translations?.find((r: any) => r.locale === 'ms') as any
+
+  // Use Malay if available and language preference is Malay, otherwise fallback to English
+  const selectedDoc = lang === 'ms' && msDoc ? msDoc : enDoc
+
+  // For link_tnc and link_faq: prioritize user's locale, fallback to other locale if not available
+  let link_tnc: string | undefined
+  let link_tnc_locale: 'en' | 'ms' | undefined
+  let link_faq: string | undefined
+  let link_faq_locale: 'en' | 'ms' | undefined
+
+  const msTnc = msDoc?.link_tnc?.trim() || undefined
+  const enTnc = enDoc?.link_tnc?.trim() || undefined
+  const msFaq = msDoc?.link_faq?.trim() || undefined
+  const enFaq = enDoc?.link_faq?.trim() || undefined
+
+  if (lang === 'ms') {
+    if (msTnc) {
+      link_tnc = msTnc
+      link_tnc_locale = 'ms'
+    } else if (enTnc) {
+      link_tnc = enTnc
+      link_tnc_locale = 'en'
+    }
+    if (msFaq) {
+      link_faq = msFaq
+      link_faq_locale = 'ms'
+    } else if (enFaq) {
+      link_faq = enFaq
+      link_faq_locale = 'en'
+    }
+  } else {
+    if (enTnc) {
+      link_tnc = enTnc
+      link_tnc_locale = 'en'
+    } else if (msTnc) {
+      link_tnc = msTnc
+      link_tnc_locale = 'ms'
+    }
+    if (enFaq) {
+      link_faq = enFaq
+      link_faq_locale = 'en'
+    } else if (msFaq) {
+      link_faq = msFaq
+      link_faq_locale = 'ms'
+    }
+  }
+
+  return {
+    prizes: selectedDoc?.prizes || undefined,
+    link_tnc,
+    link_tnc_locale,
+    link_faq,
+    link_faq_locale,
+    eligible_products_and_purchases:
+      selectedDoc?.eligible_products_and_purchases || undefined,
+    eligible_participants: selectedDoc?.eligible_participants || undefined,
+    eligible_participants_exclusion:
+      selectedDoc?.eligible_participants_exclusion || undefined,
+    eligible_stores: selectedDoc?.eligible_stores || undefined,
+    winners_selection_method:
+      selectedDoc?.winners_selection_method || undefined,
+    winners_comm_and_timeline:
+      selectedDoc?.winners_comm_and_timeline || undefined,
+    entry_method_and_submission:
+      selectedDoc?.entry_method_and_submission || undefined,
+    winners_list_and_announcement:
+      selectedDoc?.winners_list_and_announcement || undefined,
+  }
+}
+
 // Accept contestId as a prop, or fallback to route param
 export default function ContestDetailScreen({
   contestId,
 }: {
   contestId?: string
 }) {
-  const { t } = useLingui()
   // Use the provided contestId prop if available, otherwise fallback to route param
   const params = useContestDetailParams()
   const id = contestId ?? params?.id ?? ''
@@ -140,8 +236,6 @@ export default function ContestDetailScreen({
   const { main } = useColorThemeValues(isDarkColorScheme)
   const router = useRouter()
 
-  const [galleryVisible, setGalleryVisible] = useState(false)
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [receiptModalVisible, setReceiptModalVisible] = useState(false)
   const [showActionsMenu, setShowActionsMenu] = useState(false)
   const [actionButtonsY, setActionButtonsY] = useState(0)
@@ -150,6 +244,23 @@ export default function ContestDetailScreen({
   // Calculate image height for consistent sizing
   const { width: screenWidth } = Dimensions.get('window')
   const imageHeight = Math.min(screenWidth * 0.75, 400)
+
+  // Side-by-side "Both" view only renders on wide screens (desktop). The detail
+  // layout maxes out at max-w-5xl (~1024px); below this there's no room for two
+  // readable columns. Re-read on resize so toggling after rotating/width change
+  // reflects current viewport.
+  const [canShowBoth, setCanShowBoth] = useState(
+    Platform.OS === 'web' && typeof window !== 'undefined'
+      ? window.innerWidth >= 1024
+      : screenWidth >= 1024,
+  )
+  useEffect(() => {
+    if (Platform.OS !== 'web') return
+    const onResize = () =>
+      setCanShowBoth((window.innerWidth || 0) >= 1024)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   // Web-specific scroll handler
   useEffect(() => {
@@ -349,108 +460,6 @@ export default function ContestDetailScreen({
     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   })
 
-  // Helper function to process translations data
-  const processTranslations = (
-    translations: any[],
-    lang: 'en' | 'ms',
-  ): {
-    prizes?: string
-    link_tnc?: string
-    link_tnc_locale?: 'en' | 'ms'
-    link_faq?: string
-    link_faq_locale?: 'en' | 'ms'
-    eligible_products_and_purchases?: string
-    eligible_participants?: string
-    eligible_participants_exclusion?: string
-    eligible_stores?: string
-    winners_selection_method?: string
-    winners_comm_and_timeline?: string
-    entry_method_and_submission?: string
-    winners_list_and_announcement?: string
-  } => {
-    const enDoc = translations?.find((r: any) => r.locale === 'en') as any
-    const msDoc = translations?.find((r: any) => r.locale === 'ms') as any
-
-    // Use Malay if available and language preference is Malay, otherwise fallback to English
-    const selectedDoc = lang === 'ms' && msDoc ? msDoc : enDoc
-
-    // For link_tnc and link_faq: prioritize user's locale, fallback to other locale if not available
-    let link_tnc: string | undefined
-    let link_tnc_locale: 'en' | 'ms' | undefined
-    let link_faq: string | undefined
-    let link_faq_locale: 'en' | 'ms' | undefined
-
-    const msTnc = msDoc?.link_tnc?.trim() || undefined
-    const enTnc = enDoc?.link_tnc?.trim() || undefined
-    const msFaq = msDoc?.link_faq?.trim() || undefined
-    const enFaq = enDoc?.link_faq?.trim() || undefined
-
-    if (lang === 'ms') {
-      if (msTnc) {
-        link_tnc = msTnc
-        link_tnc_locale = 'ms'
-      } else if (enTnc) {
-        link_tnc = enTnc
-        link_tnc_locale = 'en'
-      }
-      if (msFaq) {
-        link_faq = msFaq
-        link_faq_locale = 'ms'
-      } else if (enFaq) {
-        link_faq = enFaq
-        link_faq_locale = 'en'
-      }
-    } else {
-      if (enTnc) {
-        link_tnc = enTnc
-        link_tnc_locale = 'en'
-      } else if (msTnc) {
-        link_tnc = msTnc
-        link_tnc_locale = 'ms'
-      }
-      if (enFaq) {
-        link_faq = enFaq
-        link_faq_locale = 'en'
-      } else if (msFaq) {
-        link_faq = msFaq
-        link_faq_locale = 'ms'
-      }
-    }
-
-    return {
-      prizes: selectedDoc?.prizes || undefined,
-      link_tnc,
-      link_tnc_locale,
-      link_faq,
-      link_faq_locale,
-      eligible_products_and_purchases:
-        selectedDoc?.eligible_products_and_purchases || undefined,
-      eligible_participants: selectedDoc?.eligible_participants || undefined,
-      eligible_participants_exclusion:
-        selectedDoc?.eligible_participants_exclusion || undefined,
-      eligible_stores: selectedDoc?.eligible_stores || undefined,
-      winners_selection_method:
-        selectedDoc?.winners_selection_method || undefined,
-      winners_comm_and_timeline:
-        selectedDoc?.winners_comm_and_timeline || undefined,
-      entry_method_and_submission:
-        selectedDoc?.entry_method_and_submission || undefined,
-      winners_list_and_announcement:
-        selectedDoc?.winners_list_and_announcement || undefined,
-    }
-  }
-
-  // Translations (embedded in the Supabase detail payload; premium fields are
-  // gated server-side for anonymous callers).
-  const contestTranslation = useMemo(() => {
-    const sourceContestId = (publicContestData?.contest as any)
-      ?.source_contest_id
-    const translations = (publicContestData?.translations || []).filter(
-      (t: any) => t.source_contest_id === sourceContestId,
-    )
-    return processTranslations(translations, language)
-  }, [publicContestData?.translations, publicContestData?.contest, language])
-
   // Hosts (embedded in the Supabase detail payload)
   const contestHosts = useMemo(() => {
     const publicHosts = publicContestData?.contest?.hosts || []
@@ -464,48 +473,70 @@ export default function ContestDetailScreen({
     })) as unknown as Host[]
   }, [publicContestData?.contest?.hosts])
 
-  const openGallery = (index: number) => {
-    setSelectedImageIndex(index)
-    setGalleryVisible(true)
-  }
-
-  const closeGallery = () => {
-    setGalleryVisible(false)
-  }
-
-  // Helper function to format prize value
-  const formatPrizeValue = (amount: number): string => {
-    const rounded = Math.ceil(amount)
-
-    if (rounded >= 1000000) {
-      // 1 million or more
-      const millions = rounded / 1000000
-      if (millions >= 10) {
-        return `RM ${Math.round(millions)}mil`
-      }
-      return `RM ${millions.toFixed(1)}mil`
-    } else if (rounded >= 1000) {
-      // 1k to 999k
-      const thousands = Math.round(rounded / 1000)
-      return `RM ${thousands}k`
-    } else {
-      // Less than 1k
-      return `RM ${rounded}`
+  // Admin-only language override on the contest detail page: admins can flip
+  // between EN / BM / Both to compare translations side-by-side. 'both' renders
+  // two stacked content trees; the toggle itself is admin-gated (see header).
+  // Non-admins always read from their persisted language preference.
+  const [adminLangMode, setAdminLangMode] = useState<
+    'en' | 'ms' | 'both' | null
+  >(
+    (typeof window !== 'undefined' &&
+      (window.localStorage.getItem('admin-contest-lang-mode') as
+        | 'en'
+        | 'ms'
+        | 'both'
+        | null)) ||
+      null,
+  )
+  useEffect(() => {
+    if (!isAdmin || !adminLangMode) return
+    try {
+      window.localStorage.setItem('admin-contest-lang-mode', adminLangMode)
+    } catch {
+      // ignore storage failures (private mode, quota)
     }
-  }
+  }, [adminLangMode, isAdmin])
 
-  // Prepare images for gallery
-  const galleryImages: ImageItem[] = contestFiles.map((file, index) => {
-    // Supabase stores a full public URL in file_id.
-    return {
-      id: file.file_id,
-      uri: file.file_id,
-      tokenSecret: file.token_secret, // Keep for backward compatibility with old images
-      blurhash: file.img_blurhash,
-      title: contest?.title,
-      description: `Image ${index + 1} of ${contestFiles.length}`,
-    }
-  })
+  const effectiveLanguage: 'en' | 'ms' =
+    isAdmin && adminLangMode && adminLangMode !== 'both'
+      ? adminLangMode
+      : language
+  const isBothMode = isAdmin && adminLangMode === 'both'
+
+  // Translations (embedded in the Supabase detail payload; premium fields are
+  // gated server-side for anonymous callers). Compute one view for the
+  // effective language, plus separate EN / MS views when "Both" is active so
+  // each side-by-side column renders its own locale without fallback mixing.
+  const contestTranslation = useMemo(() => {
+    const sourceContestId = (publicContestData?.contest as any)
+      ?.source_contest_id
+    const translations = (publicContestData?.translations || []).filter(
+      (t: any) => t.source_contest_id === sourceContestId,
+    )
+    return processContestTranslations(translations, effectiveLanguage)
+  }, [
+    publicContestData?.translations,
+    publicContestData?.contest,
+    effectiveLanguage,
+  ])
+
+  const contestTranslationEn = useMemo(() => {
+    const sourceContestId = (publicContestData?.contest as any)
+      ?.source_contest_id
+    const translations = (publicContestData?.translations || []).filter(
+      (t: any) => t.source_contest_id === sourceContestId,
+    )
+    return processContestTranslations(translations, 'en')
+  }, [publicContestData?.translations, publicContestData?.contest])
+
+  const contestTranslationMs = useMemo(() => {
+    const sourceContestId = (publicContestData?.contest as any)
+      ?.source_contest_id
+    const translations = (publicContestData?.translations || []).filter(
+      (t: any) => t.source_contest_id === sourceContestId,
+    )
+    return processContestTranslations(translations, 'ms')
+  }, [publicContestData?.translations, publicContestData?.contest])
 
   // Show loading state during auth check, admin check, or contest loading
   if (isLoadingUser || isLoadingAdmin || isLoadingContest || isLoadingFiles) {
@@ -708,16 +739,16 @@ export default function ContestDetailScreen({
   return (
     <>
       {/* Actions Menu - Fixed Position (Web & Native) - Only show when action buttons are not visible */}
-      {showActionsMenu && (
+      {showActionsMenu && !isBothMode && (
         <ContestActionsMenu
           contestId={contest.$id}
           contestSlug={contest.slug}
           contestTitle={
-            language === 'ms' && contest.title_ms
+            effectiveLanguage === 'ms' && contest.title_ms
               ? contest.title_ms
               : contest.title
           }
-          language={language}
+          language={effectiveLanguage}
           onManageReceipts={() => setReceiptModalVisible(true)}
           initialUpvoteCount={publicContestData?.contest?.upvote_count}
           showAds={SHOW_ADS}
@@ -775,8 +806,8 @@ export default function ContestDetailScreen({
       >
         {/* Content */}
         <View className="px-4 w-full max-w-5xl mx-auto">
-          {/* Host Images Row + Admin Only Badge */}
-          <View className="flex-row justify-between items-center mb-2">
+          {/* Host Images Row + Admin Only Badge + (admin) Language Toggle */}
+          <View className="flex-row justify-between items-center mb-4 mt-2">
             {/* Host Images */}
             <View className="flex-row items-center">
               {contestHosts.map((host) => (
@@ -797,248 +828,801 @@ export default function ContestDetailScreen({
               ))}
             </View>
 
-            {/* Admin Only Badge */}
-            {contest.visibility === 'admin' && (
-              <Badge className="bg-red-100 border-red-200 dark:bg-red-950 dark:border-red-800">
-                <Text className="text-xs font-semibold text-red-700 dark:text-red-300">
-                  Admin Only
-                </Text>
-              </Badge>
-            )}
-          </View>
+            {/* Right side: Admin Only badge + language toggle */}
+            <View className="flex-row items-center gap-2 flex-wrap justify-end">
+              {/* Admin Only Badge */}
+              {contest.visibility === 'admin' && (
+                <Badge className="bg-red-100 border-red-200 dark:bg-red-950 dark:border-red-800">
+                  <Text className="text-xs font-semibold text-red-700 dark:text-red-300">
+                    Admin Only
+                  </Text>
+                </Badge>
+              )}
 
-          {/* Title */}
-          <View className="flex-row items-center mb-2">
-            <Text className="text-2xl font-bold text-black dark:text-white">
-              {language === 'ms' && (contest as any).title_ms
-                ? (contest as any).title_ms
-                : contest.title}
-            </Text>
-          </View>
-
-          {/* By Host Names */}
-          <Text className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            {(() => {
-              if (contestHosts.length === 0) return t`By Unknown Host`
-              if (contestHosts.length === 1)
-                return t`By ${contestHosts[0]?.name || 'Unknown'}`
-              if (contestHosts.length === 2)
-                return t`By ${contestHosts[0]?.name || 'Unknown'} & ${
-                  contestHosts[1]?.name || 'Unknown'
-                }`
-
-              // For 3 or more hosts: "By Host1, Host2, Host3 & Host4"
-              const allButLast = contestHosts
-                .slice(0, -1)
-                .map((h) => h?.name || 'Unknown')
-                .join(', ')
-              const lastHost =
-                contestHosts[contestHosts.length - 1]?.name || 'Unknown'
-              return t`By ${allButLast} & ${lastHost}`
-            })()}
-          </Text>
-
-          {/* Image Carousel */}
-          {contestFiles.length > 0 && (
-            <View className="mb-6">
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={{ paddingRight: 16, gap: 12 }}
-              >
-                {contestFiles.map((file, index) => {
-                  // Supabase stores a full public URL in file_id.
-                  const source: any = {
-                    uri: file.file_id,
-                  }
-
-                  return (
-                    <GalleryThumbnail
-                      key={file.file_id}
-                      source={source}
-                      blurhash={file.img_blurhash}
-                      index={index}
-                      total={contestFiles.length}
-                      onPress={() => openGallery(index)}
-                      width={280}
-                      height={imageHeight}
-                    />
-                  )
-                })}
-              </ScrollView>
+              {/* Admin-only language toggle (EN / BM / Both). Only shown for
+                  admins — non-admins keep using their persisted language pref. */}
+              {isAdmin && (
+                <AdminLanguageToggle
+                  value={adminLangMode ?? (language === 'ms' ? 'ms' : 'en')}
+                  onChange={(mode) => {
+                    if (mode === 'both' && !canShowBoth) {
+                      toast.error(
+                        'Side-by-side view needs a wider screen (desktop).',
+                      )
+                      return
+                    }
+                    setAdminLangMode(mode)
+                  }}
+                />
+              )}
             </View>
+          </View>
+
+          {/* Per-locale column(s): one column for EN/BM, two side-by-side for
+              admin "Both" mode. Each column is wrapped in its own I18nProvider
+              so every <Trans>/useLingui child (gallery "TAP TO ZOOM", action
+              button labels, date badges, section titles) renders in that
+              column's locale — mirroring what a user with that language pref
+              would actually see. */}
+          {isBothMode ? (
+            <View className="flex-row gap-6 mt-2">
+              <View className="flex-1 min-w-0" style={{ minWidth: 0 }}>
+                <ContestDetailColumn
+                  contest={contest}
+                  contestTranslation={contestTranslationEn}
+                  language="en"
+                  user={user}
+                  contestHosts={contestHosts}
+                  contestFiles={contestFiles}
+                  prizeCategories={prizeCategories}
+                  howToEnterCategories={howToEnterCategories}
+                  businessCategories={businessCategories}
+                  winnerSelectionCategories={winnerSelectionCategories}
+                  imageHeight={imageHeight}
+                  receiptCount={receiptCount}
+                  upvoteCount={publicContestData?.contest?.upvote_count}
+                  onManageReceipts={() => setReceiptModalVisible(true)}
+                  isDarkColorScheme={isDarkColorScheme}
+                  main={main}
+                />
+              </View>
+              <View
+                className="w-px bg-gray-200 dark:bg-gray-700 self-stretch"
+              />
+              <View className="flex-1 min-w-0" style={{ minWidth: 0 }}>
+                <ContestDetailColumn
+                  contest={contest}
+                  contestTranslation={contestTranslationMs}
+                  language="ms"
+                  user={user}
+                  contestHosts={contestHosts}
+                  contestFiles={contestFiles}
+                  prizeCategories={prizeCategories}
+                  howToEnterCategories={howToEnterCategories}
+                  businessCategories={businessCategories}
+                  winnerSelectionCategories={winnerSelectionCategories}
+                  imageHeight={imageHeight}
+                  receiptCount={receiptCount}
+                  upvoteCount={publicContestData?.contest?.upvote_count}
+                  onManageReceipts={() => setReceiptModalVisible(true)}
+                  isDarkColorScheme={isDarkColorScheme}
+                  main={main}
+                />
+              </View>
+            </View>
+          ) : (
+            <ContestDetailColumn
+              contest={contest}
+              contestTranslation={contestTranslation}
+              language={effectiveLanguage}
+              user={user}
+              contestHosts={contestHosts}
+              contestFiles={contestFiles}
+              prizeCategories={prizeCategories}
+              howToEnterCategories={howToEnterCategories}
+              businessCategories={businessCategories}
+              winnerSelectionCategories={winnerSelectionCategories}
+              imageHeight={imageHeight}
+              receiptCount={receiptCount}
+              upvoteCount={publicContestData?.contest?.upvote_count}
+              onManageReceipts={() => setReceiptModalVisible(true)}
+              isDarkColorScheme={isDarkColorScheme}
+              main={main}
+              onActionButtonsLayout={handleActionButtonsLayout}
+            />
           )}
+        </View>
+      </ScrollView>
 
-          {/* Action Buttons Row */}
-          <View
-            className="mb-4"
-            onLayout={handleActionButtonsLayout}
-            style={{ marginHorizontal: -12 }}
+      {/* Receipt Manager Modal (shared — opened from either column's Save button) */}
+      {contest && (
+        <ReceiptManagerModal
+          visible={receiptModalVisible}
+          contestId={contest.$id}
+          contestTitle={
+            effectiveLanguage === 'ms' && contest.title_ms
+              ? contest.title_ms
+              : contest.title
+          }
+          onClose={() => setReceiptModalVisible(false)}
+        />
+      )}
+    </>
+  )
+}
+
+function dateLocaleFor(language: 'en' | 'ms'): string {
+  return language === 'ms' ? 'ms-MY' : 'en-MY'
+}
+
+// ---------------------------------------------------------------------------
+// ContestDetailColumn — full per-locale contest detail view (title, by-line,
+// gallery, actions, badges, sections). Wrapped in a locale-scoped I18nProvider
+// so child <Trans>/useLingui strings match the column language (EN or BM).
+// ---------------------------------------------------------------------------
+type ContestDetailColumnProps = {
+  contest: Contest
+  contestTranslation: ContestTranslationView
+  language: 'en' | 'ms'
+  user: ReturnType<typeof useAuth>['user']
+  contestHosts: Host[]
+  contestFiles: ContestFile[]
+  prizeCategories: Category[]
+  howToEnterCategories: Category[]
+  businessCategories: Category[]
+  winnerSelectionCategories: Category[]
+  imageHeight: number
+  receiptCount: number
+  upvoteCount?: number
+  onManageReceipts: () => void
+  isDarkColorScheme: boolean
+  main: string
+  onActionButtonsLayout?: (event: any) => void
+}
+
+function ContestDetailColumn(props: ContestDetailColumnProps) {
+  const localeI18n = getLocaleScopedI18n(props.language)
+  return (
+    <I18nProvider i18n={localeI18n}>
+      <ContestDetailColumnContent {...props} />
+    </I18nProvider>
+  )
+}
+
+function ContestDetailColumnContent({
+  contest,
+  contestTranslation,
+  language,
+  user,
+  contestHosts,
+  contestFiles,
+  prizeCategories,
+  howToEnterCategories,
+  businessCategories,
+  winnerSelectionCategories,
+  imageHeight,
+  receiptCount,
+  upvoteCount,
+  onManageReceipts,
+  isDarkColorScheme,
+  main,
+  onActionButtonsLayout,
+}: ContestDetailColumnProps) {
+  const { t } = useLingui()
+  const [galleryVisible, setGalleryVisible] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+
+  const contestTitle =
+    language === 'ms' && contest.title_ms ? contest.title_ms : contest.title
+
+  const galleryImages: ImageItem[] = useMemo(
+    () =>
+      contestFiles.map((file, index) => ({
+        id: file.file_id,
+        uri: file.file_id,
+        tokenSecret: file.token_secret,
+        blurhash: file.img_blurhash,
+        title: contestTitle,
+        description: t`Image ${index + 1} of ${contestFiles.length}`,
+      })),
+    [contestFiles, contestTitle, t],
+  )
+
+  const openGallery = (index: number) => {
+    setSelectedImageIndex(index)
+    setGalleryVisible(true)
+  }
+
+  return (
+    <View>
+      {/* Title */}
+      <View className="flex-row items-center mb-2">
+        <Text className="text-2xl font-bold text-black dark:text-white">
+          {contestTitle}
+        </Text>
+      </View>
+
+      {/* By Host Names */}
+      <Text className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+        {(() => {
+          if (contestHosts.length === 0) return t`By Unknown Host`
+          if (contestHosts.length === 1)
+            return t`By ${contestHosts[0]?.name || 'Unknown'}`
+          if (contestHosts.length === 2)
+            return t`By ${contestHosts[0]?.name || 'Unknown'} & ${
+              contestHosts[1]?.name || 'Unknown'
+            }`
+
+          const allButLast = contestHosts
+            .slice(0, -1)
+            .map((h) => h?.name || 'Unknown')
+            .join(', ')
+          const lastHost =
+            contestHosts[contestHosts.length - 1]?.name || 'Unknown'
+          return t`By ${allButLast} & ${lastHost}`
+        })()}
+      </Text>
+
+      {/* Image Carousel */}
+      {contestFiles.length > 0 && (
+        <View className="mb-6">
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingRight: 16, gap: 12 }}
           >
-            <View className="flex-row items-center justify-center md:justify-start">
-              <UpvoteButton
-                contestId={contest.$id}
-                variant="default"
-                showCount={true}
-                initialCount={publicContestData?.contest?.upvote_count}
+            {contestFiles.map((file, index) => (
+              <GalleryThumbnail
+                key={file.file_id}
+                source={{ uri: file.file_id }}
+                blurhash={file.img_blurhash}
+                index={index}
+                total={contestFiles.length}
+                onPress={() => openGallery(index)}
+                width={280}
+                height={imageHeight}
               />
-              <View style={{ width: 20 }} />
-              <SaveButton
-                contestId={contest.$id}
-                variant="default"
-                showText={true}
-                receiptCount={receiptCount}
-                onManageReceipts={() => setReceiptModalVisible(true)}
-                contestTitle={
-                  language === 'ms' && contest.title_ms
-                    ? contest.title_ms
-                    : contest.title
-                }
-              />
-              <View style={{ width: 20 }} />
-              <ShareButton
-                contestId={contest.slug}
-                contestTitle={
-                  language === 'ms' && contest.title_ms
-                    ? contest.title_ms
-                    : contest.title
-                }
-                language={language}
-                variant="default"
-              />
-            </View>
-          </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
-          {/* Contest Badges - End Date and Business Category only */}
-          <View className="mb-3">
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              nestedScrollEnabled
-              contentContainerStyle={{
-                alignItems: 'center',
-                paddingRight: 4,
-                paddingVertical: 2,
-              }}
-              style={{
-                marginHorizontal: -2,
-              }}
-            >
-              {/* End Date Badge */}
-              {(() => {
-                if (!contest.end_date) return null
+      {/* Action Buttons Row */}
+      <View
+        className="mb-4"
+        onLayout={onActionButtonsLayout}
+        style={{ marginHorizontal: -12 }}
+      >
+        <View className="flex-row items-center justify-center md:justify-start">
+          <UpvoteButton
+            contestId={contest.$id}
+            variant="default"
+            showCount={true}
+            initialCount={upvoteCount}
+          />
+          <View style={{ width: 20 }} />
+          <SaveButton
+            contestId={contest.$id}
+            variant="default"
+            showText={true}
+            receiptCount={receiptCount}
+            onManageReceipts={onManageReceipts}
+            contestTitle={contestTitle}
+          />
+          <View style={{ width: 20 }} />
+          <ShareButton
+            contestId={contest.slug}
+            contestTitle={contestTitle}
+            language={language}
+            variant="default"
+          />
+        </View>
+      </View>
 
-                const end = dayjs(contest.end_date)
-                if (!end.isValid()) return null
+      {/* Contest Badges - End Date and Business Category */}
+      <View className="mb-3">
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          nestedScrollEnabled
+          contentContainerStyle={{
+            alignItems: 'center',
+            paddingRight: 4,
+            paddingVertical: 2,
+          }}
+          style={{ marginHorizontal: -2 }}
+        >
+          {(() => {
+            if (!contest.end_date) return null
 
-                const now = dayjs()
-                const isExpired = end.isBefore(now)
-                const hoursUntilEnd = end.diff(now, 'hour')
-                const daysUntilEnd = end.diff(now, 'day')
+            const end = dayjs(contest.end_date)
+            if (!end.isValid()) return null
 
-                if (isExpired) {
-                  const daysExpired = Math.abs(daysUntilEnd)
-                  const hoursExpired = Math.abs(hoursUntilEnd)
+            const now = dayjs()
+            const isExpired = end.isBefore(now)
+            const hoursUntilEnd = end.diff(now, 'hour')
+            const daysUntilEnd = end.diff(now, 'day')
 
-                  const timeText =
-                    daysExpired >= 1 ? (
-                      <Plural
-                        value={daysExpired}
-                        one="# day ago"
-                        other="# days ago"
-                      />
-                    ) : (
-                      <Plural
-                        value={hoursExpired}
-                        one="# hour ago"
-                        other="# hours ago"
-                      />
-                    )
+            if (isExpired) {
+              const daysExpired = Math.abs(daysUntilEnd)
+              const hoursExpired = Math.abs(hoursUntilEnd)
 
-                  return (
-                    <View style={{ marginRight: 8 }}>
-                      <Badge
-                        variant="outline"
-                        className="bg-red-100 border-red-200 dark:bg-red-950 dark:border-red-800"
-                      >
-                        <Text className="text-red-700 dark:text-red-300 font-medium">
-                          <Trans>Ended</Trans> {timeText}
-                        </Text>
-                      </Badge>
-                    </View>
-                  )
-                }
-
-                if (hoursUntilEnd < 72) {
-                  const timeText = (
-                    <Plural
-                      value={hoursUntilEnd}
-                      one="in # hour"
-                      other="in # hours"
-                    />
-                  )
-
-                  return (
-                    <View style={{ marginRight: 8 }}>
-                      <Badge
-                        variant="outline"
-                        className="bg-yellow-100 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
-                      >
-                        <Text className="text-yellow-700 dark:text-yellow-300 font-medium">
-                          <Trans>Expiring</Trans> {timeText}
-                        </Text>
-                      </Badge>
-                    </View>
-                  )
-                }
-
-                if (hoursUntilEnd < 720) {
-                  const timeText = (
-                    <Plural
-                      value={daysUntilEnd}
-                      one="in # day"
-                      other="in # days"
-                    />
-                  )
-
-                  return (
-                    <View style={{ marginRight: 8 }}>
-                      <Badge
-                        variant="outline"
-                        className="bg-blue-100 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
-                      >
-                        <Text className="text-blue-700 dark:text-blue-300 font-medium">
-                          <Trans>Ends</Trans> {timeText}
-                        </Text>
-                      </Badge>
-                    </View>
-                  )
-                }
-
-                const timeText = (
+              const timeText =
+                daysExpired >= 1 ? (
                   <Plural
-                    value={daysUntilEnd}
-                    one="in # day"
-                    other="in # days"
+                    value={daysExpired}
+                    one="# day ago"
+                    other="# days ago"
+                  />
+                ) : (
+                  <Plural
+                    value={hoursExpired}
+                    one="# hour ago"
+                    other="# hours ago"
                   />
                 )
 
-                return (
-                  <View style={{ marginRight: 8 }}>
-                    <Badge
-                      variant="outline"
-                      className="bg-green-100 border-green-200 dark:bg-green-950 dark:border-green-800"
-                    >
-                      <Text className="text-green-700 dark:text-green-300 font-medium">
-                        <Trans>Ends</Trans> {timeText}
-                      </Text>
-                    </Badge>
-                  </View>
-                )
-              })()}
+              return (
+                <View style={{ marginRight: 8 }}>
+                  <Badge
+                    variant="outline"
+                    className="bg-red-100 border-red-200 dark:bg-red-950 dark:border-red-800"
+                  >
+                    <Text className="text-red-700 dark:text-red-300 font-medium">
+                      <Trans>Ended</Trans> {timeText}
+                    </Text>
+                  </Badge>
+                </View>
+              )
+            }
 
-              {/* Business Category Badges */}
-              {businessCategories.map((category) => (
+            if (hoursUntilEnd < 72) {
+              const timeText = (
+                <Plural
+                  value={hoursUntilEnd}
+                  one="in # hour"
+                  other="in # hours"
+                />
+              )
+
+              return (
+                <View style={{ marginRight: 8 }}>
+                  <Badge
+                    variant="outline"
+                    className="bg-yellow-100 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
+                  >
+                    <Text className="text-yellow-700 dark:text-yellow-300 font-medium">
+                      <Trans>Expiring</Trans> {timeText}
+                    </Text>
+                  </Badge>
+                </View>
+              )
+            }
+
+            if (hoursUntilEnd < 720) {
+              const timeText = (
+                <Plural
+                  value={daysUntilEnd}
+                  one="in # day"
+                  other="in # days"
+                />
+              )
+
+              return (
+                <View style={{ marginRight: 8 }}>
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-100 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
+                  >
+                    <Text className="text-blue-700 dark:text-blue-300 font-medium">
+                      <Trans>Ends</Trans> {timeText}
+                    </Text>
+                  </Badge>
+                </View>
+              )
+            }
+
+            const timeText = (
+              <Plural
+                value={daysUntilEnd}
+                one="in # day"
+                other="in # days"
+              />
+            )
+
+            return (
+              <View style={{ marginRight: 8 }}>
+                <Badge
+                  variant="outline"
+                  className="bg-green-100 border-green-200 dark:bg-green-950 dark:border-green-800"
+                >
+                  <Text className="text-green-700 dark:text-green-300 font-medium">
+                    <Trans>Ends</Trans> {timeText}
+                  </Text>
+                </Badge>
+              </View>
+            )
+          })()}
+
+          {businessCategories.map((category) => (
+            <Badge
+              key={category.$id}
+              variant="outline"
+              className="mr-2 bg-gray-50 border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+            >
+              <Text className="text-gray-700 dark:text-neutral-200">
+                {language === 'ms' && category.name_ms
+                  ? category.name_ms
+                  : category.name_en}
+              </Text>
+            </Badge>
+          ))}
+        </ScrollView>
+      </View>
+
+      <ContestDetailSections
+        contest={contest}
+        contestTranslation={contestTranslation}
+        language={language}
+        user={user}
+        prizeCategories={prizeCategories}
+        howToEnterCategories={howToEnterCategories}
+        winnerSelectionCategories={winnerSelectionCategories}
+        main={main}
+        isDarkColorScheme={isDarkColorScheme}
+      />
+
+      <ImageGallery
+        images={galleryImages}
+        initialIndex={selectedImageIndex}
+        isVisible={galleryVisible}
+        onClose={() => setGalleryVisible(false)}
+      />
+    </View>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Admin-only language toggle: segmented EN / BM / Both control. Rendered in the
+// contest detail header next to the Admin Only badge; non-admins never see it.
+// ---------------------------------------------------------------------------
+function AdminLanguageToggle({
+  value,
+  onChange,
+}: {
+  value: 'en' | 'ms' | 'both'
+  onChange: (mode: 'en' | 'ms' | 'both') => void
+}) {
+  const options: Array<{ key: 'en' | 'ms' | 'both'; label: string }> = [
+    { key: 'en', label: 'EN' },
+    { key: 'ms', label: 'BM' },
+    { key: 'both', label: 'Both' },
+  ]
+  return (
+    <View className="flex-row items-center rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden">
+      {options.map((opt, idx) => {
+        const active = value === opt.key
+        return (
+          <Pressable
+            key={opt.key}
+            onPress={() => onChange(opt.key)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            className={`px-2.5 py-1 ${active ? 'bg-main' : 'bg-transparent'}`}
+            style={{
+              borderLeftWidth: idx === 0 ? 0 : 1,
+              borderLeftColor: 'rgba(0,0,0,0.1)',
+            }}
+          >
+            <Text
+              className={`text-xs font-semibold ${
+                active
+                  ? 'text-white'
+                  : 'text-gray-700 dark:text-gray-300'
+              }`}
+            >
+              {opt.label}
+            </Text>
+          </Pressable>
+        )
+      })}
+    </View>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ContestDetailSections — the translation-dependent body of the contest
+// detail page (dates, eligibility, prizes, entry method, winners, additional
+// info). Extracted so the page can render it twice side-by-side when an admin
+// picks the "Both" language mode, once per locale with no fallback mixing.
+// ---------------------------------------------------------------------------
+type ContestDetailSectionsProps = {
+  contest: Contest
+  contestTranslation: ContestTranslationView
+  language: 'en' | 'ms'
+  user: ReturnType<typeof useAuth>['user']
+  prizeCategories: Category[]
+  howToEnterCategories: Category[]
+  winnerSelectionCategories: Category[]
+  main: string
+  isDarkColorScheme: boolean
+}
+
+function ContestDetailSections({
+  contest,
+  contestTranslation,
+  language,
+  user,
+  prizeCategories,
+  howToEnterCategories,
+  winnerSelectionCategories,
+  main,
+  isDarkColorScheme,
+}: ContestDetailSectionsProps) {
+  const { t } = useLingui()
+
+  const formatPrizeValue = (amount: number): string => {
+    const rounded = Math.ceil(amount)
+    if (rounded >= 1000000) {
+      const millions = rounded / 1000000
+      if (millions >= 10) return `RM ${Math.round(millions)}mil`
+      return `RM ${millions.toFixed(1)}mil`
+    } else if (rounded >= 1000) {
+      const thousands = Math.round(rounded / 1000)
+      return `RM ${thousands}k`
+    }
+    return `RM ${rounded}`
+  }
+
+  return (
+    <View className="flex-col gap-4">
+      <View className="flex-row justify-between">
+        <View className="flex-1 mr-2">
+          <Trans>
+            <Text className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+              Start Date
+            </Text>
+          </Trans>
+          <Text className="text-black dark:text-white text-sm">
+            {new Date(contest.start_date).toLocaleDateString(
+              dateLocaleFor(language),
+              {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </Text>
+        </View>
+        <View className="flex-1">
+          <Trans>
+            <Text className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+              End Date
+            </Text>
+          </Trans>
+          <Text className="text-black dark:text-white text-sm">
+            {new Date(contest.end_date).toLocaleDateString(
+              dateLocaleFor(language),
+              {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </Text>
+        </View>
+        <View className="flex-1 ml-2">
+          <Trans>
+            <Text className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
+              Contest Period
+            </Text>
+          </Trans>
+          <Text className="text-black dark:text-white text-sm">
+            {(() => {
+              const startDate = new Date(contest.start_date)
+              const endDate = new Date(contest.end_date)
+              const diffTime = Math.abs(
+                endDate.getTime() - startDate.getTime(),
+              )
+              const diffDays =
+                Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
+              return t`${diffDays} days`
+            })()}
+          </Text>
+        </View>
+      </View>
+
+      {/* Eligibility & Where to buy Card */}
+      <Card>
+        <CardHeader>
+          <Trans>
+            <CardTitle className="text-lg">
+              Eligibility & Where to buy
+            </CardTitle>
+          </Trans>
+        </CardHeader>
+        <CardContent className="flex-col gap-4">
+          {/* Eligible Participants */}
+          {contestTranslation?.eligible_participants && (
+            <View>
+              <View className="flex-row items-center mb-2">
+                <Trans>
+                  <Text className="text-base font-semibold text-black dark:text-white">
+                    👥 Eligible Participants
+                  </Text>
+                </Trans>
+                {contestTranslation?.eligible_participants_exclusion && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Pressable className="ml-2 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                        <Text className="text-xs text-gray-700 dark:text-gray-300 font-medium">
+                          <Trans>Exclusions</Trans>
+                        </Text>
+                      </Pressable>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80">
+                      <View>
+                        <Trans>
+                          <Text className="text-sm font-semibold text-black dark:text-white mb-2">
+                            Exclusions:
+                          </Text>
+                        </Trans>
+                        <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                          {contestTranslation.eligible_participants_exclusion}
+                        </MarkdownText>
+                      </View>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </View>
+              <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {contestTranslation.eligible_participants}
+              </MarkdownText>
+            </View>
+          )}
+
+          {/* Eligible Products and Purchases */}
+          {contestTranslation?.eligible_products_and_purchases && (
+            <View>
+              <Trans>
+                <Text className="text-base font-semibold text-black dark:text-white mb-2">
+                  💳 Eligible Purchases & Products 🛍️
+                </Text>
+              </Trans>
+              <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {contestTranslation.eligible_products_and_purchases}
+              </MarkdownText>
+            </View>
+          )}
+
+          {/* Eligible Stores */}
+          {contestTranslation?.eligible_stores && (
+            <View>
+              <Trans>
+                <Text className="text-base font-semibold text-black dark:text-white mb-2">
+                  🛒 Eligible Stores
+                </Text>
+              </Trans>
+              <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                {contestTranslation.eligible_stores}
+              </MarkdownText>
+            </View>
+          )}
+
+          {/* Eligible Online Stores */}
+          {(contest?.link_aff_shopee ||
+            contest?.link_aff_lazada ||
+            contest?.link_aff_tiktok_shop) && (
+            <View>
+              <View className="flex-row items-center mb-2">
+                <Trans>
+                  <Text className="text-base font-semibold text-black dark:text-white">
+                    Eligible Stores
+                    <Text className="text-base"> (JomPoints)</Text>
+                  </Text>
+                </Trans>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Pressable
+                      className="ml-2 px-2 py-1 rounded"
+                      style={
+                        Platform.OS === 'web'
+                          ? undefined
+                          : { backgroundColor: main + '1A' }
+                      }
+                    >
+                      <Trans>
+                        <Text
+                          className="text-xs font-medium"
+                          style={
+                            Platform.OS === 'web'
+                              ? undefined
+                              : { color: main }
+                          }
+                        >
+                          what is this?
+                        </Text>
+                      </Trans>
+                    </Pressable>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80">
+                    <View>
+                      <Trans>
+                        <Text className="text-sm font-semibold text-black dark:text-white mb-2">
+                          Eligible Stores (with potential to earn JomPoints)
+                        </Text>
+                      </Trans>
+                      <Trans>
+                        <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                          Shop link(s) provided below are affiliate link(s),
+                          depending on the terms and conditions, a purchase
+                          coming from the link(s) may or may not be rewarded. If
+                          it is rewarded, we will credit a proportion of the
+                          reward to you as JomPoints. This feature is still in
+                          Beta, and we are not liable for any discrepancies or
+                          inaccuracies that may occur.
+                        </Text>
+                      </Trans>
+                    </View>
+                  </PopoverContent>
+                </Popover>
+              </View>
+              <View className="flex-row flex-wrap gap-3">
+                {contest?.link_aff_shopee && (
+                  <Link href={contest.link_aff_shopee}>
+                    <View className="bg-orange-500 px-4 py-2 rounded-lg">
+                      <Text className="text-white font-medium">Shopee</Text>
+                    </View>
+                  </Link>
+                )}
+                {contest?.link_aff_lazada && (
+                  <Link href={contest.link_aff_lazada}>
+                    <View className="bg-[#D4145A] px-4 py-2 rounded-lg">
+                      <Text className="text-white font-medium">Lazada</Text>
+                    </View>
+                  </Link>
+                )}
+                {contest?.link_aff_tiktok_shop && (
+                  <Link href={contest.link_aff_tiktok_shop}>
+                    <View className="bg-black dark:bg-white px-4 py-2 rounded-lg">
+                      <Text className="text-white dark:text-black font-medium">
+                        TikTok Shop
+                      </Text>
+                    </View>
+                  </Link>
+                )}
+              </View>
+            </View>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Prizes with Total Prize Value Badge */}
+      <View>
+        <View className="flex-row items-center mb-2">
+          <Trans>
+            <Text className="text-lg font-semibold text-black dark:text-white">
+              Prizes
+            </Text>
+          </Trans>
+          {((contest.total_prizes_value_rm ?? 0) > 0 ||
+            prizeCategories.length > 0) && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              className="ml-2"
+              contentContainerStyle={{ alignItems: 'center' }}
+            >
+              {(contest.total_prizes_value_rm ?? 0) > 0 && (
+                <Badge
+                  variant="outline"
+                  className="mr-2 bg-yellow-100 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
+                >
+                  <Text className="text-yellow-700 dark:text-yellow-300 font-medium">
+                    <Trans>Worth:</Trans>{' '}
+                    {formatPrizeValue(contest.total_prizes_value_rm!)}
+                  </Text>
+                </Badge>
+              )}
+              {prizeCategories.map((category) => (
                 <Badge
                   key={category.$id}
                   variant="outline"
@@ -1052,815 +1636,441 @@ export default function ContestDetailScreen({
                 </Badge>
               ))}
             </ScrollView>
-          </View>
+          )}
+        </View>
+        {contestTranslation?.prizes && (
+          <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+            {contestTranslation.prizes}
+          </MarkdownText>
+        )}
+      </View>
 
-          {/* Contest Information */}
-          <View className="flex-col gap-4">
-            <View className="flex-row justify-between">
-              <View className="flex-1 mr-2">
-                <Trans>
-                  <Text className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                    Start Date
-                  </Text>
-                </Trans>
-                <Text className="text-black dark:text-white text-sm">
-                  {new Date(contest.start_date).toLocaleDateString('ms-MY', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+      {/* Entry Method and Submission */}
+      {contestTranslation?.entry_method_and_submission && (
+        <>
+          <Separator />
+          <View>
+            <View className="flex-row items-center mb-2">
+              <Trans>
+                <Text className="text-lg font-semibold text-black dark:text-white">
+                  How to Enter
                 </Text>
-              </View>
-              <View className="flex-1">
-                <Trans>
-                  <Text className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                    End Date
-                  </Text>
-                </Trans>
-                <Text className="text-black dark:text-white text-sm">
-                  {new Date(contest.end_date).toLocaleDateString('ms-MY', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </Text>
-              </View>
-              <View className="flex-1 ml-2">
-                <Trans>
-                  <Text className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">
-                    Contest Period
-                  </Text>
-                </Trans>
-                <Text className="text-black dark:text-white text-sm">
-                  {(() => {
-                    const startDate = new Date(contest.start_date)
-                    const endDate = new Date(contest.end_date)
-                    const diffTime = Math.abs(
-                      endDate.getTime() - startDate.getTime(),
-                    )
-                    const diffDays =
-                      Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
-                    return t`${diffDays} days`
-                  })()}
-                </Text>
-              </View>
-            </View>
-
-            {/* Eligibility & Where to buy Card */}
-            <Card>
-              <CardHeader>
-                <Trans>
-                  <CardTitle className="text-lg">
-                    Eligibility & Where to buy
-                  </CardTitle>
-                </Trans>
-              </CardHeader>
-              <CardContent className="flex-col gap-4">
-                {/* Eligible Participants */}
-                {contestTranslation?.eligible_participants && (
-                  <View>
-                    <View className="flex-row items-center mb-2">
-                      <Trans>
-                        <Text className="text-base font-semibold text-black dark:text-white">
-                          👥 Eligible Participants
-                        </Text>
-                      </Trans>
-                      {contestTranslation?.eligible_participants_exclusion && (
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Pressable className="ml-2 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                              <Text className="text-xs text-gray-700 dark:text-gray-300 font-medium">
-                                <Trans>Exclusions</Trans>
-                              </Text>
-                            </Pressable>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-80">
-                            <View>
-                              <Trans>
-                                <Text className="text-sm font-semibold text-black dark:text-white mb-2">
-                                  Exclusions:
-                                </Text>
-                              </Trans>
-                              <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                                {
-                                  contestTranslation.eligible_participants_exclusion
-                                }
-                              </MarkdownText>
-                            </View>
-                          </PopoverContent>
-                        </Popover>
-                      )}
-                    </View>
-                    <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {contestTranslation.eligible_participants}
-                    </MarkdownText>
-                  </View>
-                )}
-
-                {/* Eligible Products and Purchases */}
-                {contestTranslation?.eligible_products_and_purchases && (
-                  <View>
-                    <Trans>
-                      <Text className="text-base font-semibold text-black dark:text-white mb-2">
-                        💳 Eligible Purchases & Products 🛍️
+              </Trans>
+              {howToEnterCategories.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  className="ml-2"
+                  contentContainerStyle={{ alignItems: 'center' }}
+                >
+                  {howToEnterCategories.map((category) => (
+                    <Badge
+                      key={category.$id}
+                      variant="outline"
+                      className="mr-2 bg-gray-50 border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+                    >
+                      <Text className="text-gray-700 dark:text-neutral-200">
+                        {language === 'ms' && category.name_ms
+                          ? category.name_ms
+                          : category.name_en}
                       </Text>
-                    </Trans>
-                    <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {contestTranslation.eligible_products_and_purchases}
-                    </MarkdownText>
-                  </View>
-                )}
-
-                {/* Eligible Stores */}
-                {contestTranslation?.eligible_stores && (
-                  <View>
-                    <Trans>
-                      <Text className="text-base font-semibold text-black dark:text-white mb-2">
-                        🛒 Eligible Stores
-                      </Text>
-                    </Trans>
-                    <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {contestTranslation.eligible_stores}
-                    </MarkdownText>
-                  </View>
-                )}
-
-                {/* Eligible Online Stores */}
-                {(contest?.link_aff_shopee ||
-                  contest?.link_aff_lazada ||
-                  contest?.link_aff_tiktok_shop) && (
-                  <View>
-                    <View className="flex-row items-center mb-2">
-                      <Trans>
-                        <Text className="text-base font-semibold text-black dark:text-white">
-                          Eligible Stores
-                          <Text className="text-base"> (JomPoints)</Text>
-                        </Text>
-                      </Trans>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Pressable
-                            className="ml-2 px-2 py-1 rounded"
-                            style={
-                              Platform.OS === 'web'
-                                ? undefined
-                                : { backgroundColor: main + '1A' } // 1A is 10% opacity in hex
-                            }
-                          >
-                            <Trans>
-                              <Text
-                                className="text-xs font-medium"
-                                style={
-                                  Platform.OS === 'web'
-                                    ? undefined
-                                    : { color: main }
-                                }
-                              >
-                                what is this?
-                              </Text>
-                            </Trans>
-                          </Pressable>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80">
-                          <View>
-                            <Trans>
-                              <Text className="text-sm font-semibold text-black dark:text-white mb-2">
-                                Eligible Stores (with potential to earn
-                                JomPoints)
-                              </Text>
-                            </Trans>
-                            <Trans>
-                              <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                                Shop link(s) provided below are affiliate
-                                link(s), depending on the terms and conditions,
-                                a purchase coming from the link(s) may or may
-                                not be rewarded. If it is rewarded, we will
-                                credit a proportion of the reward to you as
-                                JomPoints. This feature is still in Beta, and we
-                                are not liable for any discrepancies or
-                                inaccuracies that may occur.
-                              </Text>
-                            </Trans>
-                          </View>
-                        </PopoverContent>
-                      </Popover>
-                    </View>
-                    <View className="flex-row flex-wrap gap-3">
-                      {contest?.link_aff_shopee && (
-                        <Link href={contest.link_aff_shopee}>
-                          <View className="bg-orange-500 px-4 py-2 rounded-lg">
-                            <Text className="text-white font-medium">
-                              Shopee
-                            </Text>
-                          </View>
-                        </Link>
-                      )}
-                      {contest?.link_aff_lazada && (
-                        <Link href={contest.link_aff_lazada}>
-                          <View className="bg-[#D4145A] px-4 py-2 rounded-lg">
-                            <Text className="text-white font-medium">
-                              Lazada
-                            </Text>
-                          </View>
-                        </Link>
-                      )}
-                      {contest?.link_aff_tiktok_shop && (
-                        <Link href={contest.link_aff_tiktok_shop}>
-                          <View className="bg-black dark:bg-white px-4 py-2 rounded-lg">
-                            <Text className="text-white dark:text-black font-medium">
-                              TikTok Shop
-                            </Text>
-                          </View>
-                        </Link>
-                      )}
-                    </View>
-                  </View>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Prizes with Total Prize Value Badge */}
-            <View>
-              <View className="flex-row items-center mb-2">
-                <Trans>
-                  <Text className="text-lg font-semibold text-black dark:text-white">
-                    Prizes
-                  </Text>
-                </Trans>
-                {((contest.total_prizes_value_rm ?? 0) > 0 ||
-                  prizeCategories.length > 0) && (
-                  <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    className="ml-2"
-                    contentContainerStyle={{ alignItems: 'center' }}
-                  >
-                    {(contest.total_prizes_value_rm ?? 0) > 0 && (
-                      <Badge
-                        variant="outline"
-                        className="mr-2 bg-yellow-100 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
-                      >
-                        <Text className="text-yellow-700 dark:text-yellow-300 font-medium">
-                          <Trans>Worth:</Trans>{' '}
-                          {formatPrizeValue(contest.total_prizes_value_rm!)}
-                        </Text>
-                      </Badge>
-                    )}
-                    {prizeCategories.map((category) => (
-                      <Badge
-                        key={category.$id}
-                        variant="outline"
-                        className="mr-2 bg-gray-50 border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
-                      >
-                        <Text className="text-gray-700 dark:text-neutral-200">
-                          {language === 'ms' && category.name_ms
-                            ? category.name_ms
-                            : category.name_en}
-                        </Text>
-                      </Badge>
-                    ))}
-                  </ScrollView>
-                )}
-              </View>
-              {contestTranslation?.prizes && (
-                <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {contestTranslation.prizes}
-                </MarkdownText>
+                    </Badge>
+                  ))}
+                </ScrollView>
               )}
             </View>
+            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              {contestTranslation.entry_method_and_submission}
+            </MarkdownText>
+          </View>
+        </>
+      )}
 
-            {/* Entry Method and Submission */}
-            {contestTranslation?.entry_method_and_submission && (
-              <>
-                <Separator />
-                <View>
-                  <View className="flex-row items-center mb-2">
-                    <Trans>
-                      <Text className="text-lg font-semibold text-black dark:text-white">
-                        How to Enter
+      {/* Winners Selection Method - Locked for anonymous users */}
+      {!user && (
+        <>
+          <Separator />
+          <View>
+            <View className="flex-row items-center mb-2">
+              <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500 mr-2">
+                🔒
+              </Text>
+              <Trans>
+                <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500">
+                  Winners Selection Method
+                </Text>
+              </Trans>
+            </View>
+            <Link href="/sign-in-register">
+              <View className="py-4 px-4 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
+                <Text className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  <Trans>
+                    Sign in or register to view winner selection details
+                  </Trans>
+                </Text>
+              </View>
+            </Link>
+          </View>
+        </>
+      )}
+      {user && contestTranslation?.winners_selection_method && (
+        <>
+          <Separator />
+          <View>
+            <View className="flex-row items-center mb-2">
+              <View style={{ flexShrink: 0 }}>
+                <Trans>
+                  <Text className="text-lg font-semibold text-black dark:text-white">
+                    Winners Selection Method
+                  </Text>
+                </Trans>
+              </View>
+              {winnerSelectionCategories.length > 0 && (
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  className="ml-2"
+                  style={{ flexShrink: 1 }}
+                  contentContainerStyle={{ alignItems: 'center' }}
+                >
+                  {winnerSelectionCategories.map((category) => (
+                    <Badge
+                      key={category.$id}
+                      variant="outline"
+                      className="mr-2 bg-gray-50 border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
+                    >
+                      <Text className="text-gray-700 dark:text-neutral-200">
+                        {language === 'ms' && category.name_ms
+                          ? category.name_ms
+                          : category.name_en}
                       </Text>
-                    </Trans>
-                    {howToEnterCategories.length > 0 && (
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        className="ml-2"
-                        contentContainerStyle={{ alignItems: 'center' }}
+                    </Badge>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              {contestTranslation.winners_selection_method}
+            </MarkdownText>
+          </View>
+        </>
+      )}
+
+      {/* Winners Communication Channel & Timeline - Locked for anonymous users */}
+      {!user && (
+        <>
+          <Separator />
+          <View>
+            <View className="flex-row items-center mb-2">
+              <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500 mr-2">
+                🔒
+              </Text>
+              <Trans>
+                <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500">
+                  Winners Communication Channel & Timeline
+                </Text>
+              </Trans>
+            </View>
+            <Link href="/sign-in-register">
+              <View className="py-4 px-4 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
+                <Text className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  <Trans>
+                    Sign in or register to view winners communication details
+                  </Trans>
+                </Text>
+              </View>
+            </Link>
+          </View>
+        </>
+      )}
+      {user && contestTranslation?.winners_comm_and_timeline && (
+        <>
+          <Separator />
+          <View>
+            <Trans>
+              <Text className="text-lg font-semibold text-black dark:text-white mb-2">
+                Winners Communication Channel & Timeline
+              </Text>
+            </Trans>
+            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              {contestTranslation.winners_comm_and_timeline}
+            </MarkdownText>
+          </View>
+        </>
+      )}
+
+      {/* Winners List & Announcement - Locked for anonymous users */}
+      {!user && (
+        <>
+          <Separator />
+          <View>
+            <View className="flex-row items-center mb-2">
+              <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500 mr-2">
+                🔒
+              </Text>
+              <Trans>
+                <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500">
+                  Winners List & Announcement
+                </Text>
+              </Trans>
+            </View>
+            <Link href="/sign-in-register">
+              <View className="py-4 px-4 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
+                <Text className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  <Trans>
+                    Sign in or register to view winners announcement details
+                  </Trans>
+                </Text>
+              </View>
+            </Link>
+          </View>
+        </>
+      )}
+      {user && contestTranslation?.winners_list_and_announcement && (
+        <>
+          <Separator />
+          <View>
+            <Trans>
+              <Text className="text-lg font-semibold text-black dark:text-white mb-2">
+                Winners List & Announcement
+              </Text>
+            </Trans>
+            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              {contestTranslation.winners_list_and_announcement}
+            </MarkdownText>
+          </View>
+        </>
+      )}
+
+      {/* Additional Information Section - Locked for anonymous users */}
+      {!user && (
+        <>
+          <Separator />
+          <View>
+            <View className="flex-row items-center mb-2">
+              <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500 mr-2">
+                🔒
+              </Text>
+              <Trans>
+                <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500">
+                  Additional Information
+                </Text>
+              </Trans>
+            </View>
+            <Link href="/sign-in-register">
+              <View className="py-4 px-4 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
+                <Text className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                  <Trans>
+                    Sign in or register to view additional important information
+                  </Trans>
+                </Text>
+              </View>
+            </Link>
+          </View>
+        </>
+      )}
+
+      {/* Additional Information Section - Only for logged-in users */}
+      {user &&
+        (contestTranslation?.link_tnc ||
+          contestTranslation?.link_faq ||
+          contest?.link_media_instagram ||
+          contest?.link_media_facebook ||
+          contest?.link_media_tiktok ||
+          contest?.link_media_x ||
+          contest?.link_media_youtube ||
+          contest?.link_media_website) && (
+          <>
+            <Separator />
+            <View>
+              <Trans>
+                <Text className="text-lg font-semibold text-black dark:text-white mb-2">
+                  Additional Information
+                </Text>
+              </Trans>
+
+              {/* Terms & Conditions and FAQ */}
+              {(contestTranslation?.link_tnc ||
+                contestTranslation?.link_faq) && (
+                <View className="flex-row flex-wrap gap-4 mb-4">
+                  {contestTranslation?.link_tnc && (
+                    <View className="flex-row flex-wrap items-baseline">
+                      <Link
+                        href={contestTranslation.link_tnc}
+                        target="_blank"
                       >
-                        {howToEnterCategories.map((category) => (
-                          <Badge
-                            key={category.$id}
-                            variant="outline"
-                            className="mr-2 bg-gray-50 border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
-                          >
-                            <Text className="text-gray-700 dark:text-neutral-200">
-                              {language === 'ms' && category.name_ms
-                                ? category.name_ms
-                                : category.name_en}
-                            </Text>
-                          </Badge>
-                        ))}
-                      </ScrollView>
-                    )}
-                  </View>
-                  <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {contestTranslation.entry_method_and_submission}
-                  </MarkdownText>
-                </View>
-              </>
-            )}
-
-            {/* Winners Selection Method - Locked for anonymous users */}
-            {!user && (
-              <>
-                <Separator />
-                <View>
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500 mr-2">
-                      🔒
-                    </Text>
-                    <Trans>
-                      <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500">
-                        Winners Selection Method
-                      </Text>
-                    </Trans>
-                  </View>
-                  <Link href="/sign-in-register">
-                    <View className="py-4 px-4 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        <Trans>
-                          Sign in or register to view winner selection details
-                        </Trans>
-                      </Text>
-                    </View>
-                  </Link>
-                </View>
-              </>
-            )}
-            {user && contestTranslation?.winners_selection_method && (
-              <>
-                <Separator />
-                <View>
-                  <View className="flex-row items-center mb-2">
-                    <View style={{ flexShrink: 0 }}>
-                      <Trans>
-                        <Text className="text-lg font-semibold text-black dark:text-white">
-                          Winners Selection Method
+                        <Text
+                          className={
+                            Platform.OS === 'web'
+                              ? 'text-main underline'
+                              : 'underline'
+                          }
+                          style={
+                            Platform.OS === 'web' ? undefined : { color: main }
+                          }
+                        >
+                          {language === 'ms'
+                            ? 'Terma & Syarat'
+                            : 'Terms & Conditions'}
                         </Text>
-                      </Trans>
-                    </View>
-                    {winnerSelectionCategories.length > 0 && (
-                      <ScrollView
-                        horizontal
-                        showsHorizontalScrollIndicator={false}
-                        className="ml-2"
-                        style={{ flexShrink: 1 }}
-                        contentContainerStyle={{ alignItems: 'center' }}
-                      >
-                        {winnerSelectionCategories.map((category) => (
-                          <Badge
-                            key={category.$id}
-                            variant="outline"
-                            className="mr-2 bg-gray-50 border-gray-300 dark:bg-neutral-900 dark:border-neutral-700"
-                          >
-                            <Text className="text-gray-700 dark:text-neutral-200">
-                              {language === 'ms' && category.name_ms
-                                ? category.name_ms
-                                : category.name_en}
+                      </Link>
+                      {(() => {
+                        const tncLocale = contestTranslation.link_tnc_locale
+                        const isFallback = tncLocale !== language
+                        if (!isFallback) return null
+                        if (language === 'ms' && tncLocale === 'en') {
+                          return (
+                            <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1">
+                              (dalam Bahasa Inggeris sahaja)
                             </Text>
-                          </Badge>
-                        ))}
-                      </ScrollView>
-                    )}
-                  </View>
-                  <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {contestTranslation.winners_selection_method}
-                  </MarkdownText>
-                </View>
-              </>
-            )}
-
-            {/* Winners Communication Channel & Timeline - Locked for anonymous users */}
-            {!user && (
-              <>
-                <Separator />
-                <View>
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500 mr-2">
-                      🔒
-                    </Text>
-                    <Trans>
-                      <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500">
-                        Winners Communication Channel & Timeline
-                      </Text>
-                    </Trans>
-                  </View>
-                  <Link href="/sign-in-register">
-                    <View className="py-4 px-4 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        <Trans>
-                          Sign in or register to view winners communication
-                          details
-                        </Trans>
-                      </Text>
+                          )
+                        } else if (language === 'en' && tncLocale === 'ms') {
+                          return (
+                            <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1">
+                              (in Bahasa Malaysia only)
+                            </Text>
+                          )
+                        }
+                        return null
+                      })()}
                     </View>
-                  </Link>
-                </View>
-              </>
-            )}
-            {user && contestTranslation?.winners_comm_and_timeline && (
-              <>
-                <Separator />
-                <View>
-                  <Trans>
-                    <Text className="text-lg font-semibold text-black dark:text-white mb-2">
-                      Winners Communication Channel & Timeline
-                    </Text>
-                  </Trans>
-                  <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {contestTranslation.winners_comm_and_timeline}
-                  </MarkdownText>
-                </View>
-              </>
-            )}
-
-            {/* Winners List & Announcement - Locked for anonymous users */}
-            {!user && (
-              <>
-                <Separator />
-                <View>
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500 mr-2">
-                      🔒
-                    </Text>
-                    <Trans>
-                      <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500">
-                        Winners List & Announcement
-                      </Text>
-                    </Trans>
-                  </View>
-                  <Link href="/sign-in-register">
-                    <View className="py-4 px-4 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        <Trans>
-                          Sign in or register to view winners announcement
-                          details
-                        </Trans>
-                      </Text>
+                  )}
+                  {contestTranslation?.link_faq && (
+                    <View className="flex-row flex-wrap items-baseline">
+                      <Link
+                        href={contestTranslation.link_faq}
+                        target="_blank"
+                      >
+                        <Text
+                          className={
+                            Platform.OS === 'web'
+                              ? 'text-main underline'
+                              : 'underline'
+                          }
+                          style={
+                            Platform.OS === 'web' ? undefined : { color: main }
+                          }
+                        >
+                          {language === 'ms' ? 'Soalan Lazim' : 'FAQ'}
+                        </Text>
+                      </Link>
+                      {(() => {
+                        const faqLocale = contestTranslation.link_faq_locale
+                        const isFallback = faqLocale !== language
+                        if (!isFallback) return null
+                        if (language === 'ms' && faqLocale === 'en') {
+                          return (
+                            <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1">
+                              (dalam Bahasa Inggeris sahaja)
+                            </Text>
+                          )
+                        } else if (language === 'en' && faqLocale === 'ms') {
+                          return (
+                            <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1">
+                              (in Bahasa Malaysia only)
+                            </Text>
+                          )
+                        }
+                        return null
+                      })()}
                     </View>
-                  </Link>
+                  )}
                 </View>
-              </>
-            )}
-            {user && contestTranslation?.winners_list_and_announcement && (
-              <>
-                <Separator />
-                <View>
-                  <Trans>
-                    <Text className="text-lg font-semibold text-black dark:text-white mb-2">
-                      Winners List & Announcement
-                    </Text>
-                  </Trans>
-                  <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                    {contestTranslation.winners_list_and_announcement}
-                  </MarkdownText>
-                </View>
-              </>
-            )}
+              )}
 
-            {/* Additional Information Section - Locked for anonymous users */}
-            {!user && (
-              <>
-                <Separator />
-                <View>
-                  <View className="flex-row items-center mb-2">
-                    <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500 mr-2">
-                      🔒
-                    </Text>
-                    <Trans>
-                      <Text className="text-lg font-semibold text-gray-400 dark:text-gray-500">
-                        Additional Information
-                      </Text>
-                    </Trans>
-                  </View>
-                  <Link href="/sign-in-register">
-                    <View className="py-4 px-4 bg-gray-50 dark:bg-neutral-900 rounded-lg border border-gray-200 dark:border-neutral-800">
-                      <Text className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                        <Trans>
-                          Sign in or register to view additional important
-                          information
-                        </Trans>
-                      </Text>
-                    </View>
-                  </Link>
-                </View>
-              </>
-            )}
-
-            {/* Additional Information Section - Only for logged-in users */}
-            {user &&
-              (contestTranslation?.link_tnc ||
-                contestTranslation?.link_faq ||
-                contest?.link_media_instagram ||
+              {/* Social Media Links */}
+              {(contest?.link_media_instagram ||
                 contest?.link_media_facebook ||
                 contest?.link_media_tiktok ||
                 contest?.link_media_x ||
                 contest?.link_media_youtube ||
+                contest?.link_media_linkedin ||
                 contest?.link_media_website) && (
-                <>
-                  <Separator />
-                  <View>
-                    <Trans>
-                      <Text className="text-lg font-semibold text-black dark:text-white mb-2">
-                        Additional Information
-                      </Text>
-                    </Trans>
+                <Card className="bg-main/5 border-main/20">
+                  <CardContent className="pt-6">
+                    {/* Section Title */}
+                    <Text className="text-sm font-semibold text-black dark:text-white mb-4">
+                      {contest?.link_media_website ? (
+                        contest?.link_media_instagram ||
+                        contest?.link_media_facebook ||
+                        contest?.link_media_tiktok ||
+                        contest?.link_media_x ||
+                        contest?.link_media_youtube ||
+                        contest?.link_media_linkedin ? (
+                          <Trans>
+                            Contest posting on organiser's social media &
+                            website:
+                          </Trans>
+                        ) : (
+                          <Trans>
+                            Contest posting on organiser's website:
+                          </Trans>
+                        )
+                      ) : (
+                        <Trans>
+                          Contest posting on organiser's social media:
+                        </Trans>
+                      )}
+                    </Text>
 
-                    {/* Terms & Conditions and FAQ */}
-                    {(contestTranslation?.link_tnc ||
-                      contestTranslation?.link_faq) && (
-                      <View className="flex-row flex-wrap gap-4 mb-4">
-                        {contestTranslation?.link_tnc && (
-                          <View className="flex-row flex-wrap items-baseline">
-                            <Link
-                              href={contestTranslation.link_tnc}
-                              target="_blank"
-                            >
-                              <Text
-                                className={
-                                  Platform.OS === 'web'
-                                    ? 'text-main underline'
-                                    : 'underline'
-                                }
-                                style={
-                                  Platform.OS === 'web'
-                                    ? undefined
-                                    : { color: main }
-                                }
-                              >
-                                {language === 'ms'
-                                  ? 'Terma & Syarat'
-                                  : 'Terms & Conditions'}
-                              </Text>
-                            </Link>
-                            {(() => {
-                              const tncLocale =
-                                contestTranslation.link_tnc_locale
-                              const isFallback = tncLocale !== language
-
-                              if (!isFallback) return null
-
-                              // Show fallback note in normal text color
-                              if (language === 'ms' && tncLocale === 'en') {
-                                return (
-                                  <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1">
-                                    (dalam Bahasa Inggeris sahaja)
-                                  </Text>
-                                )
-                              } else if (
-                                language === 'en' &&
-                                tncLocale === 'ms'
-                              ) {
-                                return (
-                                  <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1">
-                                    (in Bahasa Malaysia only)
-                                  </Text>
-                                )
-                              }
-                              return null
-                            })()}
+                    {/* Social Media Icons Row */}
+                    <View className="flex-row items-center gap-4 flex-wrap">
+                      {contest?.link_media_instagram && (
+                        <Link href={contest.link_media_instagram} target="_blank">
+                          <View className="p-2">
+                            <InstagramSolid width={28} height={28} color={isDarkColorScheme ? '#e5e5e5' : '#1f2937'} />
                           </View>
-                        )}
-                        {contestTranslation?.link_faq && (
-                          <View className="flex-row flex-wrap items-baseline">
-                            <Link
-                              href={contestTranslation.link_faq}
-                              target="_blank"
-                            >
-                              <Text
-                                className={
-                                  Platform.OS === 'web'
-                                    ? 'text-main underline'
-                                    : 'underline'
-                                }
-                                style={
-                                  Platform.OS === 'web'
-                                    ? undefined
-                                    : { color: main }
-                                }
-                              >
-                                {language === 'ms' ? 'Soalan Lazim' : 'FAQ'}
-                              </Text>
-                            </Link>
-                            {(() => {
-                              const faqLocale =
-                                contestTranslation.link_faq_locale
-                              const isFallback = faqLocale !== language
-
-                              if (!isFallback) return null
-
-                              // Show fallback note in normal text color
-                              if (language === 'ms' && faqLocale === 'en') {
-                                return (
-                                  <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1">
-                                    (dalam Bahasa Inggeris sahaja)
-                                  </Text>
-                                )
-                              } else if (
-                                language === 'en' &&
-                                faqLocale === 'ms'
-                              ) {
-                                return (
-                                  <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1">
-                                    (in Bahasa Malaysia only)
-                                  </Text>
-                                )
-                              }
-                              return null
-                            })()}
+                        </Link>
+                      )}
+                      {contest?.link_media_facebook && (
+                        <Link href={contest.link_media_facebook} target="_blank">
+                          <View className="p-2">
+                            <FacebookSolid width={28} height={28} color={isDarkColorScheme ? '#e5e5e5' : '#1f2937'} />
                           </View>
-                        )}
-                      </View>
-                    )}
-
-                    {/* Social Media Links */}
-                    {(contest?.link_media_instagram ||
-                      contest?.link_media_facebook ||
-                      contest?.link_media_tiktok ||
-                      contest?.link_media_x ||
-                      contest?.link_media_youtube ||
-                      contest?.link_media_linkedin ||
-                      contest?.link_media_website) && (
-                      <Card className="bg-main/5 border-main/20">
-                        <CardContent className="pt-6">
-                          {/* Section Title */}
-                          <Text className="text-sm font-semibold text-black dark:text-white mb-4">
-                            {contest?.link_media_website ? (
-                              contest?.link_media_instagram ||
-                              contest?.link_media_facebook ||
-                              contest?.link_media_tiktok ||
-                              contest?.link_media_x ||
-                              contest?.link_media_youtube ||
-                              contest?.link_media_linkedin ? (
-                                <Trans>
-                                  Contest posting on organiser's social media &
-                                  website:
-                                </Trans>
-                              ) : (
-                                <Trans>
-                                  Contest posting on organiser's website:
-                                </Trans>
-                              )
-                            ) : (
-                              <Trans>
-                                Contest posting on organiser's social media:
-                              </Trans>
-                            )}
-                          </Text>
-
-                          {/* Social Media Icons Row */}
-                          <View className="flex-row items-center gap-4 flex-wrap">
-                            {contest?.link_media_instagram && (
-                              <Link
-                                href={contest.link_media_instagram}
-                                target="_blank"
-                              >
-                                <View className="p-2">
-                                  <InstagramSolid
-                                    width={28}
-                                    height={28}
-                                    color={
-                                      isDarkColorScheme ? '#e5e5e5' : '#1f2937'
-                                    }
-                                  />
-                                </View>
-                              </Link>
-                            )}
-                            {contest?.link_media_facebook && (
-                              <Link
-                                href={contest.link_media_facebook}
-                                target="_blank"
-                              >
-                                <View className="p-2">
-                                  <FacebookSolid
-                                    width={28}
-                                    height={28}
-                                    color={
-                                      isDarkColorScheme ? '#e5e5e5' : '#1f2937'
-                                    }
-                                  />
-                                </View>
-                              </Link>
-                            )}
-                            {contest?.link_media_tiktok && (
-                              <Link
-                                href={contest.link_media_tiktok}
-                                target="_blank"
-                              >
-                                <View className="p-2">
-                                  <TikTokSolid
-                                    width={28}
-                                    height={28}
-                                    color={
-                                      isDarkColorScheme ? '#e5e5e5' : '#1f2937'
-                                    }
-                                  />
-                                </View>
-                              </Link>
-                            )}
-                            {contest?.link_media_x && (
-                              <Link href={contest.link_media_x} target="_blank">
-                                <View className="p-2">
-                                  <XSolid
-                                    width={28}
-                                    height={28}
-                                    color={
-                                      isDarkColorScheme ? '#e5e5e5' : '#1f2937'
-                                    }
-                                  />
-                                </View>
-                              </Link>
-                            )}
-                            {contest?.link_media_youtube && (
-                              <Link
-                                href={contest.link_media_youtube}
-                                target="_blank"
-                              >
-                                <View className="p-2">
-                                  <YouTubeSolid
-                                    width={28}
-                                    height={28}
-                                    color={
-                                      isDarkColorScheme ? '#e5e5e5' : '#1f2937'
-                                    }
-                                  />
-                                </View>
-                              </Link>
-                            )}
-                            {contest?.link_media_linkedin && (
-                              <Link
-                                href={contest.link_media_linkedin}
-                                target="_blank"
-                              >
-                                <View className="p-2">
-                                  <LinkedInSolid
-                                    width={28}
-                                    height={28}
-                                    color={
-                                      isDarkColorScheme ? '#e5e5e5' : '#1f2937'
-                                    }
-                                  />
-                                </View>
-                              </Link>
-                            )}
-                            {contest?.link_media_website && (
-                              <Link
-                                href={contest.link_media_website}
-                                target="_blank"
-                              >
-                                <View className="p-2">
-                                  <GlobeAltOutline
-                                    width={28}
-                                    height={28}
-                                    color={
-                                      isDarkColorScheme ? '#e5e5e5' : '#1f2937'
-                                    }
-                                  />
-                                </View>
-                              </Link>
-                            )}
+                        </Link>
+                      )}
+                      {contest?.link_media_tiktok && (
+                        <Link href={contest.link_media_tiktok} target="_blank">
+                          <View className="p-2">
+                            <TikTokSolid width={28} height={28} color={isDarkColorScheme ? '#e5e5e5' : '#1f2937'} />
                           </View>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </View>
-                </>
+                        </Link>
+                      )}
+                      {contest?.link_media_x && (
+                        <Link href={contest.link_media_x} target="_blank">
+                          <View className="p-2">
+                            <XSolid width={28} height={28} color={isDarkColorScheme ? '#e5e5e5' : '#1f2937'} />
+                          </View>
+                        </Link>
+                      )}
+                      {contest?.link_media_youtube && (
+                        <Link href={contest.link_media_youtube} target="_blank">
+                          <View className="p-2">
+                            <YouTubeSolid width={28} height={28} color={isDarkColorScheme ? '#e5e5e5' : '#1f2937'} />
+                          </View>
+                        </Link>
+                      )}
+                      {contest?.link_media_linkedin && (
+                        <Link href={contest.link_media_linkedin} target="_blank">
+                          <View className="p-2">
+                            <LinkedInSolid width={28} height={28} color={isDarkColorScheme ? '#e5e5e5' : '#1f2937'} />
+                          </View>
+                        </Link>
+                      )}
+                      {contest?.link_media_website && (
+                        <Link href={contest.link_media_website} target="_blank">
+                          <View className="p-2">
+                            <GlobeAltOutline width={28} height={28} color={isDarkColorScheme ? '#e5e5e5' : '#1f2937'} />
+                          </View>
+                        </Link>
+                      )}
+                    </View>
+                  </CardContent>
+                </Card>
               )}
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Image Gallery Modal */}
-      <ImageGallery
-        images={galleryImages}
-        initialIndex={selectedImageIndex}
-        isVisible={galleryVisible}
-        onClose={closeGallery}
-      />
-
-      {/* Receipt Manager Modal */}
-      {contest && (
-        <ReceiptManagerModal
-          visible={receiptModalVisible}
-          contestId={contest.$id}
-          contestTitle={
-            language === 'ms' && contest.title_ms
-              ? contest.title_ms
-              : contest.title
-          }
-          onClose={() => setReceiptModalVisible(false)}
-        />
-      )}
-    </>
+            </View>
+          </>
+        )}
+    </View>
   )
 }

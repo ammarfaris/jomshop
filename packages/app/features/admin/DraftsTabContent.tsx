@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   Pressable,
   useColorScheme,
+  Platform,
 } from 'react-native'
 import { Text } from 'app/components/ui/text'
 import { Button } from 'app/components/ui/button'
@@ -26,6 +27,8 @@ import {
   type ContestSearchResult,
 } from 'app/lib/supabase/admin'
 import { TrashOutline } from 'app/components/icons-svg/TrashOutline'
+import { EyeOutline } from 'app/components/icons-svg/EyeOutline'
+import { useRouter } from 'app/lib/router-universal'
 
 type Props = {
   containerMaxWidth: number
@@ -259,6 +262,20 @@ function DraftCard({
   onOpenInEditTab: (slug: string) => void
   onDelete: (draft: DraftContest) => void
 }) {
+  const router = useRouter()
+  // Open the read-only contest detail page for this draft. Admins can preview
+  // visibility='admin' rows thanks to RLS (fetchContestDetailSupabase lifts the
+  // visibility filter for admins). On web we open in a new tab so the admin
+  // keeps their place in the Drafts list; on native we navigate in-app.
+  const handleView = () => {
+    const path = `/contest/${draft.slug}`
+    if (Platform.OS === 'web') {
+      window.open(path, '_blank', 'noopener,noreferrer')
+      return
+    }
+    router.push(path)
+  }
+
   return (
     <View className="border border-border rounded-lg p-4 bg-white dark:bg-gray-900">
       {/* Title + actions */}
@@ -274,6 +291,15 @@ function DraftCard({
           )}
         </View>
         <View className="flex-row gap-2">
+          <Pressable
+            onPress={handleView}
+            className="flex-row items-center bg-gray-600 dark:bg-gray-700 px-3 py-1.5 rounded"
+            accessibilityLabel="View contest preview"
+            accessibilityHint="Opens the admin-only preview of this draft"
+          >
+            <EyeOutline width={14} height={14} className="text-white" />
+            <Text className="text-white text-xs font-semibold ml-1.5">View</Text>
+          </Pressable>
           <Pressable
             onPress={() => onOpenInEditTab(draft.slug)}
             className="bg-main px-3 py-1.5 rounded"
