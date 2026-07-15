@@ -860,6 +860,7 @@ export async function updateSupabaseContest(
 
   for (let i = 0; i < ordered.length; i++) {
     const f = ordered[i]
+    if (!f) continue
     const { error: uErr } = await supabase
       .from('contest_files')
       .update({ file_order: i + 1, label: i === 0 ? 'main-gallery' : 'gallery' })
@@ -872,6 +873,82 @@ export async function updateSupabaseContest(
     .update({ main_img_id: finalMain, main_img_blurhash: null })
     .eq('id', contestId)
   if (mErr) throw mErr
+}
+
+// ===========================================================================
+// Inline (per-field) edits — backs the pencil-icon editing on the contest
+// detail page for admins. Unlike updateSupabaseContest these patch a single
+// field without touching relations, images, or the other translation columns.
+// ===========================================================================
+
+/** Contest-row columns editable inline from the detail page. */
+export type ContestInlinePatch = Partial<{
+  title: string
+  title_ms: string | null
+  start_date: string
+  end_date: string
+  total_prizes_value_rm: number | null
+  link_media_instagram: string | null
+  link_media_facebook: string | null
+  link_media_tiktok: string | null
+  link_media_x: string | null
+  link_media_youtube: string | null
+  link_media_linkedin: string | null
+  link_media_website: string | null
+}>
+
+export async function updateSupabaseContestFields(
+  contestId: string,
+  patch: ContestInlinePatch,
+): Promise<void> {
+  const supabase = getSupabase()
+  const { error } = await supabase
+    .from('contests')
+    .update(patch)
+    .eq('id', contestId)
+  if (error) throw error
+}
+
+// Screen-facing translation field names (legacy Appwrite shape used by
+// ContestDetailScreen) -> actual contest_translations columns.
+const TRANSLATION_INLINE_COLUMNS = {
+  prizes: 'prizes',
+  eligible_products_and_purchases: 'eligible_products',
+  eligible_participants: 'eligible_participants',
+  eligible_participants_exclusion: 'eligible_participants_exclusion',
+  eligible_stores: 'eligible_stores',
+  entry_method_and_submission: 'entry_method',
+  winners_selection_method: 'winners_selection_method',
+  winners_comm_and_timeline: 'winners_comm_and_timeline',
+  winners_list_and_announcement: 'winners_list_and_announcement',
+  link_tnc: 'link_tnc',
+  link_faq: 'link_faq',
+} as const
+
+export type TranslationInlineField = keyof typeof TRANSLATION_INLINE_COLUMNS
+
+/**
+ * Patch one translation field for one locale. Upserts so editing a locale that
+ * has no row yet (e.g. filling in Malay on an EN-only draft) creates it; only
+ * the given column is written on conflict, so the rest of the row is untouched.
+ */
+export async function updateSupabaseTranslationField(
+  contestId: string,
+  locale: 'en' | 'ms',
+  field: TranslationInlineField,
+  value: string,
+): Promise<void> {
+  const supabase = getSupabase()
+  const trimmed = value.trim()
+  const { error } = await supabase.from('contest_translations').upsert(
+    {
+      contest_id: contestId,
+      locale,
+      [TRANSLATION_INLINE_COLUMNS[field]]: trimmed || null,
+    },
+    { onConflict: 'contest_id,locale' },
+  )
+  if (error) throw error
 }
 
 /**

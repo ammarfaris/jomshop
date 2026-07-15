@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   ActivityIndicator,
+  ScrollView,
   View,
   useWindowDimensions,
   Platform,
@@ -90,23 +91,31 @@ export default function AdminScreen() {
         onValueChange={setTabValue}
         className="flex-1 w-full"
       >
-        <TabsList>
-          <TabsTrigger value="create">
-            <Text>Create Contest</Text>
-          </TabsTrigger>
-          <TabsTrigger value="edit">
-            <Text>Edit Contest</Text>
-          </TabsTrigger>
-          <TabsTrigger value="points">
-            <Text>Award Points</Text>
-          </TabsTrigger>
-          <TabsTrigger value="referrals">
-            <Text>Referral Limits</Text>
-          </TabsTrigger>
-          <TabsTrigger value="drafts">
-            <Text>Drafts</Text>
-          </TabsTrigger>
-        </TabsList>
+        {/* Horizontal scroll keeps every trigger reachable when the tab row
+            overflows narrow screens (flex-grow-0 stops it stealing height). */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          className="w-full flex-grow-0"
+        >
+          <TabsList>
+            <TabsTrigger value="create">
+              <Text>Create Contest</Text>
+            </TabsTrigger>
+            <TabsTrigger value="edit">
+              <Text>Edit Contest</Text>
+            </TabsTrigger>
+            <TabsTrigger value="points">
+              <Text>Award Points</Text>
+            </TabsTrigger>
+            <TabsTrigger value="referrals">
+              <Text>Referral Limits</Text>
+            </TabsTrigger>
+            <TabsTrigger value="drafts">
+              <Text>Drafts</Text>
+            </TabsTrigger>
+          </TabsList>
+        </ScrollView>
 
         {/* Keep both tab contents mounted to preserve state */}
         <View className="flex-1 border border-border rounded-lg mt-2">

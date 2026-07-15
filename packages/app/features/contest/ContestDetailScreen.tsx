@@ -55,6 +55,15 @@ import { useRouter } from 'app/lib/router-universal'
 import { toast } from 'app/lib/sonner-universal'
 import { I18nProvider } from '@lingui/react'
 import { getLocaleScopedI18n } from 'app/lib/lingui/locale-scoped-i18n'
+import {
+  AdminEditableField,
+  AdminEditableDateRange,
+  useAdminInlineContestSave,
+} from 'app/features/contest/components/AdminEditableField'
+import type {
+  ContestInlinePatch,
+  TranslationInlineField,
+} from 'app/lib/supabase/admin'
 
 // AdSense configuration
 const ADSENSE_PUBLISHER_ID = 'ca-pub-3985532721810420' // JomContest publisher ID
@@ -124,6 +133,11 @@ type Category = Document & {
 }
 
 const useContestDetailParams = useRouteParams<{ id: string }>
+
+// Admin language/edit modes for the detail page toggle. The two Both modes
+// need the wide side-by-side layout; only 'both-edit' enables inline editing.
+type AdminLangMode = 'en' | 'ms' | 'both' | 'both-edit'
+const ADMIN_LANG_MODES: AdminLangMode[] = ['en', 'ms', 'both', 'both-edit']
 
 // Resolved translation view for a single locale. `processContestTranslations`
 // picks the doc for `lang` and resolves T&C / FAQ links with locale fallback.
@@ -216,6 +230,33 @@ function processContestTranslations(
       selectedDoc?.entry_method_and_submission || undefined,
     winners_list_and_announcement:
       selectedDoc?.winners_list_and_announcement || undefined,
+  }
+}
+
+function getLocaleOwnedContestTranslation(
+  translations: any[],
+  lang: 'en' | 'ms',
+): ContestTranslationView {
+  const localeDoc = translations?.find((r: any) => r.locale === lang) as any
+
+  return {
+    prizes: localeDoc?.prizes || undefined,
+    link_tnc: localeDoc?.link_tnc || undefined,
+    link_tnc_locale: localeDoc?.link_tnc ? lang : undefined,
+    link_faq: localeDoc?.link_faq || undefined,
+    link_faq_locale: localeDoc?.link_faq ? lang : undefined,
+    eligible_products_and_purchases:
+      localeDoc?.eligible_products_and_purchases || undefined,
+    eligible_participants: localeDoc?.eligible_participants || undefined,
+    eligible_participants_exclusion:
+      localeDoc?.eligible_participants_exclusion || undefined,
+    eligible_stores: localeDoc?.eligible_stores || undefined,
+    winners_selection_method: localeDoc?.winners_selection_method || undefined,
+    winners_comm_and_timeline: localeDoc?.winners_comm_and_timeline || undefined,
+    entry_method_and_submission:
+      localeDoc?.entry_method_and_submission || undefined,
+    winners_list_and_announcement:
+      localeDoc?.winners_list_and_announcement || undefined,
   }
 }
 
@@ -474,19 +515,18 @@ export default function ContestDetailScreen({
   }, [publicContestData?.contest?.hosts])
 
   // Admin-only language override on the contest detail page: admins can flip
-  // between EN / BM / Both to compare translations side-by-side. 'both' renders
-  // two stacked content trees; the toggle itself is admin-gated (see header).
+  // between EN / BM / Both View / Both Edit. Both modes render two side-by-side
+  // content trees; only Both Edit turns on the inline pencil editors — every
+  // other mode is view-only. The toggle itself is admin-gated (see header).
   // Non-admins always read from their persisted language preference.
-  const [adminLangMode, setAdminLangMode] = useState<
-    'en' | 'ms' | 'both' | null
-  >(
-    (typeof window !== 'undefined' &&
-      (window.localStorage.getItem('admin-contest-lang-mode') as
-        | 'en'
-        | 'ms'
-        | 'both'
-        | null)) ||
-      null,
+  const [adminLangMode, setAdminLangMode] = useState<AdminLangMode | null>(
+    () => {
+      if (typeof window === 'undefined') return null
+      const stored = window.localStorage.getItem('admin-contest-lang-mode')
+      return ADMIN_LANG_MODES.includes(stored as AdminLangMode)
+        ? (stored as AdminLangMode)
+        : null
+    },
   )
   useEffect(() => {
     if (!isAdmin || !adminLangMode) return
@@ -497,46 +537,63 @@ export default function ContestDetailScreen({
     }
   }, [adminLangMode, isAdmin])
 
+  // Default to Both Edit when the screen fits two columns, otherwise the
+  // admin's saved locale. A saved Both mode is likewise demoted to the saved
+  // locale on narrow screens (both modes need the side-by-side layout).
+  const resolvedAdminMode: AdminLangMode = (() => {
+    const mode = adminLangMode ?? (canShowBoth ? 'both-edit' : language)
+    if ((mode === 'both' || mode === 'both-edit') && !canShowBoth) {
+      return language
+    }
+    return mode
+  })()
+
   const effectiveLanguage: 'en' | 'ms' =
-    isAdmin && adminLangMode && adminLangMode !== 'both'
-      ? adminLangMode
+    isAdmin && (resolvedAdminMode === 'en' || resolvedAdminMode === 'ms')
+      ? resolvedAdminMode
       : language
-  const isBothMode = isAdmin && adminLangMode === 'both'
+  const isBothMode =
+    isAdmin &&
+    (resolvedAdminMode === 'both' || resolvedAdminMode === 'both-edit')
+  const canEditInline = isAdmin && resolvedAdminMode === 'both-edit'
+
+  const contestTranslations = useMemo(() => {
+    const sourceContestId = (publicContestData?.contest as any)
+      ?.source_contest_id
+    return (publicContestData?.translations || []).filter(
+      (t: any) => t.source_contest_id === sourceContestId,
+    )
+  }, [publicContestData?.translations, publicContestData?.contest])
 
   // Translations (embedded in the Supabase detail payload; premium fields are
   // gated server-side for anonymous callers). Compute one view for the
   // effective language, plus separate EN / MS views when "Both" is active so
   // each side-by-side column renders its own locale without fallback mixing.
   const contestTranslation = useMemo(() => {
-    const sourceContestId = (publicContestData?.contest as any)
-      ?.source_contest_id
-    const translations = (publicContestData?.translations || []).filter(
-      (t: any) => t.source_contest_id === sourceContestId,
-    )
-    return processContestTranslations(translations, effectiveLanguage)
-  }, [
-    publicContestData?.translations,
-    publicContestData?.contest,
-    effectiveLanguage,
-  ])
+    return processContestTranslations(contestTranslations, effectiveLanguage)
+  }, [contestTranslations, effectiveLanguage])
+  const contestTranslationOwn = useMemo(() => {
+    return getLocaleOwnedContestTranslation(contestTranslations, effectiveLanguage)
+  }, [contestTranslations, effectiveLanguage])
 
   const contestTranslationEn = useMemo(() => {
-    const sourceContestId = (publicContestData?.contest as any)
-      ?.source_contest_id
-    const translations = (publicContestData?.translations || []).filter(
-      (t: any) => t.source_contest_id === sourceContestId,
-    )
-    return processContestTranslations(translations, 'en')
-  }, [publicContestData?.translations, publicContestData?.contest])
+    return processContestTranslations(contestTranslations, 'en')
+  }, [contestTranslations])
+  const contestTranslationEnOwn = useMemo(() => {
+    return getLocaleOwnedContestTranslation(contestTranslations, 'en')
+  }, [contestTranslations])
 
   const contestTranslationMs = useMemo(() => {
-    const sourceContestId = (publicContestData?.contest as any)
-      ?.source_contest_id
-    const translations = (publicContestData?.translations || []).filter(
-      (t: any) => t.source_contest_id === sourceContestId,
-    )
-    return processContestTranslations(translations, 'ms')
-  }, [publicContestData?.translations, publicContestData?.contest])
+    return processContestTranslations(contestTranslations, 'ms')
+  }, [contestTranslations])
+  const contestTranslationMsOwn = useMemo(() => {
+    return getLocaleOwnedContestTranslation(contestTranslations, 'ms')
+  }, [contestTranslations])
+
+  // Admin-only inline editing (pencil icons per item). Saves patch a single
+  // field and invalidate this page's detail query.
+  const { saveContestFields, saveTranslationField } =
+    useAdminInlineContestSave(id)
 
   // Show loading state during auth check, admin check, or contest loading
   if (isLoadingUser || isLoadingAdmin || isLoadingContest || isLoadingFiles) {
@@ -839,13 +896,17 @@ export default function ContestDetailScreen({
                 </Badge>
               )}
 
-              {/* Admin-only language toggle (EN / BM / Both). Only shown for
-                  admins — non-admins keep using their persisted language pref. */}
+              {/* Admin-only language/edit toggle (EN / BM / Both View / Both
+                  Edit). Only shown for admins — non-admins keep using their
+                  persisted language pref. */}
               {isAdmin && (
                 <AdminLanguageToggle
-                  value={adminLangMode ?? (language === 'ms' ? 'ms' : 'en')}
+                  value={resolvedAdminMode}
                   onChange={(mode) => {
-                    if (mode === 'both' && !canShowBoth) {
+                    if (
+                      (mode === 'both' || mode === 'both-edit') &&
+                      !canShowBoth
+                    ) {
                       toast.error(
                         'Side-by-side view needs a wider screen (desktop).',
                       )
@@ -870,6 +931,7 @@ export default function ContestDetailScreen({
                 <ContestDetailColumn
                   contest={contest}
                   contestTranslation={contestTranslationEn}
+                  contestTranslationOwn={contestTranslationEnOwn}
                   language="en"
                   user={user}
                   contestHosts={contestHosts}
@@ -884,6 +946,9 @@ export default function ContestDetailScreen({
                   onManageReceipts={() => setReceiptModalVisible(true)}
                   isDarkColorScheme={isDarkColorScheme}
                   main={main}
+                  canEdit={canEditInline}
+                  saveContestFields={saveContestFields}
+                  saveTranslationField={saveTranslationField}
                 />
               </View>
               <View
@@ -893,6 +958,7 @@ export default function ContestDetailScreen({
                 <ContestDetailColumn
                   contest={contest}
                   contestTranslation={contestTranslationMs}
+                  contestTranslationOwn={contestTranslationMsOwn}
                   language="ms"
                   user={user}
                   contestHosts={contestHosts}
@@ -907,6 +973,9 @@ export default function ContestDetailScreen({
                   onManageReceipts={() => setReceiptModalVisible(true)}
                   isDarkColorScheme={isDarkColorScheme}
                   main={main}
+                  canEdit={canEditInline}
+                  saveContestFields={saveContestFields}
+                  saveTranslationField={saveTranslationField}
                 />
               </View>
             </View>
@@ -914,6 +983,7 @@ export default function ContestDetailScreen({
             <ContestDetailColumn
               contest={contest}
               contestTranslation={contestTranslation}
+              contestTranslationOwn={contestTranslationOwn}
               language={effectiveLanguage}
               user={user}
               contestHosts={contestHosts}
@@ -929,6 +999,9 @@ export default function ContestDetailScreen({
               isDarkColorScheme={isDarkColorScheme}
               main={main}
               onActionButtonsLayout={handleActionButtonsLayout}
+              canEdit={canEditInline}
+              saveContestFields={saveContestFields}
+              saveTranslationField={saveTranslationField}
             />
           )}
         </View>
@@ -963,6 +1036,7 @@ function dateLocaleFor(language: 'en' | 'ms'): string {
 type ContestDetailColumnProps = {
   contest: Contest
   contestTranslation: ContestTranslationView
+  contestTranslationOwn: ContestTranslationView
   language: 'en' | 'ms'
   user: ReturnType<typeof useAuth>['user']
   contestHosts: Host[]
@@ -978,6 +1052,18 @@ type ContestDetailColumnProps = {
   isDarkColorScheme: boolean
   main: string
   onActionButtonsLayout?: (event: any) => void
+  // Admin inline editing (pencil per item). `canEdit` gates all of it.
+  canEdit: boolean
+  saveContestFields: (
+    contestId: string,
+    patch: ContestInlinePatch,
+  ) => Promise<void>
+  saveTranslationField: (
+    contestId: string,
+    locale: 'en' | 'ms',
+    field: TranslationInlineField,
+    value: string,
+  ) => Promise<void>
 }
 
 function ContestDetailColumn(props: ContestDetailColumnProps) {
@@ -992,6 +1078,7 @@ function ContestDetailColumn(props: ContestDetailColumnProps) {
 function ContestDetailColumnContent({
   contest,
   contestTranslation,
+  contestTranslationOwn,
   language,
   user,
   contestHosts,
@@ -1007,6 +1094,9 @@ function ContestDetailColumnContent({
   isDarkColorScheme,
   main,
   onActionButtonsLayout,
+  canEdit,
+  saveContestFields,
+  saveTranslationField,
 }: ContestDetailColumnProps) {
   const { t } = useLingui()
   const [galleryVisible, setGalleryVisible] = useState(false)
@@ -1036,10 +1126,30 @@ function ContestDetailColumnContent({
   return (
     <View>
       {/* Title */}
-      <View className="flex-row items-center mb-2">
-        <Text className="text-2xl font-bold text-black dark:text-white">
-          {contestTitle}
-        </Text>
+      <View className="mb-2">
+        <AdminEditableField
+          enabled={canEdit}
+          label={language === 'ms' ? 'Title (BM)' : 'Title (EN)'}
+          value={language === 'ms' ? (contest.title_ms ?? '') : contest.title}
+          multiline={false}
+          maxLength={100}
+          onSave={async (v) => {
+            const trimmed = v.trim()
+            if (language === 'en' && !trimmed) {
+              throw new Error('Title cannot be empty')
+            }
+            await saveContestFields(
+              contest.$id,
+              language === 'ms'
+                ? { title_ms: trimmed || null }
+                : { title: trimmed },
+            )
+          }}
+        >
+          <Text className="text-2xl font-bold text-black dark:text-white">
+            {contestTitle}
+          </Text>
+        </AdminEditableField>
       </View>
 
       {/* By Host Names */}
@@ -1263,6 +1373,7 @@ function ContestDetailColumnContent({
       <ContestDetailSections
         contest={contest}
         contestTranslation={contestTranslation}
+        contestTranslationOwn={contestTranslationOwn}
         language={language}
         user={user}
         prizeCategories={prizeCategories}
@@ -1270,6 +1381,9 @@ function ContestDetailColumnContent({
         winnerSelectionCategories={winnerSelectionCategories}
         main={main}
         isDarkColorScheme={isDarkColorScheme}
+        canEdit={canEdit}
+        saveContestFields={saveContestFields}
+        saveTranslationField={saveTranslationField}
       />
 
       <ImageGallery
@@ -1283,20 +1397,22 @@ function ContestDetailColumnContent({
 }
 
 // ---------------------------------------------------------------------------
-// Admin-only language toggle: segmented EN / BM / Both control. Rendered in the
-// contest detail header next to the Admin Only badge; non-admins never see it.
+// Admin-only language toggle: segmented EN / BM / Both View / Both Edit
+// control. Rendered in the contest detail header next to the Admin Only
+// badge; non-admins never see it. Both Edit is the only mode with pencils.
 // ---------------------------------------------------------------------------
 function AdminLanguageToggle({
   value,
   onChange,
 }: {
-  value: 'en' | 'ms' | 'both'
-  onChange: (mode: 'en' | 'ms' | 'both') => void
+  value: AdminLangMode
+  onChange: (mode: AdminLangMode) => void
 }) {
-  const options: Array<{ key: 'en' | 'ms' | 'both'; label: string }> = [
+  const options: Array<{ key: AdminLangMode; label: string }> = [
     { key: 'en', label: 'EN' },
     { key: 'ms', label: 'BM' },
-    { key: 'both', label: 'Both' },
+    { key: 'both', label: 'Both View' },
+    { key: 'both-edit', label: 'Both Edit' },
   ]
   return (
     <View className="flex-row items-center rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden">
@@ -1339,6 +1455,7 @@ function AdminLanguageToggle({
 type ContestDetailSectionsProps = {
   contest: Contest
   contestTranslation: ContestTranslationView
+  contestTranslationOwn: ContestTranslationView
   language: 'en' | 'ms'
   user: ReturnType<typeof useAuth>['user']
   prizeCategories: Category[]
@@ -1346,11 +1463,23 @@ type ContestDetailSectionsProps = {
   winnerSelectionCategories: Category[]
   main: string
   isDarkColorScheme: boolean
+  canEdit: boolean
+  saveContestFields: (
+    contestId: string,
+    patch: ContestInlinePatch,
+  ) => Promise<void>
+  saveTranslationField: (
+    contestId: string,
+    locale: 'en' | 'ms',
+    field: TranslationInlineField,
+    value: string,
+  ) => Promise<void>
 }
 
 function ContestDetailSections({
   contest,
   contestTranslation,
+  contestTranslationOwn,
   language,
   user,
   prizeCategories,
@@ -1358,8 +1487,45 @@ function ContestDetailSections({
   winnerSelectionCategories,
   main,
   isDarkColorScheme,
+  canEdit,
+  saveContestFields,
+  saveTranslationField,
 }: ContestDetailSectionsProps) {
   const { t } = useLingui()
+
+  // Inline-edit helpers, bound to this column's contest + locale. `langLabel`
+  // disambiguates which locale a pencil writes to (esp. in "Both" mode).
+  const langLabel = language === 'ms' ? 'BM' : 'EN'
+  const saveT = (field: TranslationInlineField) => (value: string) =>
+    saveTranslationField(contest.$id, language, field, value)
+  const savePrizeValue = async (v: string) => {
+    const trimmed = v.trim()
+    const n = Number(trimmed.replace(/[,\s]|RM/gi, ''))
+    if (trimmed !== '' && (!Number.isFinite(n) || n < 0)) {
+      throw new Error('Enter a non-negative number')
+    }
+    await saveContestFields(contest.$id, {
+      total_prizes_value_rm: trimmed === '' || n === 0 ? null : n,
+    })
+  }
+  // URL fields (T&C/FAQ per locale; social links shared) mirror the create
+  // form's optionalUrl rule: empty clears, otherwise must be http(s).
+  const assertUrl = (value: string) => {
+    if (value && !/^https?:\/\/.+/.test(value)) {
+      throw new Error('Must be a valid URL starting with http(s)://')
+    }
+  }
+  const saveUrlT = (field: TranslationInlineField) => async (value: string) => {
+    const trimmed = value.trim()
+    assertUrl(trimmed)
+    await saveTranslationField(contest.$id, language, field, trimmed)
+  }
+  const saveSocialLink =
+    (field: keyof ContestInlinePatch) => async (value: string) => {
+      const trimmed = value.trim()
+      assertUrl(trimmed)
+      await saveContestFields(contest.$id, { [field]: trimmed || null })
+    }
 
   const formatPrizeValue = (amount: number): string => {
     const rounded = Math.ceil(amount)
@@ -1376,6 +1542,17 @@ function ContestDetailSections({
 
   return (
     <View className="flex-col gap-4">
+      <AdminEditableDateRange
+        enabled={canEdit}
+        startValue={contest.start_date}
+        endValue={contest.end_date}
+        onSave={(startIso, endIso) =>
+          saveContestFields(contest.$id, {
+            start_date: startIso,
+            end_date: endIso,
+          })
+        }
+      >
       <View className="flex-row justify-between">
         <View className="flex-1 mr-2">
           <Trans>
@@ -1429,6 +1606,7 @@ function ContestDetailSections({
           </Text>
         </View>
       </View>
+      </AdminEditableDateRange>
 
       {/* Eligibility & Where to buy Card */}
       <Card>
@@ -1441,7 +1619,7 @@ function ContestDetailSections({
         </CardHeader>
         <CardContent className="flex-col gap-4">
           {/* Eligible Participants */}
-          {contestTranslation?.eligible_participants && (
+          {(contestTranslation?.eligible_participants || canEdit) && (
             <View>
               <View className="flex-row items-center mb-2">
                 <Trans>
@@ -1473,37 +1651,88 @@ function ContestDetailSections({
                   </Popover>
                 )}
               </View>
-              <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {contestTranslation.eligible_participants}
-              </MarkdownText>
+              <AdminEditableField
+                enabled={canEdit}
+                label={`Eligible participants (${langLabel})`}
+                value={contestTranslationOwn?.eligible_participants}
+                maxLength={1500}
+                onSave={saveT('eligible_participants')}
+              >
+                {contestTranslation?.eligible_participants ? (
+                  <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {contestTranslation.eligible_participants}
+                  </MarkdownText>
+                ) : null}
+              </AdminEditableField>
+              {/* Admins get the exclusion text inline (users read it via the
+                  popover above) so it can be reviewed and edited in place. */}
+              {canEdit && (
+                <View className="mt-2">
+                  <AdminEditableField
+                    enabled={canEdit}
+                    label={`Participant exclusions (${langLabel})`}
+                    value={
+                      contestTranslationOwn?.eligible_participants_exclusion
+                    }
+                    maxLength={1000}
+                    onSave={saveT('eligible_participants_exclusion')}
+                  >
+                    {contestTranslation?.eligible_participants_exclusion ? (
+                      <MarkdownText className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+                        {contestTranslation.eligible_participants_exclusion}
+                      </MarkdownText>
+                    ) : null}
+                  </AdminEditableField>
+                </View>
+              )}
             </View>
           )}
 
           {/* Eligible Products and Purchases */}
-          {contestTranslation?.eligible_products_and_purchases && (
+          {(contestTranslation?.eligible_products_and_purchases || canEdit) && (
             <View>
               <Trans>
                 <Text className="text-base font-semibold text-black dark:text-white mb-2">
                   💳 Eligible Purchases & Products 🛍️
                 </Text>
               </Trans>
-              <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {contestTranslation.eligible_products_and_purchases}
-              </MarkdownText>
+              <AdminEditableField
+                enabled={canEdit}
+                label={`Eligible purchases & products (${langLabel})`}
+                value={contestTranslationOwn?.eligible_products_and_purchases}
+                maxLength={2400}
+                onSave={saveT('eligible_products_and_purchases')}
+              >
+                {contestTranslation?.eligible_products_and_purchases ? (
+                  <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {contestTranslation.eligible_products_and_purchases}
+                  </MarkdownText>
+                ) : null}
+              </AdminEditableField>
             </View>
           )}
 
           {/* Eligible Stores */}
-          {contestTranslation?.eligible_stores && (
+          {(contestTranslation?.eligible_stores || canEdit) && (
             <View>
               <Trans>
                 <Text className="text-base font-semibold text-black dark:text-white mb-2">
                   🛒 Eligible Stores
                 </Text>
               </Trans>
-              <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                {contestTranslation.eligible_stores}
-              </MarkdownText>
+              <AdminEditableField
+                enabled={canEdit}
+                label={`Eligible stores (${langLabel})`}
+                value={contestTranslationOwn?.eligible_stores}
+                maxLength={2000}
+                onSave={saveT('eligible_stores')}
+              >
+                {contestTranslation?.eligible_stores ? (
+                  <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {contestTranslation.eligible_stores}
+                  </MarkdownText>
+                ) : null}
+              </AdminEditableField>
             </View>
           )}
 
@@ -1604,24 +1833,40 @@ function ContestDetailSections({
             </Text>
           </Trans>
           {((contest.total_prizes_value_rm ?? 0) > 0 ||
-            prizeCategories.length > 0) && (
+            prizeCategories.length > 0 ||
+            canEdit) && (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               className="ml-2"
               contentContainerStyle={{ alignItems: 'center' }}
             >
-              {(contest.total_prizes_value_rm ?? 0) > 0 && (
-                <Badge
-                  variant="outline"
-                  className="mr-2 bg-yellow-100 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
+              <View className="mr-2">
+                <AdminEditableField
+                  enabled={canEdit}
+                  label="Total prizes value (RM)"
+                  value={
+                    (contest.total_prizes_value_rm ?? 0) > 0
+                      ? String(contest.total_prizes_value_rm)
+                      : ''
+                  }
+                  multiline={false}
+                  shared
+                  onSave={savePrizeValue}
                 >
-                  <Text className="text-yellow-700 dark:text-yellow-300 font-medium">
-                    <Trans>Worth:</Trans>{' '}
-                    {formatPrizeValue(contest.total_prizes_value_rm!)}
-                  </Text>
-                </Badge>
-              )}
+                  {(contest.total_prizes_value_rm ?? 0) > 0 ? (
+                    <Badge
+                      variant="outline"
+                      className="bg-yellow-100 border-yellow-200 dark:bg-yellow-950 dark:border-yellow-800"
+                    >
+                      <Text className="text-yellow-700 dark:text-yellow-300 font-medium">
+                        <Trans>Worth:</Trans>{' '}
+                        {formatPrizeValue(contest.total_prizes_value_rm!)}
+                      </Text>
+                    </Badge>
+                  ) : null}
+                </AdminEditableField>
+              </View>
               {prizeCategories.map((category) => (
                 <Badge
                   key={category.$id}
@@ -1638,15 +1883,23 @@ function ContestDetailSections({
             </ScrollView>
           )}
         </View>
-        {contestTranslation?.prizes && (
-          <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-            {contestTranslation.prizes}
-          </MarkdownText>
-        )}
+        <AdminEditableField
+          enabled={canEdit}
+          label={`Prizes (${langLabel})`}
+          value={contestTranslationOwn?.prizes}
+          maxLength={2000}
+          onSave={saveT('prizes')}
+        >
+          {contestTranslation?.prizes ? (
+            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+              {contestTranslation.prizes}
+            </MarkdownText>
+          ) : null}
+        </AdminEditableField>
       </View>
 
       {/* Entry Method and Submission */}
-      {contestTranslation?.entry_method_and_submission && (
+      {(contestTranslation?.entry_method_and_submission || canEdit) && (
         <>
           <Separator />
           <View>
@@ -1679,9 +1932,19 @@ function ContestDetailSections({
                 </ScrollView>
               )}
             </View>
-            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              {contestTranslation.entry_method_and_submission}
-            </MarkdownText>
+            <AdminEditableField
+              enabled={canEdit}
+              label={`How to enter (${langLabel})`}
+              value={contestTranslationOwn?.entry_method_and_submission}
+              maxLength={2000}
+              onSave={saveT('entry_method_and_submission')}
+            >
+              {contestTranslation?.entry_method_and_submission ? (
+                <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {contestTranslation.entry_method_and_submission}
+                </MarkdownText>
+              ) : null}
+            </AdminEditableField>
           </View>
         </>
       )}
@@ -1713,7 +1976,7 @@ function ContestDetailSections({
           </View>
         </>
       )}
-      {user && contestTranslation?.winners_selection_method && (
+      {user && (contestTranslation?.winners_selection_method || canEdit) && (
         <>
           <Separator />
           <View>
@@ -1749,9 +2012,19 @@ function ContestDetailSections({
                 </ScrollView>
               )}
             </View>
-            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              {contestTranslation.winners_selection_method}
-            </MarkdownText>
+            <AdminEditableField
+              enabled={canEdit}
+              label={`Winners selection method (${langLabel})`}
+              value={contestTranslationOwn?.winners_selection_method}
+              maxLength={2000}
+              onSave={saveT('winners_selection_method')}
+            >
+              {contestTranslation?.winners_selection_method ? (
+                <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {contestTranslation.winners_selection_method}
+                </MarkdownText>
+              ) : null}
+            </AdminEditableField>
           </View>
         </>
       )}
@@ -1783,7 +2056,7 @@ function ContestDetailSections({
           </View>
         </>
       )}
-      {user && contestTranslation?.winners_comm_and_timeline && (
+      {user && (contestTranslation?.winners_comm_and_timeline || canEdit) && (
         <>
           <Separator />
           <View>
@@ -1792,9 +2065,19 @@ function ContestDetailSections({
                 Winners Communication Channel & Timeline
               </Text>
             </Trans>
-            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              {contestTranslation.winners_comm_and_timeline}
-            </MarkdownText>
+            <AdminEditableField
+              enabled={canEdit}
+              label={`Winners communication & timeline (${langLabel})`}
+              value={contestTranslationOwn?.winners_comm_and_timeline}
+              maxLength={1500}
+              onSave={saveT('winners_comm_and_timeline')}
+            >
+              {contestTranslation?.winners_comm_and_timeline ? (
+                <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {contestTranslation.winners_comm_and_timeline}
+                </MarkdownText>
+              ) : null}
+            </AdminEditableField>
           </View>
         </>
       )}
@@ -1826,7 +2109,7 @@ function ContestDetailSections({
           </View>
         </>
       )}
-      {user && contestTranslation?.winners_list_and_announcement && (
+      {user && (contestTranslation?.winners_list_and_announcement || canEdit) && (
         <>
           <Separator />
           <View>
@@ -1835,9 +2118,19 @@ function ContestDetailSections({
                 Winners List & Announcement
               </Text>
             </Trans>
-            <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-              {contestTranslation.winners_list_and_announcement}
-            </MarkdownText>
+            <AdminEditableField
+              enabled={canEdit}
+              label={`Winners list & announcement (${langLabel})`}
+              value={contestTranslationOwn?.winners_list_and_announcement}
+              maxLength={1000}
+              onSave={saveT('winners_list_and_announcement')}
+            >
+              {contestTranslation?.winners_list_and_announcement ? (
+                <MarkdownText className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {contestTranslation.winners_list_and_announcement}
+                </MarkdownText>
+              ) : null}
+            </AdminEditableField>
           </View>
         </>
       )}
@@ -1879,7 +2172,8 @@ function ContestDetailSections({
           contest?.link_media_tiktok ||
           contest?.link_media_x ||
           contest?.link_media_youtube ||
-          contest?.link_media_website) && (
+          contest?.link_media_website ||
+          canEdit) && (
           <>
             <Separator />
             <View>
@@ -1891,9 +2185,21 @@ function ContestDetailSections({
 
               {/* Terms & Conditions and FAQ */}
               {(contestTranslation?.link_tnc ||
-                contestTranslation?.link_faq) && (
+                contestTranslation?.link_faq ||
+                canEdit) && (
                 <View className="flex-row flex-wrap gap-4 mb-4">
-                  {contestTranslation?.link_tnc && (
+                  {/* Seed the editors with this locale's own link only — the
+                      displayed value may be the other locale's fallback, and
+                      saving that here would copy it across locales. */}
+                  <AdminEditableField
+                    enabled={canEdit}
+                    label={`T&C link (${langLabel})`}
+                    value={contestTranslationOwn?.link_tnc ?? ''}
+                    multiline={false}
+                    maxLength={300}
+                    onSave={saveUrlT('link_tnc')}
+                  >
+                  {contestTranslation?.link_tnc ? (
                     <View className="flex-row flex-wrap items-baseline">
                       <Link
                         href={contestTranslation.link_tnc}
@@ -1934,8 +2240,17 @@ function ContestDetailSections({
                         return null
                       })()}
                     </View>
-                  )}
-                  {contestTranslation?.link_faq && (
+                  ) : null}
+                  </AdminEditableField>
+                  <AdminEditableField
+                    enabled={canEdit}
+                    label={`FAQ link (${langLabel})`}
+                    value={contestTranslationOwn?.link_faq ?? ''}
+                    multiline={false}
+                    maxLength={300}
+                    onSave={saveUrlT('link_faq')}
+                  >
+                  {contestTranslation?.link_faq ? (
                     <View className="flex-row flex-wrap items-baseline">
                       <Link
                         href={contestTranslation.link_faq}
@@ -1974,7 +2289,8 @@ function ContestDetailSections({
                         return null
                       })()}
                     </View>
-                  )}
+                  ) : null}
+                  </AdminEditableField>
                 </View>
               )}
 
@@ -1985,7 +2301,8 @@ function ContestDetailSections({
                 contest?.link_media_x ||
                 contest?.link_media_youtube ||
                 contest?.link_media_linkedin ||
-                contest?.link_media_website) && (
+                contest?.link_media_website ||
+                canEdit) && (
                 <Card className="bg-main/5 border-main/20">
                   <CardContent className="pt-6">
                     {/* Section Title */}
@@ -2065,6 +2382,72 @@ function ContestDetailSections({
                         </Link>
                       )}
                     </View>
+
+                    {/* Admin inline editing for the social/website links.
+                        Contest-level values, so each editor is marked shared. */}
+                    {canEdit && (
+                      <View className="mt-4 gap-2">
+                        {(
+                          [
+                            {
+                              field: 'link_media_instagram',
+                              label: 'Instagram link',
+                              max: 400,
+                            },
+                            {
+                              field: 'link_media_facebook',
+                              label: 'Facebook link',
+                              max: 400,
+                            },
+                            {
+                              field: 'link_media_tiktok',
+                              label: 'TikTok link',
+                              max: 200,
+                            },
+                            {
+                              field: 'link_media_x',
+                              label: 'X (Twitter) link',
+                              max: 200,
+                            },
+                            {
+                              field: 'link_media_youtube',
+                              label: 'YouTube link',
+                              max: 200,
+                            },
+                            {
+                              field: 'link_media_linkedin',
+                              label: 'LinkedIn link',
+                              max: 400,
+                            },
+                            {
+                              field: 'link_media_website',
+                              label: 'Website link',
+                              max: 400,
+                            },
+                          ] as const
+                        ).map(({ field, label, max }) => (
+                          <AdminEditableField
+                            key={field}
+                            enabled={canEdit}
+                            label={label}
+                            value={contest[field] ?? ''}
+                            multiline={false}
+                            shared
+                            maxLength={max}
+                            onSave={saveSocialLink(field)}
+                          >
+                            {contest[field] ? (
+                              <Text
+                                numberOfLines={1}
+                                className="text-xs text-gray-600 dark:text-gray-400"
+                              >
+                                {label}: {contest[field]}
+                              </Text>
+                            ) : null}
+                          </AdminEditableField>
+                        ))}
+                      </View>
+                    )}
                   </CardContent>
                 </Card>
               )}

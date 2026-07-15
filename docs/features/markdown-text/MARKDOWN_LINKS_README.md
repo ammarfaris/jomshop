@@ -66,11 +66,10 @@ A lightweight React component that parses markdown link syntax and renders click
 
 ### Features
 
-✅ External links (`https://example.com`)
-✅ Internal links (`/page`)
-✅ Email links (`mailto:email@example.com`)
-✅ Phone links (`tel:+60123456789`)
+✅ External links (`http://` / `https://`)
+✅ Internal links (`/page`, `./page`, `../page`, `#anchor`)
 ✅ Multiple links in one text
+✅ Unsafe schemes are blocked (`javascript:`, `data:`, `mailto:`, `tel:` render as plain text)
 ✅ Cross-platform (Web, iOS, Android)
 ✅ Dark mode support
 ✅ Backward compatible
@@ -89,7 +88,7 @@ Copy and paste these examples into the admin forms to verify rendering.
 
 - ✓ External links are clickable
 - ✓ Internal links navigate within app
-- ✓ Email links open email client
+- ✓ Unsafe schemes render as plain text (not clickable)
 - ✓ Links are styled correctly (blue, underlined)
 - ✓ Dark mode works
 - ✓ Works on web, iOS, and Android
@@ -156,7 +155,7 @@ Shop at [Shopee](https://shopee.com.my) or [Lazada](https://lazada.com.my).
 A: Check syntax - must be exactly `[text](url)` with no spaces.
 
 **Q: Link not clickable?**
-A: Verify the URL is complete (include `https://` for external links).
+A: External links must start with `http://` or `https://`. Relative links must start with `/`, `./`, `../`, or `#`.
 
 **Q: Internal link not working?**
 A: Ensure the path starts with `/` (e.g., `/tnc` not `tnc`).
@@ -172,7 +171,7 @@ See the component source and tests:
 Potential improvements:
 
 - Add more markdown features (bold, italic, lists)
-- Add link validation in admin forms
+- Expand allowlist if additional safe protocols are needed
 - Add preview mode
 - Extend to more fields
 - Track link click analytics
@@ -182,7 +181,7 @@ Potential improvements:
 - No database changes required
 - Fully backward compatible
 - Works with existing contest data
-- Admin-only feature (trusted input)
+- Defense in depth: only `http(s)` and relative links are rendered as clickable
 - Cross-platform support
 
 ## 🎉 Quick Win
@@ -197,6 +196,6 @@ This feature provides immediate value:
 
 ---
 
-**Last Updated:** 2024
+**Last Updated:** 2026
 **Status:** ✅ Production Ready
 **Platforms:** Web, iOS, Android

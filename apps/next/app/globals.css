@@ -142,8 +142,25 @@ html {
 }
 body {
   display: flex;
+  /*
+    App Router renders pages directly into <body> (there is no #__next), so
+    body must be the column flex root. Without this the default row direction
+    makes each page's root react-native-web View (flex-shrink: 0) size to its
+    content's max-content width instead of stretching — long unwrapped text
+    then pushes the page wider than the viewport and every page pans sideways.
+  */
+  flex-direction: column;
   /* Allows you to scroll below the viewport; default value is visible */
   overflow-y: auto;
+  /*
+    Safety net: never allow page-level horizontal panning (scrollbars are
+    hidden, so a 1px-too-wide element otherwise makes the page drift sideways
+    and fight inner horizontal scrollers). Must live on body, NOT html:
+    body's (hidden, auto) pair propagates cleanly to the viewport, whereas
+    overflow-x on html coerces the viewport's overflow-y and kills user
+    wheel/gesture scrolling. Inner ScrollViews/carousels are unaffected.
+  */
+  overflow-x: hidden;
   overscroll-behavior-y: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

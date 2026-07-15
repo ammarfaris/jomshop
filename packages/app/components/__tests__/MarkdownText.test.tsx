@@ -1,41 +1,30 @@
 import { describe, it, expect } from '@jest/globals'
+import {
+  isRelativeMarkdownHref,
+  isSafeMarkdownHref,
+} from '../markdownLinkSafety'
 
-/**
- * Test cases for MarkdownText component
- * These are conceptual tests to document expected behavior
- */
-
-describe('MarkdownText', () => {
-  it('should parse external links correctly', () => {
-    const input = 'Visit [Google](https://google.com) for more info'
-    // Expected: Text with clickable link to https://google.com
-    expect(input).toContain('[Google](https://google.com)')
+describe('markdownLinkSafety', () => {
+  it('allows only http(s) absolute links', () => {
+    expect(isSafeMarkdownHref('https://google.com')).toBe(true)
+    expect(isSafeMarkdownHref('http://example.com/faq')).toBe(true)
+    expect(isSafeMarkdownHref('mailto:test@example.com')).toBe(false)
+    expect(isSafeMarkdownHref('javascript:alert(1)')).toBe(false)
+    expect(isSafeMarkdownHref('data:text/html;base64,PHNjcmlwdA==')).toBe(false)
   })
 
-  it('should parse internal links correctly', () => {
-    const input = 'Check our [Terms](/tnc) page'
-    // Expected: Text with clickable link to /tnc
-    expect(input).toContain('[Terms](/tnc)')
+  it('allows relative links used inside the app', () => {
+    expect(isRelativeMarkdownHref('/contest/new-year')).toBe(true)
+    expect(isRelativeMarkdownHref('./terms')).toBe(true)
+    expect(isRelativeMarkdownHref('../help')).toBe(true)
+    expect(isRelativeMarkdownHref('#how-to-enter')).toBe(true)
+    expect(isRelativeMarkdownHref('https://google.com')).toBe(false)
   })
 
-  it('should handle multiple links in one text', () => {
-    const input = 'Visit [Site A](https://a.com) or [Site B](https://b.com)'
-    // Expected: Text with two clickable links
-    expect(input).toContain('[Site A](https://a.com)')
-    expect(input).toContain('[Site B](https://b.com)')
-  })
-
-  it('should handle text without links', () => {
-    const input = 'This is plain text without any links'
-    // Expected: Plain text, no links
-    expect(input).not.toContain('[')
-  })
-
-  it('should handle mixed content', () => {
-    const input = 'Submit via [form](https://example.com/form) within 7 days'
-    // Expected: Text before link, clickable link, text after link
-    expect(input).toContain('Submit via')
-    expect(input).toContain('[form](https://example.com/form)')
-    expect(input).toContain('within 7 days')
+  it('rejects empty or malformed href values', () => {
+    expect(isSafeMarkdownHref('')).toBe(false)
+    expect(isSafeMarkdownHref('   ')).toBe(false)
+    expect(isSafeMarkdownHref('www.example.com/no-scheme')).toBe(false)
+    expect(isSafeMarkdownHref(':/broken')).toBe(false)
   })
 })

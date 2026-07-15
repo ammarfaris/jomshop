@@ -1,5 +1,9 @@
 import { Text } from 'app/components/ui/text'
 import { Separator } from 'app/components/ui/separator'
+import {
+  isRelativeMarkdownHref,
+  isSafeMarkdownHref,
+} from 'app/components/markdownLinkSafety'
 import { Link } from 'app/lib/link-universal'
 import { Platform, View, ScrollView, Text as RNText } from 'react-native'
 import { useColorScheme } from 'app/hooks/useColorScheme'
@@ -492,13 +496,17 @@ export function MarkdownText({ children, className }: MarkdownTextProps) {
   // Recursive rendering function to handle nested content
   const renderPart = (part: any, index: number): any => {
     if (part.type === 'link' && part.url) {
-      // Check if it's an internal link (starts with /)
-      const isInternal = part.url.startsWith('/')
+      const href = part.url.trim()
+      // Defense in depth: only render http(s) or relative links as clickable.
+      if (!isSafeMarkdownHref(href)) {
+        return part.content
+      }
+      const isInternal = isRelativeMarkdownHref(href)
 
       return (
         <Link
           key={index}
-          href={part.url}
+          href={href}
           className={
             Platform.OS === 'web' ? 'text-main underline' : 'underline'
           }
