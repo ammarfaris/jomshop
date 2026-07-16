@@ -54,7 +54,8 @@ RULES:
 - total_prizes_value_rm: a number, ONLY if the T&C states a total prize value; otherwise omit the key.
 - links: include only links you actually found; omit empty ones.
 - Do not add any other keys (no images, host_ids, category_ids, visibility).
-- Every translations value is consumer-friendly Markdown TEXT: short paragraphs, **bold**, bullet lists, tables and emoji where they genuinely help. NEVER put a section title/heading inside a value — the JSON key already is the title.
+- Every translations value is consumer-friendly Markdown TEXT: short paragraphs, **bold**, bullet lists, tables, and light emoji. NEVER put a section title/heading inside a value — the JSON key already is the title.
+- EMOJI: sprinkle sparingly in translation fields as visual anchors (e.g. 🎁 prizes, 📝 entry steps, 🛒 products, 🏪 stores). At most one emoji per bullet or paragraph lead; never decorate every line. No emoji in summary, summary_ms, or titles. Skip emoji in dense/legal fields.
 - Extract strictly; do not invent. If the T&C truly lacks a required field's info, write what is known and add "Not specified in T&C".
 - Both languages always: if the T&C is English-only, translate into Bahasa Malaysia (NOT Bahasa Indonesia); if Malay-only, translate into English.
 - Hard-respect every max length; if trimming is needed, drop minor details, never the prizes or the entry steps.

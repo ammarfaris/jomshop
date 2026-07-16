@@ -1,27 +1,13 @@
-# Direct-prompting prompt (curl + submit, end-to-end)
+/**
+ * Cursor / shell-equipped AI prompt: paste a campaign URL, AI fetches TnC,
+ * builds contest.json, and POSTs a draft via the ingest Edge Function.
+ *
+ * AUTO-GENERATED — do not edit by hand. Run `yarn sync-ingest-prompts`.
+ * Source: supabase/functions/ingest-contest/ai-assist/direct-prompting-end-to-end/PROMPT.md
+ * (the fenced block between BEGIN/END PROMPT).
+ */
 
-This file **is** the prompt. Copy it from Admin → **Create Contest** → **Copy
-AI Prompt → From URL** — or copy everything inside the `=== BEGIN PROMPT ===`
-/ `=== END PROMPT ===` fence below into your AI chatbox, replace the single
-`<CAMPAIGN_URL>` placeholder, and send. The AI will curl the page, extract the
-TnC, build `contest.json`, and POST it as a **draft** to the JomContest Edge
-Function — landing it in the Admin panel for a human to approve.
-
-**For a first test**, append this single line to your message so the AI skips
-the submit step and just shows you the JSON:
-
-```
-DRY RUN: skip the SUBMIT step and just show me contest.json.
-```
-
-> **Admin UI copy:** the fenced prompt below is also exported to
-> `packages/app/features/admin/contestCursorPrompt.ts` for the
-> **Copy AI Prompt → From URL** button. After editing this file, run
-> `yarn sync-ingest-prompts` from the repo root.
-
-```text
-=== BEGIN PROMPT ===
-You are the contest-ingestion editor for JomContest.com, a Malaysian contest
+export const CURSOR_INGEST_PROMPT = `You are the contest-ingestion editor for JomContest.com, a Malaysian contest
 catalogue app. I will give you the URL of ONE Malaysian contest's public
 campaign page. Your job: fetch the page and its TnC with curl, read the TnC,
 turn it into a single JSON payload, and POST that payload to our ingest API
@@ -39,9 +25,9 @@ SCOPE — what's in and out:
   in one sentence — do NOT switch to a browser, do NOT improvise.
 
 LENIENCY — never block a draft on a recoverable failure:
-- Image fetch fails (404, 403, timeout, wrong Content-Type, `file` reports
+- Image fetch fails (404, 403, timeout, wrong Content-Type, \`file\` reports
   HTML instead of an image, image under 1000px): DELETE that image from
-  ./images/ and OMIT the `images` array in contest.json. Note the gap in
+  ./images/ and OMIT the \`images\` array in contest.json. Note the gap in
   the final report. Do NOT retry more than once. A draft with no images is
   perfectly submittable — the admin can add images in the panel.
 - TnC fetch fails (404, 403, timeout): if you already have enough info from
@@ -73,15 +59,15 @@ STEPS — do these in order, narrating each command and its result briefly:
        ├── contest.json          ← the final payload (the only thing submitted)
        └── images/
            └── 01-banner.jpg     ← downloaded key visual for audit
-   a. RUNS="$HOME/JomContest/runs"; mkdir -p "$RUNS"; TODAY=$(date +%Y-%m-%d)
+   a. RUNS="\$HOME/JomContest/runs"; mkdir -p "\$RUNS"; TODAY=\$(date +%Y-%m-%d)
    b. Fetch into a temp dir first — we need the page <title> to name the
       folder. Use a desktop User-Agent for all curl calls in this run:
         UA="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
-        TMP=$(mktemp -d)
-        curl -sL -A "$UA" "<CAMPAIGN_URL>" -o "$TMP/landing.html"
-   c. ANTI-BOT CHECK: if "$TMP/landing.html" is empty, or contains any of
+        TMP=\$(mktemp -d)
+        curl -sL -A "\$UA" "<CAMPAIGN_URL>" -o "\$TMP/landing.html"
+   c. ANTI-BOT CHECK: if "\$TMP/landing.html" is empty, or contains any of
       "Just a moment", "cf-challenge", "enable JavaScript", run
-      `rm -rf "$TMP"` and STOP — this page is out of scope (see SCOPE).
+      \`rm -rf "\$TMP"\` and STOP — this page is out of scope (see SCOPE).
    d. DERIVE <slug>: read <title> (and og:site_name if present) from
       landing.html and combine with the URL host. Pick host brand +
       campaign in kebab-case, ASCII-only, lowercase, [a-z0-9-] only
@@ -90,12 +76,12 @@ STEPS — do these in order, narrating each command and its result briefly:
           → ntpm-jom-cuti-cuti-malaysia
         giant.com.my/campaigns/nestle + "Supermarket Sweep Bersama Nestlé"
           → giant-supermarket-sweep-nestle
-   e. RUN_DIR="$RUNS/$TODAY-<slug>". If it already exists, append -2, -3,
+   e. RUN_DIR="\$RUNS/\$TODAY-<slug>". If it already exists, append -2, -3,
       … until free (so re-runs on the same day don't overwrite).
-   f. mkdir -p "$RUN_DIR/images" && mv "$TMP/landing.html" "$RUN_DIR/" \
-        && rmdir "$TMP" 2>/dev/null
-   g. cd "$RUN_DIR". Every subsequent step runs from here. All file paths
-      below are relative to $RUN_DIR.
+   f. mkdir -p "\$RUN_DIR/images" && mv "\$TMP/landing.html" "\$RUN_DIR/" \\
+        && rmdir "\$TMP" 2>/dev/null
+   g. cd "\$RUN_DIR". Every subsequent step runs from here. All file paths
+      below are relative to \$RUN_DIR.
 
 2. FIND THE TnC LINK AND THE KEY IMAGES in ./landing.html.
    - TnC link: search landing.html for <a href> whose anchor text or filename
@@ -106,7 +92,7 @@ STEPS — do these in order, narrating each command and its result briefly:
      and/or anything named *banner* / *poster*. REJECT anything named like a
      template asset (left-img, right-img, placeholder, bg-pattern, logo) and
      anything whose Content-Type or byte size looks like an icon (HEAD it
-     with `curl -sI <url>` first). Promo microsites often reuse stale images
+     with \`curl -sI <url>\` first). Promo microsites often reuse stale images
      from OTHER brands' campaigns — when in doubt, view it before keeping it.
      Download each KEPT image into ./images/ with a 01-, 02-, … prefix
      (01-banner.jpg for the key visual). Rejected candidates: do not save.
@@ -114,7 +100,7 @@ STEPS — do these in order, narrating each command and its result briefly:
 3. FETCH THE TnC AND EXTRACT ITS TEXT.
    - PDF TnC (URL-encode spaces and the & character — e.g. "T&C - X.pdf"
      becomes "T%26C%20-%20X.pdf"):
-       curl -sL -A "$UA" "<encoded-tnc-url>" -o tnc-official.pdf
+       curl -sL -A "\$UA" "<encoded-tnc-url>" -o tnc-official.pdf
        pdftotext -layout tnc-official.pdf tnc-official.txt
    - HTML TnC page: strip tags to plain text. WordPress sites often expose
      clean content at /wp-json/wp/v2/pages?slug=<page-slug> — try that
@@ -192,12 +178,12 @@ STEPS — do these in order, narrating each command and its result briefly:
      allows.
    - EXCLUDE eligibility info (e.g. "open to Malaysians only").
 
-5. SANITY-CHECK IMAGES. Run `file ./images/<name>` on each kept image. A
+5. SANITY-CHECK IMAGES. Run \`file ./images/<name>\` on each kept image. A
    real JPEG/PNG at ≥1000px on one side passes; anything else fails the
    check. Apply the LENIENCY rule above (delete + omit + note, retry at
    most once with a different candidate).
 
-6. SAVE the JSON to ./contest.json (in $RUN_DIR, where you are now).
+6. SAVE the JSON to ./contest.json (in \$RUN_DIR, where you are now).
 
 7. VALIDATE LOCALLY — run this exact script and confirm it prints "OK"
    before submitting. If it prints FAIL, fix every listed field and re-run
@@ -209,22 +195,22 @@ STEPS — do these in order, narrating each command and its result briefly:
    const reqEn = ["prizes","eligible_products","eligible_participants","eligible_stores","winners_selection_method","entry_method","winners_list_and_announcement","winners_comm_and_timeline"];
    const e = [];
    for (const k of ["title","summary","start_date","end_date"])
-     if (!String(j.contest?.[k] ?? "").trim()) e.push(`contest.${k} is required`);
+     if (!String(j.contest?.[k] ?? "").trim()) e.push(\`contest.\${k} is required\`);
    for (const [k,m] of Object.entries({title:100,title_ms:100,summary:200,summary_ms:200}))
-     if ((j.contest?.[k]||"").length > m) e.push(`contest.${k}=${(j.contest[k]||"").length}>${m}`);
+     if ((j.contest?.[k]||"").length > m) e.push(\`contest.\${k}=\${(j.contest[k]||"").length}>\${m}\`);
    for (const f of reqEn)
-     if (!String(j.translations?.en?.[f] ?? "").trim()) e.push(`translations.en.${f} is required`);
+     if (!String(j.translations?.en?.[f] ?? "").trim()) e.push(\`translations.en.\${f} is required\`);
    for (const loc of ["en","ms"]) for (const [f,m] of Object.entries(L))
      if (j.translations?.[loc]?.[f] && j.translations[loc][f].length > m)
-       e.push(`translations.${loc}.${f}=${j.translations[loc][f].length}>${m}`);
-   console.log(e.length ? "FAIL:\n" + e.join("\n") : "OK");
+       e.push(\`translations.\${loc}.\${f}=\${j.translations[loc][f].length}>\${m}\`);
+   console.log(e.length ? "FAIL:\\n" + e.join("\\n") : "OK");
    '
 
 8. SUBMIT — UNLESS this is a DRY RUN. Run exactly:
    set -a; [ -f ~/JomContest/.env ] && . ~/JomContest/.env; set +a
-   curl -s -X POST "https://abdaylmwkcmxmsvagfch.supabase.co/functions/v1/ingest-contest" \
-     -H "content-type: application/json" \
-     -H "x-ingest-key: $INGEST_CONTEST_KEY" \
+   curl -s -X POST "https://abdaylmwkcmxmsvagfch.supabase.co/functions/v1/ingest-contest" \\
+     -H "content-type: application/json" \\
+     -H "x-ingest-key: \$INGEST_CONTEST_KEY" \\
      --data-binary @contest.json
 
    Interpret the response per the LENIENCY block above. Summary:
@@ -237,7 +223,7 @@ STEPS — do these in order, narrating each command and its result briefly:
    - 500 mentioning something else, or 401 → report verbatim and STOP.
 
 FINAL REPORT — after submit (or in DRY RUN, after step 7), give me:
-   - **the run folder path** ($RUN_DIR) — everything from this run lives
+   - **the run folder path** (\$RUN_DIR) — everything from this run lives
      there for audit and re-runs,
    - the contest title (EN + MS) and date range you extracted,
    - the TnC source URL,
@@ -247,169 +233,4 @@ FINAL REPORT — after submit (or in DRY RUN, after step 7), give me:
    - any gaps: fields where the TnC was silent, links you couldn't find,
      images you couldn't fetch.
 
-Then STOP. Do not loop, do not retry on success, do not attempt to publish.
-=== END PROMPT ===
-```
-
----
-
-## Appendix — human-facing notes (do NOT paste into the chatbot)
-
-Everything below this line is reference material for the human operator. The
-AI never needs to see it; the prompt above is self-contained.
-
-### Wait — will this work in Gemini / ChatGPT web?
-
-**No.** This prompt needs a shell. The 8 steps use `curl`, `pdftotext`,
-`grep`, and `node`, plus a local `~/JomContest/.env` file for the ingest key
-— none of which exist in `gemini.google.com/app` or `chatgpt.com`. Hosted
-chatbots (Gemini, ChatGPT, Claude.ai web) can:
-
-- fetch a URL through their search integration, but only a **summary**, not
-  the raw HTML — useless for finding a "Terma dan Syarat" PDF link in a
-  footer;
-- read a PDF you **upload** natively (so `pdftotext` isn't needed);
-- build the JSON well;
-- **NOT** POST to your Edge Function (no shell, no `INGEST_CONTEST_KEY` on
-  your machine — and you should never paste the key into a third-party
-  chatbot anyway).
-
-For hosted chatbots, use the **Prompt B** flow instead:
-
-1. JomContest Admin → **Create Contest** → **Copy AI Prompt → From T&C**
-   (source of truth: `packages/app/features/admin/contestJsonPrompt.ts`).
-2. Paste that prompt into Gemini/ChatGPT **along with the TnC** — either
-   paste the text or upload the PDF (no `pdftotext` needed; they read PDFs
-   natively).
-3. Copy the chatbot's `json` code block.
-4. Bring it back one of two ways:
-   - **Admin UI** → Create Contest → **Paste JSON** / **Import (.json)** —
-     no key, no shell, fully human review. Easiest.
-   - **Shell on your machine** → save as `contest.json`, run the curl POST
-     from step 8 of the prompt above (this is "Prompt A½" in
-     [`../autoclaw-needs-tuning/PROMPT.md`](../autoclaw-needs-tuning/PROMPT.md)).
-
-The folder split mirrors the runtime split: this folder is end-to-end on
-shell-equipped AIs (Cursor, Claude Code, OpenClaw, AutoClaw); the
-[`../autoclaw-needs-tuning/`](../autoclaw-needs-tuning/) folder covers the
-Gemini/ChatGPT-web + human-submits path.
-
-### When this prompt works, and when it doesn't
-
-| ✅ Works (paste the URL and go) | ❌ Will refuse — use [`../autoclaw-needs-tuning/`](../autoclaw-needs-tuning/) instead |
-| --- | --- |
-| Direct campaign microsites (mypromotions.my, giant.com.my, brand.com.my/campaigns, WordPress landing pages) | Facebook / Instagram / TikTok / X posts — login-gated + bot-checked |
-| Host brands' own `.com.my` TnC pages | Aggregator pages (*Kaki Peraduan…*) that point at FB posts |
-| PDF TnCs hosted on the brand's domain or its promo platform | Anything behind a Cloudflare "verify you're human" wall |
-| Plain-HTML prize / contest pages | Sites that JS-render all content (curl gets an empty shell) |
-
-The prompt is hard-coded to STOP when it hits one of the ❌ cases. That's
-deliberate — the browser-assisted AutoClaw flow is the right tool there, and
-a confused half-result from curl is worse than a clean "this URL is out of
-scope, use the other prompt".
-
-### One-time key setup
-
-The submit step sources `~/JomContest/.env`, which must contain exactly one
-line:
-
-```
-INGEST_CONTEST_KEY=<the secret set in Supabase Edge Function secrets>
-```
-
-Create it once:
-
-```bash
-mkdir -p ~/JomContest
-echo 'INGEST_CONTEST_KEY=<your key>' >> ~/JomContest/.env
-```
-
-**Rotate** any time — generate a new key, set it as the function secret, and
-overwrite the local file. The curl snippet reads the file at submit time, so
-rotation takes effect on the next run with nothing to restart:
-
-```bash
-openssl rand -hex 32                                         # 1. new key
-supabase secrets set INGEST_CONTEST_KEY="<new-key>"          # 2. set in Supabase
-echo 'INGEST_CONTEST_KEY=<new-key>' > ~/JomContest/.env      # 3. update local
-```
-
-Only the SUBMIT step needs the key. Dry runs and the browser-chatbot path
-never see it.
-
-### Run folder layout and lifecycle
-
-Each run of this prompt writes everything to one dated folder:
-
-```
-~/JomContest/runs/
-├── 2026-07-13-ntpm-jom-cuti-cuti-malaysia/
-│   ├── landing.html
-│   ├── tnc-official.pdf
-│   ├── tnc-official.txt
-│   ├── contest.json
-│   └── images/01-banner.jpg
-├── 2026-07-14-giant-supermarket-sweep-nestle/
-└── 2026-07-14-ntpm-jom-cuti-cuti-malaysia-2/    ← same-day re-run gets -2
-```
-
-This mirrors the `~/JomContest/inbox/<slug>/` convention the AutoClaw scout
-flow uses (see [`../autoclaw-needs-tuning/SCOUT.md`](../autoclaw-needs-tuning/SCOUT.md))
-— same brand of folder, same artifacts, just produced by curl instead of a
-browser. Differences:
-
-| | this curl flow | AutoClaw scout |
-| --- | --- | --- |
-| Folder root | `~/JomContest/runs/` | `~/JomContest/inbox/` |
-| Folder name | `<YYYY-MM-DD>-<slug>` (date-prefixed, never collides) | `<slug>` (date lives inside `lead.md`) |
-| Also writes | `contest.json` (built + submitted inline) | `contest.json` + `tnc-official.md` + `lead.md` (review package; submission is a separate step) |
-
-**Lifecycle:**
-
-- After a contest is approved in `/admin` and live, the run folder can be
-  moved to `~/JomContest/archive/` (matching the scout convention). The AI
-  doesn't do this automatically — it's a one-line `mv` for the human.
-- Re-runs on the same day get `-2`, `-3`, … suffixes (the prompt handles
-  this in step 1e). Earlier folders are never overwritten, so you can diff
-  two runs of the same contest.
-- If a contest is rejected during admin review, the run folder is the audit
-  trail — `landing.html` + `tnc-official.pdf` prove what the AI saw.
-
-### Safety invariant (read once)
-
-Every ingest path — this curl flow, the AutoClaw pipeline, even a human
-admin's JWT — lands the contest with `visibility = 'admin'`. The Edge
-Function hard-codes this in [`../../index.ts`](../../index.ts); **no AI or
-curl call can publish a contest**. Three independent guards:
-
-1. The Edge Function ignores any visibility the AI sends and forces
-   `'admin'`.
-2. The submit endpoint only accepts the shared secret (`x-ingest-key`) or a
-   human admin's JWT — the AI never holds an admin session.
-3. Flipping visibility to `users`/`any` is a separate write that requires an
-   admin JWT — there is no AI path to it.
-
-Treat the AI as a draft factory. The human always clicks publish.
-
-### Trial run — NTPM Jom Cuti-Cuti Malaysia (validated 2026-07-13)
-
-The [`trial/`](./trial/) folder is a complete worked run of this prompt
-against `https://ntpmcontest2026.mypromotions.my/`. It contains:
-
-| File | What it is |
-| --- | --- |
-| `landing.html` | curl of the landing page |
-| `tnc-official.pdf` | the 23-page "Terma dan Syarat" PDF (575 KB) |
-| `tnc-official.txt` | `pdftotext -layout` extraction |
-| `images/01-banner.jpg` | the 2560×1200 campaign banner (538 KB) |
-| `contest.json` | the uploadable payload, 0 errors / 0 over-limit |
-| `README.md` | step-by-step, with the actual curl commands and findings |
-
-The `trial/` folder itself is a snapshot of what `$RUN_DIR` looks like after
-a successful run — same files, same layout. On a real run the AI writes them
-to `~/JomContest/runs/2026-07-13-ntpm-jom-cuti-cuti-malaysia/` instead.
-
-Reproduce it by pasting the prompt above into a shell-equipped chatbot with
-`<CAMPAIGN_URL> = https://ntpmcontest2026.mypromotions.my/`. The expected
-result matches `trial/contest.json` and lands as a draft at the returned
-`reviewUrl`.
+Then STOP. Do not loop, do not retry on success, do not attempt to publish.`

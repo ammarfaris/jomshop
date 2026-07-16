@@ -18,7 +18,9 @@
     "build": "cd apps/next && yarn build",
     "extract": "lingui extract --clean",
     "extract-orig": "lingui extract",
-    "compile": "lingui compile --typescript"
+    "compile": "lingui compile --typescript",
+    "sync-ingest-prompts": "node scripts/sync-ingest-prompts.mjs",
+    "sync-ingest-prompts:test": "bash scripts/sync-ingest-prompts.test.sh"
   },
   "packageManager": "yarn@4.14.1",
   "eslintConfig": {

@@ -47,8 +47,8 @@ import {
   CONTEST_JSON_TEXT_KEYS,
   type ParseReport,
 } from './contestJsonIO'
-import { CONTEST_JSON_PROMPT } from './contestJsonPrompt'
-import { copyToClipboard, readFromClipboard } from 'app/lib/clipboard'
+import { CopyAiPromptMenu } from './CopyAiPromptMenu'
+import { readFromClipboard } from 'app/lib/clipboard'
 
 interface CreateContestTabContentProps {
   user: any
@@ -397,20 +397,6 @@ export default function CreateContestTabContent({
       return
     }
     applyImportReport(parseContestJson(raw), 'clipboard')
-  }
-
-  // Copies the T&C → JSON conversion prompt for any browser chatbot
-  // (Perplexity / ChatGPT / Claude). Paste it there with the contest's T&C,
-  // then bring the returned JSON back via Import (.json) or Paste JSON.
-  const handleCopyPrompt = async () => {
-    const ok = await copyToClipboard(CONTEST_JSON_PROMPT)
-    if (ok) {
-      toast.success(
-        'AI prompt copied — paste it into Perplexity/ChatGPT together with the T&C.'
-      )
-    } else {
-      toast.error('Could not copy the prompt to the clipboard')
-    }
   }
 
   const generateSlug = () => {
@@ -802,14 +788,7 @@ export default function CreateContestTabContent({
             >
               <Text className="text-xs font-semibold">Paste JSON</Text>
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="px-3 py-1"
-              onPress={handleCopyPrompt}
-            >
-              <Text className="text-xs font-semibold">Copy AI Prompt</Text>
-            </Button>
+            <CopyAiPromptMenu />
             <Button
               size="sm"
               variant="outline"

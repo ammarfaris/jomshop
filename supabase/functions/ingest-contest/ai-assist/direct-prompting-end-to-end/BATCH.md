@@ -27,12 +27,19 @@ scale up.
 1. Make sure `~/JomContest/.env` contains `INGEST_CONTEST_KEY=<your key>`
    (same as the single-contest flow — see
    [`PROMPT.md` appendix](./PROMPT.md#one-time-key-setup)).
-2. Copy everything inside `=== BEGIN PROMPT ===` / `=== END PROMPT ===` below.
+2. Copy the prompt from Admin → **Create Contest** → **Copy AI Prompt → From
+   URLs (batch)** — or copy everything inside `=== BEGIN PROMPT ===` /
+   `=== END PROMPT ===` below.
 3. Replace the `<URL_1>`, `<URL_2>`, … lines with your actual URLs. Add or
    remove lines freely — the AI reads the list, doesn't count them.
 4. **For a first test**, append `DRY RUN: skip every SUBMIT step and just
    show me the per-URL contest.json files.` so you can verify the loop
    without posting anything.
+
+> **Admin UI copy:** the fenced prompt below is also exported to
+> `packages/app/features/admin/contestCursorBatchPrompt.ts` for the
+> **Copy AI Prompt → From URLs (batch)** button. After editing this file, run
+> `yarn sync-ingest-prompts` from the repo root.
 
 ```text
 === BEGIN PROMPT ===

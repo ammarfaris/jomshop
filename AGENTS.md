@@ -27,6 +27,12 @@ Facts an AI agent needs to work on this repo without re-discovering them.
 - `yarn web` — Next.js dev server
 - `yarn workspace app test` — Jest tests for the shared package
 - Typecheck an app: `yarn tsc --noEmit` inside `apps/expo` or `apps/next`
+- `yarn sync-ingest-prompts` — after editing the fenced prompt in
+  `supabase/functions/ingest-contest/ai-assist/direct-prompting-end-to-end/PROMPT.md`
+  or `BATCH.md`, run this to regenerate
+  `packages/app/features/admin/contestCursorPrompt.ts` and
+  `contestCursorBatchPrompt.ts` (Admin **Copy AI Prompt** dropdown). Do not
+  hand-edit the generated `.ts` files.
 
 ## Gotchas
 
