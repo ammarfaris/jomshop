@@ -38,9 +38,40 @@ const CONTESTS_BUCKET = 'contests'
 const MAX_IMAGES = 10
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024 // 15 MB per image
 const MAX_IMAGE_REDIRECTS = 5
+const MAX_RELATION_IDS = 50
 
-// Contest-level max lengths (mirror createContestSchema.ts).
-const CONTEST_LIMITS = { title: 100, title_ms: 100, summary: 200, summary_ms: 200 }
+// Contest-level max lengths (mirror createContestSchema.ts / DB CHECK constraints).
+const CONTEST_LIMITS = {
+  title: 100,
+  title_ms: 100,
+  summary: 200,
+  summary_ms: 200,
+  slug: 200,
+  link_aff_shopee: 1000,
+  link_aff_lazada: 1000,
+  link_aff_tiktok_shop: 1000,
+  link_media_instagram: 400,
+  link_media_facebook: 400,
+  link_media_tiktok: 200,
+  link_media_x: 200,
+  link_media_youtube: 200,
+  link_media_linkedin: 400,
+  link_media_website: 400,
+}
+
+// Canonical contest link columns -> accepted payload keys (short schema key first).
+const CONTEST_LINK_ALIASES = {
+  link_aff_shopee: ['aff_shopee', 'link_aff_shopee'],
+  link_aff_lazada: ['aff_lazada', 'link_aff_lazada'],
+  link_aff_tiktok_shop: ['aff_tiktok_shop', 'link_aff_tiktok_shop'],
+  link_media_instagram: ['instagram', 'link_media_instagram'],
+  link_media_facebook: ['facebook', 'link_media_facebook'],
+  link_media_tiktok: ['tiktok', 'link_media_tiktok'],
+  link_media_x: ['x', 'twitter', 'link_media_x'],
+  link_media_youtube: ['youtube', 'link_media_youtube'],
+  link_media_linkedin: ['linkedin', 'link_media_linkedin'],
+  link_media_website: ['website', 'link_media_website'],
+} as const
 
 // Per-locale translation field max lengths (mirror createContestSchema.ts).
 const TRANSLATION_LIMITS: Record<string, number> = {
@@ -85,6 +116,16 @@ function json(body: unknown, status = 200): Response {
 function clean(s: unknown): string | null {
   const v = (s ?? '').toString().trim()
   return v.length ? v : null
+}
+
+function isHttpUrl(v: string): boolean {
+  return /^https?:\/\/.+/i.test(v)
+}
+
+function isUuid(v: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    v,
+  )
 }
 
 // Mirrors adminTransforms.slugify so ingested slugs match the app's convention.
@@ -200,6 +241,34 @@ function validatePayload(body: any): { errors: string[]; start: Date | null; end
   const summaryMs = clean(contest.summary_ms)
   if (summaryMs && summaryMs.length > CONTEST_LIMITS.summary_ms)
     errors.push(`contest.summary_ms exceeds ${CONTEST_LIMITS.summary_ms} chars`)
+  const slug = clean(contest.slug)
+  if (slug && slug.length > CONTEST_LIMITS.slug)
+    errors.push(`contest.slug exceeds ${CONTEST_LIMITS.slug} chars`)
+
+  const links =
+    contest?.links && typeof contest.links === 'object'
+      ? (contest.links as Record<string, unknown>)
+      : (contest as Record<string, unknown>)
+  for (const [field, aliases] of Object.entries(CONTEST_LINK_ALIASES)) {
+    let val: string | null = null
+    for (const key of aliases) {
+      const candidate = clean(links[key])
+      if (candidate) {
+        val = candidate
+        break
+      }
+    }
+    const limit = CONTEST_LIMITS[field as keyof typeof CONTEST_LIMITS]
+    if (val && limit) {
+      if (!isHttpUrl(val)) {
+        errors.push(
+          `contest.links.${aliases[0]} must start with http:// or https://`,
+        )
+      } else if (val.length > limit) {
+        errors.push(`contest.links.${aliases[0]} exceeds ${limit} chars`)
+      }
+    }
+  }
 
   const start = parseDate(contest.start_date)
   if (!start) errors.push('contest.start_date is required (ISO date/time)')
@@ -220,8 +289,20 @@ function validatePayload(body: any): { errors: string[]; start: Date | null; end
   ] as const) {
     for (const f of TRANSLATION_FIELDS) {
       const val = clean((obj as Record<string, unknown>)[f])
-      if (val && val.length > TRANSLATION_LIMITS[f])
-        errors.push(`translations.${locale}.${f} exceeds ${TRANSLATION_LIMITS[f]} chars`)
+      if (val) {
+        if (f === 'link_tnc' || f === 'link_faq') {
+          if (!isHttpUrl(val)) {
+            errors.push(
+              `translations.${locale}.${f} must start with http:// or https://`,
+            )
+          }
+        }
+        if (val.length > TRANSLATION_LIMITS[f]) {
+          errors.push(
+            `translations.${locale}.${f} exceeds ${TRANSLATION_LIMITS[f]} chars`,
+          )
+        }
+      }
     }
   }
 
@@ -237,6 +318,25 @@ function validatePayload(body: any): { errors: string[]; start: Date | null; end
         if (!im.url && !im.base64)
           errors.push(`images[${i}] must have a url or base64`)
       }
+  }
+
+  // host/category relation ids: bounded arrays of UUIDs.
+  for (const [field, value] of [
+    ['host_ids', body?.host_ids],
+    ['category_ids', body?.category_ids],
+  ] as const) {
+    if (value == null) continue
+    if (!Array.isArray(value)) {
+      errors.push(`${field} must be an array`)
+      continue
+    }
+    if (value.length > MAX_RELATION_IDS) {
+      errors.push(`${field} exceeds the max of ${MAX_RELATION_IDS}`)
+    }
+    for (let i = 0; i < value.length; i++) {
+      const id = String(value[i] ?? '').trim()
+      if (!isUuid(id)) errors.push(`${field}[${i}] must be a UUID`)
+    }
   }
 
   return { errors, start, end }
@@ -280,7 +380,7 @@ function contestCoreFromPayload(contest: any, slug: string) {
     link_media_instagram: clean(links.link_media_instagram ?? links.instagram),
     link_media_facebook: clean(links.link_media_facebook ?? links.facebook),
     link_media_tiktok: clean(links.link_media_tiktok ?? links.tiktok),
-    link_media_x: clean(links.link_media_x ?? links.x),
+    link_media_x: clean(links.link_media_x ?? links.x ?? links.twitter),
     link_media_youtube: clean(links.link_media_youtube ?? links.youtube),
     link_media_linkedin: clean(links.link_media_linkedin ?? links.linkedin),
     link_media_website: clean(links.link_media_website ?? links.website),

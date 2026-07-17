@@ -27,14 +27,10 @@ import {
   type ContestSearchResult,
 } from 'app/lib/supabase/admin'
 import { TrashOutline } from 'app/components/icons-svg/TrashOutline'
-import { EyeOutline } from 'app/components/icons-svg/EyeOutline'
 import { useRouter } from 'app/lib/router-universal'
 
 type Props = {
   containerMaxWidth: number
-  // Switch the admin screen to the Edit tab with this slug pre-filled, so the
-  // admin can review and publish the draft in one flow.
-  onOpenInEditTab: (slug: string) => void
 }
 
 type DraftContest = {
@@ -80,10 +76,7 @@ function formatRange(start?: string | null, end?: string | null): string {
   return '—'
 }
 
-export default function DraftsTabContent({
-  containerMaxWidth,
-  onOpenInEditTab,
-}: Props) {
+export default function DraftsTabContent({ containerMaxWidth }: Props) {
   const colorScheme = useColorScheme()
   const [drafts, setDrafts] = useState<DraftContest[]>([])
   const [hostsByContest, setHostsByContest] = useState<
@@ -176,8 +169,9 @@ export default function DraftsTabContent({
           </View>
           <Text className="text-sm text-gray-600 dark:text-gray-400">
             Contests ingested by the AI (or any path) at
-            visibility=admin — invisible to users until you review and publish
-            them in the Edit tab.
+            visibility=admin — invisible to users until you review them.
+            Review opens the contest page in Edit Both mode; publish by
+            changing its visibility there.
           </Text>
         </View>
 
@@ -204,7 +198,6 @@ export default function DraftsTabContent({
                 key={draft.$id}
                 draft={draft}
                 hosts={hostsByContest[draft.$id] ?? []}
-                onOpenInEditTab={onOpenInEditTab}
                 onDelete={handleDeleteClick}
               />
             ))}
@@ -254,20 +247,25 @@ export default function DraftsTabContent({
 function DraftCard({
   draft,
   hosts,
-  onOpenInEditTab,
   onDelete,
 }: {
   draft: DraftContest
   hosts: DraftHost[]
-  onOpenInEditTab: (slug: string) => void
   onDelete: (draft: DraftContest) => void
 }) {
   const router = useRouter()
-  // Open the read-only contest detail page for this draft. Admins can preview
-  // visibility='admin' rows thanks to RLS (fetchContestDetailSupabase lifts the
-  // visibility filter for admins). On web we open in a new tab so the admin
-  // keeps their place in the Drafts list; on native we navigate in-app.
-  const handleView = () => {
+  // Review = open the contest detail page with Edit Both preselected. Admins
+  // can view visibility='admin' rows thanks to RLS. The mode is preset via the
+  // same localStorage key the detail page's toggle persists to (web only —
+  // native has no localStorage, and phones are too narrow for Edit Both, so
+  // the detail page falls back to its own default there). On web we open a
+  // new tab so the admin keeps their place in the Drafts list.
+  const handleReview = () => {
+    try {
+      window.localStorage.setItem('admin-contest-lang-mode', 'both-edit')
+    } catch {
+      // no localStorage (native / private mode) — detail page uses its default
+    }
     const path = `/contest/${draft.slug}`
     if (Platform.OS === 'web') {
       window.open(path, '_blank', 'noopener,noreferrer')
@@ -292,19 +290,12 @@ function DraftCard({
         </View>
         <View className="flex-row gap-2">
           <Pressable
-            onPress={handleView}
-            className="flex-row items-center bg-gray-600 dark:bg-gray-700 px-3 py-1.5 rounded"
-            accessibilityLabel="View contest preview"
-            accessibilityHint="Opens the admin-only preview of this draft"
+            onPress={handleReview}
+            className="bg-yellow-500 px-3 py-1.5 rounded"
+            accessibilityLabel="Review draft"
+            accessibilityHint="Opens the contest page in Edit Both mode"
           >
-            <EyeOutline width={14} height={14} className="text-white" />
-            <Text className="text-white text-xs font-semibold ml-1.5">View</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => onOpenInEditTab(draft.slug)}
-            className="bg-main px-3 py-1.5 rounded"
-          >
-            <Text className="text-white text-xs font-semibold">Review</Text>
+            <Text className="text-black text-xs font-semibold">Review</Text>
           </Pressable>
           <Pressable
             onPress={() => onDelete(draft)}

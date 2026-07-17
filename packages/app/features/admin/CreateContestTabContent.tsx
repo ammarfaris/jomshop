@@ -38,6 +38,10 @@ import {
   createContestSchema,
   CreateContestFormData,
 } from './createContestSchema'
+import {
+  CONTEST_CHAR_LIMITS,
+  TRANSLATION_CHAR_LIMITS,
+} from './contestFieldLimits'
 import { DraggableHostBadge } from 'app/components/admin/DraggableHostBadge'
 import { DraggableCategoryBadge } from 'app/components/admin/DraggableCategoryBadge'
 import { detectSuspiciousLineBreaks } from 'app/utils/lineBreakDetection'
@@ -419,6 +423,9 @@ export default function CreateContestTabContent({
       .filter((p) => !!p && p.trim())
       .join('-')
     const generated = `${mainPart}-from-${start}-until-${end}`
+      .slice(0, CONTEST_CHAR_LIMITS.slug)
+      .replace(/^-+/, '')
+      .replace(/-+$/, '')
     setValue('slug', generated)
   }
 
@@ -1054,7 +1061,7 @@ export default function CreateContestTabContent({
             'input',
             true,
             false,
-            100
+            CONTEST_CHAR_LIMITS.title
           )}
           {renderLocaleFieldPair(
             'summary',
@@ -1065,7 +1072,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             false,
-            200
+            CONTEST_CHAR_LIMITS.summary
           )}
 
           {Platform.OS === 'web' ? (
@@ -1170,7 +1177,7 @@ export default function CreateContestTabContent({
             name="slug"
             render={({ field: { onChange, value } }) => {
               const charCount = value?.length || 0
-              const maxLength = 200
+              const maxLength = CONTEST_CHAR_LIMITS.slug
               const isOverLimit = charCount > maxLength
               return (
                 <View>
@@ -1223,7 +1230,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            1000
+            CONTEST_CHAR_LIMITS.link_aff_shopee
           )}
           {renderControlledField(
             'link_aff_lazada',
@@ -1233,7 +1240,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            1000
+            CONTEST_CHAR_LIMITS.link_aff_lazada
           )}
           {renderControlledField(
             'link_aff_tiktok_shop',
@@ -1243,7 +1250,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            1000
+            CONTEST_CHAR_LIMITS.link_aff_tiktok_shop
           )}
 
           <Text className="text-lg font-semibold mt-6 mb-2 text-black dark:text-white">
@@ -1258,7 +1265,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            400
+            CONTEST_CHAR_LIMITS.link_media_instagram
           )}
           {renderControlledField(
             'link_media_facebook',
@@ -1268,7 +1275,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            400
+            CONTEST_CHAR_LIMITS.link_media_facebook
           )}
           {renderControlledField(
             'link_media_tiktok',
@@ -1278,7 +1285,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            200
+            CONTEST_CHAR_LIMITS.link_media_tiktok
           )}
           {renderControlledField(
             'link_media_x',
@@ -1288,7 +1295,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            200
+            CONTEST_CHAR_LIMITS.link_media_x
           )}
           {renderControlledField(
             'link_media_youtube',
@@ -1298,7 +1305,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            200
+            CONTEST_CHAR_LIMITS.link_media_youtube
           )}
           {renderControlledField(
             'link_media_linkedin',
@@ -1308,7 +1315,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            400
+            CONTEST_CHAR_LIMITS.link_media_linkedin
           )}
           {renderControlledField(
             'link_media_website',
@@ -1318,7 +1325,7 @@ export default function CreateContestTabContent({
             false,
             false,
             false,
-            400
+            CONTEST_CHAR_LIMITS.link_media_website
           )}
 
           <Text className="text-lg font-semibold mt-6 mb-2 text-black dark:text-white">
@@ -1367,7 +1374,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             true,
-            1500,
+            TRANSLATION_CHAR_LIMITS.eligible_participants,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1379,7 +1386,7 @@ export default function CreateContestTabContent({
             'textarea',
             false,
             true,
-            1000,
+            TRANSLATION_CHAR_LIMITS.eligible_participants_exclusion,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1391,7 +1398,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             true,
-            2400,
+            TRANSLATION_CHAR_LIMITS.eligible_products,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1403,7 +1410,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             true,
-            2000,
+            TRANSLATION_CHAR_LIMITS.eligible_stores,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1415,7 +1422,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             true,
-            2000,
+            TRANSLATION_CHAR_LIMITS.prizes,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1427,7 +1434,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             true,
-            2000,
+            TRANSLATION_CHAR_LIMITS.entry_method,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1439,7 +1446,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             true,
-            2000,
+            TRANSLATION_CHAR_LIMITS.winners_selection_method,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1451,7 +1458,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             true,
-            1500,
+            TRANSLATION_CHAR_LIMITS.winners_comm_and_timeline,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1463,7 +1470,7 @@ export default function CreateContestTabContent({
             'textarea',
             true,
             true,
-            1000,
+            TRANSLATION_CHAR_LIMITS.winners_list_and_announcement,
             true // Enable line break detection
           )}
           {renderLocaleFieldPair(
@@ -1475,7 +1482,7 @@ export default function CreateContestTabContent({
             'input',
             false,
             false,
-            300
+            TRANSLATION_CHAR_LIMITS.link_tnc
           )}
           {renderLocaleFieldPair(
             'link_faq_en',
@@ -1486,7 +1493,7 @@ export default function CreateContestTabContent({
             'input',
             false,
             false,
-            300
+            TRANSLATION_CHAR_LIMITS.link_faq
           )}
 
           <Button

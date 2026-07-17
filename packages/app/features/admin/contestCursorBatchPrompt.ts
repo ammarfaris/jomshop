@@ -25,6 +25,25 @@ Read that file once at the start (steps 4 BUILD, CONTENT RULES, SUMMARY
 RULES, and step 7's length-check script apply unchanged). Do NOT deviate
 from the schema — same keys, same max lengths, same two locales (en + ms).
 
+ENTRY/LINK NORMALIZATION — apply these on every URL:
+- Keep light emoji usage in translation fields (minor only, as required by
+  PROMPT.md; no emoji in titles/summaries).
+- If \`entry_method\` includes WhatsApp, make the number clickable with
+  \`https://wa.me/<digits>\` (digits only, include country code).
+- In Markdown translation fields, make every shown URL clickable with a HARD
+  threshold: if URL length is ≤70 characters, keep full-url display as
+  clickable text (\`[https://example.com/path](https://example.com/path)\`); if
+  URL length is >70 characters, use a short descriptive clickable label
+  (\`[Official entry form](<url>)\`). Apply this to external links in
+  \`entry_method\` and other translation fields. Keep \`contest.links.*\` and
+  \`translations.*.link_tnc\` as raw URL strings.
+- Reconcile channels from TnC + landing page: if both a form/landing URL
+  (often QR destination) and WhatsApp/other method exist, include BOTH as
+  clearly separated options in \`entry_method\` for en + ms.
+- Reserve \`contest.links.website\` for organiser/brand official website only.
+  Do NOT set third-party form hosts, short links, or marketplace URLs as
+  \`website\`; include them in \`entry_method\` when they are entry channels.
+
 BATCH BEHAVIOR — this is what makes it batch mode:
 - Process URLs in the order given. For EACH URL, do all of: set up run
   folder → fetch → find TnC → fetch TnC → build contest.json → validate →
@@ -61,16 +80,16 @@ LENIENCY — continue-on-error, never abort the whole batch:
 PER-URL REPORT — after each URL, emit one line:
   [N] <slug> | <title> | <dates> | <status>
 where <status> is one of:
-  ✓ submitted (slug=<slug>, reviewUrl=<url>)
-  ✓ submitted, no images (image fetch failed — see run folder)
-  ✗ skipped: <one-line reason> (run folder: <path>)
-  ✗ submit failed: <HTTP status + one-line reason>
+  ✅ submitted (slug=<slug>, reviewUrl=<url>)
+  ✅ submitted, no images (image fetch failed — see run folder)
+  ❌ skipped: <one-line reason> (run folder: <path>)
+  ❌ submit failed: <HTTP status + one-line reason>
 Keep these lines short — the goal is a scannable summary at the end.
 
 FINAL SUMMARY — after the last URL, print a table:
   Total: <N> URLs processed
-  ✓ submitted: <count>  (of which <count> missing images)
-  ✗ skipped/failed: <count>
+  ✅ submitted: <count>  (of which <count> missing images)
+  ❌ skipped/failed: <count>
   Run folders: ~/JomContest/runs/<date>-*
 Then list the failed ones with one-line reasons, so I can decide whether to
 re-run them with the single-contest prompt (which gives them full attention).

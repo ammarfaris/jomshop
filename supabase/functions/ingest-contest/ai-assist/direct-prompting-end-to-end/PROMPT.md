@@ -97,7 +97,7 @@ STEPS — do these in order, narrating each command and its result briefly:
    g. cd "$RUN_DIR". Every subsequent step runs from here. All file paths
       below are relative to $RUN_DIR.
 
-2. FIND THE TnC LINK AND THE KEY IMAGES in ./landing.html.
+2. FIND THE TnC LINK, ENTRY CHANNELS, AND KEY IMAGES in ./landing.html.
    - TnC link: search landing.html for <a href> whose anchor text or filename
      contains any of (case-insensitive) "Terma", "Syarat", "Terms",
      "Condition", "T&C", "tnc". The footer "Terma dan Syarat" link is the
@@ -110,6 +110,10 @@ STEPS — do these in order, narrating each command and its result briefly:
      from OTHER brands' campaigns — when in doubt, view it before keeping it.
      Download each KEPT image into ./images/ with a 01-, 02-, … prefix
      (01-banner.jpg for the key visual). Rejected candidates: do not save.
+   - Entry channels: capture every concrete way to participate shown on the
+     landing page (current page form, CTA links/buttons, explicit "join now"
+     URLs, QR destination URL if provided as text/link, WhatsApp numbers).
+     Keep these for `translations.*.entry_method` together with TnC steps.
 
 3. FETCH THE TnC AND EXTRACT ITS TEXT.
    - PDF TnC (URL-encode spaces and the & character — e.g. "T&C - X.pdf"
@@ -143,6 +147,11 @@ STEPS — do these in order, narrating each command and its result briefly:
                               found on the page: website, facebook, instagram,
                               tiktok, x, youtube, aff_shopee, aff_lazada,
                               aff_tiktok_shop.
+                              `website` is ONLY for the organiser/brand's
+                              official website domain. Do NOT put third-party
+                              form hosts, short links, or marketplaces in
+                              `website`; include those entry URLs inside
+                              `translations.*.entry_method` instead.
 
    translations.en            REQUIRED object. Keys and max lengths:
      eligible_participants                ≤1500   REQUIRED
@@ -152,7 +161,10 @@ STEPS — do these in order, narrating each command and its result briefly:
      prizes                               ≤2000   REQUIRED (include the
                                                    prizes AND any per-
                                                    participant limit)
-     entry_method                         ≤2000   REQUIRED (step-by-step)
+    entry_method                         ≤2000   REQUIRED (step-by-step; if
+                                                  WhatsApp is used, include
+                                                  clickable
+                                                  `https://wa.me/<digits>`)
      winners_selection_method             ≤2000   REQUIRED
      winners_comm_and_timeline            ≤1500   REQUIRED
      winners_list_and_announcement        ≤1000   REQUIRED
@@ -173,11 +185,28 @@ STEPS — do these in order, narrating each command and its result briefly:
      paragraphs, **bold**, bullet lists, tables, and light emoji. NEVER put
      a section title/heading inside a value — the JSON key already is the
      title.
-   - EMOJI: sprinkle sparingly in translation fields as visual anchors
-     (e.g. 🎁 prizes, 📝 entry steps, 🛒 products, 🏪 stores, 🏆 winners).
-     At most one emoji per bullet or paragraph lead; never decorate every
-     line. No emoji in summary, summary_ms, or titles. Skip emoji in dense
-     or legal-heavy fields.
+  - EMOJI: include a minor amount in translation fields (at least one emoji
+    per locale across the translation object) as visual anchors (e.g. 🎁
+    prizes, 📝 entry steps, 🛒 products, 🏪 stores, 🏆 winners). At most one
+    emoji per bullet or paragraph lead; never decorate every line. No emoji
+    in summary, summary_ms, or titles. Skip emoji in dense or legal-heavy
+    fields.
+  - ENTRY METHOD RECONCILIATION: combine participation channels from both
+    TnC and landing page evidence. If the landing page itself is an entry
+    form/URL (often QR destination) and TnC also gives WhatsApp/other
+    instructions, include BOTH options clearly in `entry_method` (e.g.
+    Option 1/Option 2) for both locales.
+  - WHATSAPP LINKS: whenever `entry_method` includes WhatsApp, render the
+    number as a clickable Markdown link using `https://wa.me/<digits>`
+    (digits only, include country code, no spaces or symbols).
+  - LINK FORMAT (for Markdown translation fields): every URL shown in
+    `translations.*` must be clickable Markdown with a HARD threshold:
+    if URL length is ≤70 characters, show the full URL as link text
+    (`[https://example.com/path](https://example.com/path)`); if URL length
+    is >70 characters, use a concise descriptive link label
+    (`[Official entry form](https://very-long-url...)`). Apply this to all
+    external links in translation fields. Keep `contest.links.*` and
+    `translations.*.link_tnc` as raw URL strings (not Markdown).
    - Extract strictly; do not invent. If the TnC lacks info for a required
      field, write what is known and append "Not specified in T&C".
    - Both languages always: if the TnC is English-only, translate into
@@ -206,12 +235,19 @@ STEPS — do these in order, narrating each command and its result briefly:
    node -e '
    const j = JSON.parse(require("fs").readFileSync("contest.json","utf8"));
    const L = {prizes:2000,link_tnc:300,eligible_products:2400,eligible_participants:1500,eligible_participants_exclusion:1000,eligible_stores:2000,winners_selection_method:2000,entry_method:2000,winners_list_and_announcement:1000,winners_comm_and_timeline:1500};
+   const C = {title:100,title_ms:100,summary:200,summary_ms:200,slug:200};
+   const K = {website:400,facebook:400,instagram:400,tiktok:200,x:200,youtube:200,linkedin:400,aff_shopee:1000,aff_lazada:1000,aff_tiktok_shop:1000,link_media_website:400,link_media_facebook:400,link_media_instagram:400,link_media_tiktok:200,link_media_x:200,link_media_youtube:200,link_media_linkedin:400,link_aff_shopee:1000,link_aff_lazada:1000,link_aff_tiktok_shop:1000};
    const reqEn = ["prizes","eligible_products","eligible_participants","eligible_stores","winners_selection_method","entry_method","winners_list_and_announcement","winners_comm_and_timeline"];
    const e = [];
    for (const k of ["title","summary","start_date","end_date"])
      if (!String(j.contest?.[k] ?? "").trim()) e.push(`contest.${k} is required`);
-   for (const [k,m] of Object.entries({title:100,title_ms:100,summary:200,summary_ms:200}))
+   for (const [k,m] of Object.entries(C))
      if ((j.contest?.[k]||"").length > m) e.push(`contest.${k}=${(j.contest[k]||"").length}>${m}`);
+   const links = {...(j.contest||{}), ...(j.contest?.links||{})};
+   for (const [k,m] of Object.entries(K)) {
+     const v = links?.[k];
+     if (typeof v === "string" && v.length > m) e.push(`contest.links.${k}=${v.length}>${m}`);
+   }
    for (const f of reqEn)
      if (!String(j.translations?.en?.[f] ?? "").trim()) e.push(`translations.en.${f} is required`);
    for (const loc of ["en","ms"]) for (const [f,m] of Object.entries(L))

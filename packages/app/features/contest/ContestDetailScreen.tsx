@@ -60,10 +60,21 @@ import {
   AdminEditableDateRange,
   useAdminInlineContestSave,
 } from 'app/features/contest/components/AdminEditableField'
+import {
+  AdminVisibilitySelect,
+  AdminCategoriesEditor,
+  AdminHostsEditor,
+  AdminImagesEditor,
+} from 'app/features/contest/components/AdminContestMetaEditors'
 import type {
   ContestInlinePatch,
   TranslationInlineField,
 } from 'app/lib/supabase/admin'
+import { slugify } from 'app/lib/supabase/adminTransforms'
+import {
+  CONTEST_CHAR_LIMITS,
+  TRANSLATION_CHAR_LIMITS,
+} from 'app/features/admin/contestFieldLimits'
 
 // AdSense configuration
 const ADSENSE_PUBLISHER_ID = 'ca-pub-3985532721810420' // JomContest publisher ID
@@ -515,8 +526,8 @@ export default function ContestDetailScreen({
   }, [publicContestData?.contest?.hosts])
 
   // Admin-only language override on the contest detail page: admins can flip
-  // between EN / BM / Both View / Both Edit. Both modes render two side-by-side
-  // content trees; only Both Edit turns on the inline pencil editors — every
+  // between EN / BM / View Both / Edit Both. Both modes render two side-by-side
+  // content trees; only Edit Both turns on the inline pencil editors — every
   // other mode is view-only. The toggle itself is admin-gated (see header).
   // Non-admins always read from their persisted language preference.
   const [adminLangMode, setAdminLangMode] = useState<AdminLangMode | null>(
@@ -537,7 +548,7 @@ export default function ContestDetailScreen({
     }
   }, [adminLangMode, isAdmin])
 
-  // Default to Both Edit when the screen fits two columns, otherwise the
+  // Default to Edit Both when the screen fits two columns, otherwise the
   // admin's saved locale. A saved Both mode is likewise demoted to the saved
   // locale on narrow screens (both modes need the side-by-side layout).
   const resolvedAdminMode: AdminLangMode = (() => {
@@ -592,8 +603,203 @@ export default function ContestDetailScreen({
 
   // Admin-only inline editing (pencil icons per item). Saves patch a single
   // field and invalidate this page's detail query.
-  const { saveContestFields, saveTranslationField } =
-    useAdminInlineContestSave(id)
+  const {
+    saveContestFields,
+    saveTranslationField,
+    saveContestHosts,
+    saveContestCategories,
+    saveContestImages,
+  } = useAdminInlineContestSave(id)
+
+  // Required-field gaps that block a visibility change beyond 'admin' from
+  // the inline dropdown. Mirrors the create form's full submit validation:
+  // createContestSchema's EN requirements plus the checks that live outside
+  // the schema there (≥1 image, ≥1 host, ≥1 category).
+  const missingRequiredFields = useMemo(() => {
+    if (!contest) return []
+    const missing = new Set<string>()
+    const add = (msg: string) => missing.add(msg)
+    const pushIfOverLimit = (
+      value: string | null | undefined,
+      limit: number,
+      label: string,
+    ) => {
+      if (value && value.length > limit) {
+        add(`${label} exceeds ${limit} chars`)
+      }
+    }
+    if (!contest.title?.trim()) add('Title (EN)')
+    if (!contest.summary?.trim()) add('Summary (EN)')
+    if (!contest.slug?.trim()) add('Slug')
+    if (!contest.start_date) add('Start date')
+    if (!contest.end_date) add('End date')
+    if (contest.start_date && contest.end_date) {
+      const start = new Date(contest.start_date)
+      const end = new Date(contest.end_date)
+      if (
+        Number.isNaN(start.getTime()) ||
+        Number.isNaN(end.getTime()) ||
+        end.getTime() <= start.getTime()
+      ) {
+        add('End date must be after start date')
+      }
+    }
+    const contestLengthChecks: Array<[keyof typeof CONTEST_CHAR_LIMITS, string]> = [
+      ['title', 'Title (EN)'],
+      ['title_ms', 'Title (BM)'],
+      ['summary', 'Summary (EN)'],
+      ['summary_ms', 'Summary (BM)'],
+      ['slug', 'Slug'],
+      ['link_aff_shopee', 'Shopee affiliate link'],
+      ['link_aff_lazada', 'Lazada affiliate link'],
+      ['link_aff_tiktok_shop', 'TikTok Shop affiliate link'],
+      ['link_media_instagram', 'Instagram link'],
+      ['link_media_facebook', 'Facebook link'],
+      ['link_media_tiktok', 'TikTok link'],
+      ['link_media_x', 'X link'],
+      ['link_media_youtube', 'YouTube link'],
+      ['link_media_linkedin', 'LinkedIn link'],
+      ['link_media_website', 'Website link'],
+    ]
+    for (const [field, label] of contestLengthChecks) {
+      pushIfOverLimit(
+        contest[field as keyof Contest] as string | null | undefined,
+        CONTEST_CHAR_LIMITS[field],
+        label,
+      )
+    }
+
+    if (contestFiles.length === 0) add('At least one contest image')
+    if (contestHosts.length === 0) add('At least one host')
+    if (contestCategories.length === 0) add('At least one category')
+    const en = contestTranslationEnOwn
+    const ms = contestTranslationMsOwn
+    const requiredEn: Array<[string | undefined, string, number]> = [
+      [en.prizes, 'Prizes (EN)', TRANSLATION_CHAR_LIMITS.prizes],
+      [
+        en.eligible_products_and_purchases,
+        'Eligible Purchases & Products (EN)',
+        TRANSLATION_CHAR_LIMITS.eligible_products,
+      ],
+      [
+        en.eligible_participants,
+        'Eligible Participants (EN)',
+        TRANSLATION_CHAR_LIMITS.eligible_participants,
+      ],
+      [en.eligible_stores, 'Eligible Stores (EN)', TRANSLATION_CHAR_LIMITS.eligible_stores],
+      [
+        en.winners_selection_method,
+        'Winners Selection Method (EN)',
+        TRANSLATION_CHAR_LIMITS.winners_selection_method,
+      ],
+      [
+        en.entry_method_and_submission,
+        'Entry Method & Submission (EN)',
+        TRANSLATION_CHAR_LIMITS.entry_method,
+      ],
+      [
+        en.winners_comm_and_timeline,
+        'Winners Communication Channel & Timeline (EN)',
+        TRANSLATION_CHAR_LIMITS.winners_comm_and_timeline,
+      ],
+      [
+        en.winners_list_and_announcement,
+        'Winners List & Announcement (EN)',
+        TRANSLATION_CHAR_LIMITS.winners_list_and_announcement,
+      ],
+    ]
+    for (const [value, label, limit] of requiredEn) {
+      if (!value?.trim()) add(label)
+      pushIfOverLimit(value, limit, label)
+    }
+
+    const translationLengthChecks: Array<
+      [keyof ContestTranslationView, keyof typeof TRANSLATION_CHAR_LIMITS, string]
+    > = [
+      ['prizes', 'prizes', 'Prizes'],
+      ['eligible_products_and_purchases', 'eligible_products', 'Eligible Purchases & Products'],
+      ['eligible_participants', 'eligible_participants', 'Eligible Participants'],
+      ['eligible_participants_exclusion', 'eligible_participants_exclusion', 'Participant exclusions'],
+      ['eligible_stores', 'eligible_stores', 'Eligible Stores'],
+      ['entry_method_and_submission', 'entry_method', 'Entry Method & Submission'],
+      ['winners_selection_method', 'winners_selection_method', 'Winners Selection Method'],
+      ['winners_comm_and_timeline', 'winners_comm_and_timeline', 'Winners Communication Channel & Timeline'],
+      ['winners_list_and_announcement', 'winners_list_and_announcement', 'Winners List & Announcement'],
+      ['link_tnc', 'link_tnc', 'T&C link'],
+      ['link_faq', 'link_faq', 'FAQ link'],
+    ]
+    const checkTranslationLimits = (
+      translation: ContestTranslationView,
+      localeLabel: 'EN' | 'BM',
+    ) => {
+      for (const [field, limitKey, label] of translationLengthChecks) {
+        pushIfOverLimit(
+          translation[field] as string | undefined,
+          TRANSLATION_CHAR_LIMITS[limitKey],
+          `${label} (${localeLabel})`,
+        )
+      }
+    }
+    checkTranslationLimits(en, 'EN')
+    checkTranslationLimits(ms, 'BM')
+
+    return Array.from(missing)
+  }, [
+    contest,
+    contestFiles,
+    contestHosts,
+    contestCategories,
+    contestTranslationEnOwn,
+    contestTranslationMsOwn,
+  ])
+
+  // Same auto-slug recipe as the admin portal's Generate button:
+  // {host slugs}-{title}-from-{start}-until-{end} (local dates).
+  const generateContestSlug = () => {
+    if (!contest) return ''
+    const localDate = (dateStr?: string) => {
+      if (!dateStr) return ''
+      const d = new Date(dateStr)
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${d.getFullYear()}-${month}-${day}`
+    }
+    const hostPart = contestHosts
+      .map((h) => h.slug || slugify(h.name))
+      .filter(Boolean)
+      .join('-')
+    const mainPart = [hostPart, slugify(contest.title)]
+      .filter((p) => !!p && p.trim())
+      .join('-')
+    const generated = `${mainPart}-from-${localDate(contest.start_date)}-until-${localDate(
+      contest.end_date,
+    )}`
+    return generated
+      .slice(0, CONTEST_CHAR_LIMITS.slug)
+      .replace(/^-+/, '')
+      .replace(/-+$/, '')
+  }
+
+  // Saving a new slug moves the page's URL, so after a successful save we
+  // navigate to the new address (the detail query is keyed by slug).
+  const saveSlug = async (value: string) => {
+    if (!contest) return
+    const next = value.trim().toLowerCase()
+    if (!next) throw new Error('Slug cannot be empty')
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(next)) {
+      throw new Error(
+        'Slug can only contain lowercase letters, numbers and hyphens',
+      )
+    }
+    if (next.length > CONTEST_CHAR_LIMITS.slug) {
+      throw new Error(
+        `Slug must be ${CONTEST_CHAR_LIMITS.slug} characters or less`,
+      )
+    }
+    if (next === contest.slug) return
+    await saveContestFields(contest.$id, { slug: next })
+    router.replace(`/contest/${next}`)
+  }
 
   // Show loading state during auth check, admin check, or contest loading
   if (isLoadingUser || isLoadingAdmin || isLoadingContest || isLoadingFiles) {
@@ -863,61 +1069,154 @@ export default function ContestDetailScreen({
       >
         {/* Content */}
         <View className="px-4 w-full max-w-5xl mx-auto">
-          {/* Host Images Row + Admin Only Badge + (admin) Language Toggle */}
-          <View className="flex-row justify-between items-center mb-4 mt-2">
-            {/* Host Images */}
-            <View className="flex-row items-center">
-              {contestHosts.map((host) => (
-                <View
-                  key={host.$id}
-                  className="w-[70px] h-[70px] mr-2 overflow-hidden rounded-lg"
-                >
-                  <HostImage
-                    imgId={host.img_id}
-                    imgTokenSecret={host.img_token_secret}
-                    imgBlurhash={host.img_blurhash}
-                    width={70}
-                    height={70}
-                    borderRadius={8}
-                    contentFit="contain"
+          {/* Header. For admins the control bar (Admin Only pill + visibility
+              dropdown + EN/BM/View Both/Edit Both toggle) sits on its own row
+              so the Edit Both strip (slug, categories, images) can slot in
+              between the bar and the host images. Non-admins keep the single
+              host-images row. */}
+          {isAdmin ? (
+            <>
+              {/* Admin bar. Left: visibility control (Edit Both only).
+                  Right: Admin Only pill next to the EN/BM/View Both/Edit Both
+                  toggle. */}
+              <View className="flex-row justify-between items-center mb-2 mt-2 gap-2 flex-wrap">
+                <View className="flex-row items-center gap-2">
+                  {/* Visibility dropdown (Edit Both only). Changing it asks
+                      for confirmation; making the contest visible beyond
+                      admins is blocked while required fields are missing. */}
+                  {canEditInline && (
+                    <>
+                      <Text className="text-xs font-semibold text-gray-600 dark:text-gray-400">
+                        Visibility
+                      </Text>
+                      <AdminVisibilitySelect
+                        value={contest.visibility ?? 'users'}
+                        missingRequiredFields={missingRequiredFields}
+                        onSave={(next) =>
+                          saveContestFields(contest.$id, { visibility: next })
+                        }
+                      />
+                    </>
+                  )}
+                </View>
+                <View className="flex-row items-center gap-2">
+                  {contest.visibility === 'admin' && (
+                    <Badge className="bg-red-100 border-red-200 dark:bg-red-950 dark:border-red-800">
+                      <Text className="text-xs font-semibold text-red-700 dark:text-red-300">
+                        Admin Only
+                      </Text>
+                    </Badge>
+                  )}
+                  <AdminLanguageToggle
+                    value={resolvedAdminMode}
+                    onChange={(mode) => {
+                      if (
+                        (mode === 'both' || mode === 'both-edit') &&
+                        !canShowBoth
+                      ) {
+                        toast.error(
+                          'Side-by-side view needs a wider screen (desktop).',
+                        )
+                        return
+                      }
+                      setAdminLangMode(mode)
+                    }}
                   />
                 </View>
-              ))}
-            </View>
+              </View>
 
-            {/* Right side: Admin Only badge + language toggle */}
-            <View className="flex-row items-center gap-2 flex-wrap justify-end">
-              {/* Admin Only Badge */}
-              {contest.visibility === 'admin' && (
-                <Badge className="bg-red-100 border-red-200 dark:bg-red-950 dark:border-red-800">
-                  <Text className="text-xs font-semibold text-red-700 dark:text-red-300">
-                    Admin Only
-                  </Text>
-                </Badge>
+              {/* Edit Both strip: slug, categories, and the image gallery —
+                  contest-level fields that don't belong to either column. */}
+              {canEditInline && (
+                <View className="mb-3 gap-2 rounded-md border border-dashed border-main/40 p-2">
+                  <AdminEditableField
+                    enabled
+                    label="Slug"
+                    value={contest.slug}
+                    multiline={false}
+                    maxLength={CONTEST_CHAR_LIMITS.slug}
+                    shared
+                    hint="Lowercase letters, numbers and hyphens. On save the page follows the new URL, but previously shared links to the old slug will stop working."
+                    generateValue={generateContestSlug}
+                    generateLabel="Auto-generate"
+                    confirmSave={{
+                      title: 'Change the contest URL?',
+                      message:
+                        'The contest page moves to the new slug immediately ' +
+                        '(you will be taken there). Any previously shared ' +
+                        'links, social posts, QR codes, and search results ' +
+                        'pointing to the old slug will stop working.',
+                    }}
+                    onSave={saveSlug}
+                  >
+                    <Text className="text-xs text-gray-600 dark:text-gray-400">
+                      Slug: {contest.slug}
+                    </Text>
+                  </AdminEditableField>
+                  <AdminCategoriesEditor
+                    categories={contestCategories}
+                    requireNonEmpty={contest.visibility !== 'admin'}
+                    onSave={(ids) => saveContestCategories(contest.$id, ids)}
+                  />
+                  <AdminImagesEditor
+                    contestId={contest.$id}
+                    slugBase={contest.slug}
+                    imageCount={contestFiles.length}
+                    onSave={saveContestImages}
+                  />
+                </View>
               )}
 
-              {/* Admin-only language/edit toggle (EN / BM / Both View / Both
-                  Edit). Only shown for admins — non-admins keep using their
-                  persisted language pref. */}
-              {isAdmin && (
-                <AdminLanguageToggle
-                  value={resolvedAdminMode}
-                  onChange={(mode) => {
-                    if (
-                      (mode === 'both' || mode === 'both-edit') &&
-                      !canShowBoth
-                    ) {
-                      toast.error(
-                        'Side-by-side view needs a wider screen (desktop).',
-                      )
-                      return
-                    }
-                    setAdminLangMode(mode)
-                  }}
-                />
-              )}
+              {/* Host images (+ hosts pencil in Edit Both) */}
+              <View className="flex-row items-center mb-4">
+                {contestHosts.map((host) => (
+                  <View
+                    key={host.$id}
+                    className="w-[70px] h-[70px] mr-2 overflow-hidden rounded-lg"
+                  >
+                    <HostImage
+                      imgId={host.img_id}
+                      imgTokenSecret={host.img_token_secret}
+                      imgBlurhash={host.img_blurhash}
+                      width={70}
+                      height={70}
+                      borderRadius={8}
+                      contentFit="contain"
+                    />
+                  </View>
+                ))}
+                {canEditInline && (
+                  <AdminHostsEditor
+                    hosts={contestHosts}
+                    requireNonEmpty={contest.visibility !== 'admin'}
+                    onSave={(ids) => saveContestHosts(contest.$id, ids)}
+                  />
+                )}
+              </View>
+            </>
+          ) : (
+            <View className="flex-row justify-between items-center mb-4 mt-2">
+              {/* Host Images */}
+              <View className="flex-row items-center">
+                {contestHosts.map((host) => (
+                  <View
+                    key={host.$id}
+                    className="w-[70px] h-[70px] mr-2 overflow-hidden rounded-lg"
+                  >
+                    <HostImage
+                      imgId={host.img_id}
+                      imgTokenSecret={host.img_token_secret}
+                      imgBlurhash={host.img_blurhash}
+                      width={70}
+                      height={70}
+                      borderRadius={8}
+                      contentFit="contain"
+                    />
+                  </View>
+                ))}
+              </View>
             </View>
-          </View>
+          )}
 
           {/* Per-locale column(s): one column for EN/BM, two side-by-side for
               admin "Both" mode. Each column is wrapped in its own I18nProvider
@@ -1132,7 +1431,11 @@ function ContestDetailColumnContent({
           label={language === 'ms' ? 'Title (BM)' : 'Title (EN)'}
           value={language === 'ms' ? (contest.title_ms ?? '') : contest.title}
           multiline={false}
-          maxLength={100}
+          maxLength={
+            language === 'ms'
+              ? CONTEST_CHAR_LIMITS.title_ms
+              : CONTEST_CHAR_LIMITS.title
+          }
           onSave={async (v) => {
             const trimmed = v.trim()
             if (language === 'en' && !trimmed) {
@@ -1397,9 +1700,9 @@ function ContestDetailColumnContent({
 }
 
 // ---------------------------------------------------------------------------
-// Admin-only language toggle: segmented EN / BM / Both View / Both Edit
+// Admin-only language toggle: segmented EN / BM / View Both / Edit Both
 // control. Rendered in the contest detail header next to the Admin Only
-// badge; non-admins never see it. Both Edit is the only mode with pencils.
+// badge; non-admins never see it. Edit Both is the only mode with pencils.
 // ---------------------------------------------------------------------------
 function AdminLanguageToggle({
   value,
@@ -1411,8 +1714,8 @@ function AdminLanguageToggle({
   const options: Array<{ key: AdminLangMode; label: string }> = [
     { key: 'en', label: 'EN' },
     { key: 'ms', label: 'BM' },
-    { key: 'both', label: 'Both View' },
-    { key: 'both-edit', label: 'Both Edit' },
+    { key: 'both', label: 'View Both' },
+    { key: 'both-edit', label: 'Edit Both' },
   ]
   return (
     <View className="flex-row items-center rounded-md border border-gray-300 dark:border-gray-600 overflow-hidden">
@@ -1496,8 +1799,27 @@ function ContestDetailSections({
   // Inline-edit helpers, bound to this column's contest + locale. `langLabel`
   // disambiguates which locale a pencil writes to (esp. in "Both" mode).
   const langLabel = language === 'ms' ? 'BM' : 'EN'
-  const saveT = (field: TranslationInlineField) => (value: string) =>
-    saveTranslationField(contest.$id, language, field, value)
+  const requiredEnTranslationFields = new Set<TranslationInlineField>([
+    'prizes',
+    'eligible_products_and_purchases',
+    'eligible_participants',
+    'eligible_stores',
+    'entry_method_and_submission',
+    'winners_selection_method',
+    'winners_comm_and_timeline',
+    'winners_list_and_announcement',
+  ])
+  const saveT = (field: TranslationInlineField) => async (value: string) => {
+    const trimmed = value.trim()
+    if (
+      language === 'en' &&
+      requiredEnTranslationFields.has(field) &&
+      !trimmed
+    ) {
+      throw new Error(`${field} (EN) cannot be empty`)
+    }
+    await saveTranslationField(contest.$id, language, field, trimmed)
+  }
   const savePrizeValue = async (v: string) => {
     const trimmed = v.trim()
     const n = Number(trimmed.replace(/[,\s]|RM/gi, ''))
@@ -1542,6 +1864,52 @@ function ContestDetailSections({
 
   return (
     <View className="flex-col gap-4">
+      {/* Summary (contest-level) keeps parity with title/date inline editing.
+          EN is required for publish; BM remains optional. */}
+      <Card>
+        <CardHeader>
+          <Trans>
+            <CardTitle className="text-lg">Summary</CardTitle>
+          </Trans>
+        </CardHeader>
+        <CardContent>
+          <AdminEditableField
+            enabled={canEdit}
+            label={`Summary (${langLabel})`}
+            value={language === 'ms' ? (contest.summary_ms ?? '') : contest.summary}
+            maxLength={
+              language === 'ms'
+                ? CONTEST_CHAR_LIMITS.summary_ms
+                : CONTEST_CHAR_LIMITS.summary
+            }
+            onSave={async (v) => {
+              const trimmed = v.trim()
+              if (language === 'en' && !trimmed) {
+                throw new Error('Summary cannot be empty')
+              }
+              await saveContestFields(
+                contest.$id,
+                language === 'ms'
+                  ? { summary_ms: trimmed || null }
+                  : { summary: trimmed },
+              )
+            }}
+          >
+            {(() => {
+              const summaryText =
+                language === 'ms' && contest.summary_ms
+                  ? contest.summary_ms
+                  : contest.summary
+              return summaryText ? (
+                <Text className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                  {summaryText}
+                </Text>
+              ) : null
+            })()}
+          </AdminEditableField>
+        </CardContent>
+      </Card>
+
       <AdminEditableDateRange
         enabled={canEdit}
         startValue={contest.start_date}
@@ -1655,7 +2023,7 @@ function ContestDetailSections({
                 enabled={canEdit}
                 label={`Eligible participants (${langLabel})`}
                 value={contestTranslationOwn?.eligible_participants}
-                maxLength={1500}
+                maxLength={TRANSLATION_CHAR_LIMITS.eligible_participants}
                 onSave={saveT('eligible_participants')}
               >
                 {contestTranslation?.eligible_participants ? (
@@ -1674,7 +2042,9 @@ function ContestDetailSections({
                     value={
                       contestTranslationOwn?.eligible_participants_exclusion
                     }
-                    maxLength={1000}
+                    maxLength={
+                      TRANSLATION_CHAR_LIMITS.eligible_participants_exclusion
+                    }
                     onSave={saveT('eligible_participants_exclusion')}
                   >
                     {contestTranslation?.eligible_participants_exclusion ? (
@@ -1700,7 +2070,7 @@ function ContestDetailSections({
                 enabled={canEdit}
                 label={`Eligible purchases & products (${langLabel})`}
                 value={contestTranslationOwn?.eligible_products_and_purchases}
-                maxLength={2400}
+                maxLength={TRANSLATION_CHAR_LIMITS.eligible_products}
                 onSave={saveT('eligible_products_and_purchases')}
               >
                 {contestTranslation?.eligible_products_and_purchases ? (
@@ -1724,7 +2094,7 @@ function ContestDetailSections({
                 enabled={canEdit}
                 label={`Eligible stores (${langLabel})`}
                 value={contestTranslationOwn?.eligible_stores}
-                maxLength={2000}
+                maxLength={TRANSLATION_CHAR_LIMITS.eligible_stores}
                 onSave={saveT('eligible_stores')}
               >
                 {contestTranslation?.eligible_stores ? (
@@ -1739,7 +2109,8 @@ function ContestDetailSections({
           {/* Eligible Online Stores */}
           {(contest?.link_aff_shopee ||
             contest?.link_aff_lazada ||
-            contest?.link_aff_tiktok_shop) && (
+            contest?.link_aff_tiktok_shop ||
+            canEdit) && (
             <View>
               <View className="flex-row items-center mb-2">
                 <Trans>
@@ -1819,6 +2190,49 @@ function ContestDetailSections({
                   </Link>
                 )}
               </View>
+
+              {/* Admin inline editing for the affiliate links. Contest-level
+                  values, so each editor is marked shared. */}
+              {canEdit && (
+                <View className="mt-3 gap-2">
+                  {(
+                    [
+                      {
+                        field: 'link_aff_shopee',
+                        label: 'Shopee affiliate link',
+                      },
+                      {
+                        field: 'link_aff_lazada',
+                        label: 'Lazada affiliate link',
+                      },
+                      {
+                        field: 'link_aff_tiktok_shop',
+                        label: 'TikTok Shop affiliate link',
+                      },
+                    ] as const
+                  ).map(({ field, label }) => (
+                    <AdminEditableField
+                      key={field}
+                      enabled={canEdit}
+                      label={label}
+                      value={contest[field] ?? ''}
+                      multiline={false}
+                      shared
+                      maxLength={CONTEST_CHAR_LIMITS[field]}
+                      onSave={saveSocialLink(field)}
+                    >
+                      {contest[field] ? (
+                        <Text
+                          numberOfLines={1}
+                          className="text-xs text-gray-600 dark:text-gray-400"
+                        >
+                          {label}: {contest[field]}
+                        </Text>
+                      ) : null}
+                    </AdminEditableField>
+                  ))}
+                </View>
+              )}
             </View>
           )}
         </CardContent>
@@ -1887,7 +2301,7 @@ function ContestDetailSections({
           enabled={canEdit}
           label={`Prizes (${langLabel})`}
           value={contestTranslationOwn?.prizes}
-          maxLength={2000}
+          maxLength={TRANSLATION_CHAR_LIMITS.prizes}
           onSave={saveT('prizes')}
         >
           {contestTranslation?.prizes ? (
@@ -1936,7 +2350,7 @@ function ContestDetailSections({
               enabled={canEdit}
               label={`How to enter (${langLabel})`}
               value={contestTranslationOwn?.entry_method_and_submission}
-              maxLength={2000}
+              maxLength={TRANSLATION_CHAR_LIMITS.entry_method}
               onSave={saveT('entry_method_and_submission')}
             >
               {contestTranslation?.entry_method_and_submission ? (
@@ -2016,7 +2430,7 @@ function ContestDetailSections({
               enabled={canEdit}
               label={`Winners selection method (${langLabel})`}
               value={contestTranslationOwn?.winners_selection_method}
-              maxLength={2000}
+              maxLength={TRANSLATION_CHAR_LIMITS.winners_selection_method}
               onSave={saveT('winners_selection_method')}
             >
               {contestTranslation?.winners_selection_method ? (
@@ -2069,7 +2483,7 @@ function ContestDetailSections({
               enabled={canEdit}
               label={`Winners communication & timeline (${langLabel})`}
               value={contestTranslationOwn?.winners_comm_and_timeline}
-              maxLength={1500}
+              maxLength={TRANSLATION_CHAR_LIMITS.winners_comm_and_timeline}
               onSave={saveT('winners_comm_and_timeline')}
             >
               {contestTranslation?.winners_comm_and_timeline ? (
@@ -2122,7 +2536,9 @@ function ContestDetailSections({
               enabled={canEdit}
               label={`Winners list & announcement (${langLabel})`}
               value={contestTranslationOwn?.winners_list_and_announcement}
-              maxLength={1000}
+              maxLength={
+                TRANSLATION_CHAR_LIMITS.winners_list_and_announcement
+              }
               onSave={saveT('winners_list_and_announcement')}
             >
               {contestTranslation?.winners_list_and_announcement ? (
@@ -2196,7 +2612,7 @@ function ContestDetailSections({
                     label={`T&C link (${langLabel})`}
                     value={contestTranslationOwn?.link_tnc ?? ''}
                     multiline={false}
-                    maxLength={300}
+                    maxLength={TRANSLATION_CHAR_LIMITS.link_tnc}
                     onSave={saveUrlT('link_tnc')}
                   >
                   {contestTranslation?.link_tnc ? (
@@ -2247,7 +2663,7 @@ function ContestDetailSections({
                     label={`FAQ link (${langLabel})`}
                     value={contestTranslationOwn?.link_faq ?? ''}
                     multiline={false}
-                    maxLength={300}
+                    maxLength={TRANSLATION_CHAR_LIMITS.link_faq}
                     onSave={saveUrlT('link_faq')}
                   >
                   {contestTranslation?.link_faq ? (
@@ -2392,40 +2808,33 @@ function ContestDetailSections({
                             {
                               field: 'link_media_instagram',
                               label: 'Instagram link',
-                              max: 400,
                             },
                             {
                               field: 'link_media_facebook',
                               label: 'Facebook link',
-                              max: 400,
                             },
                             {
                               field: 'link_media_tiktok',
                               label: 'TikTok link',
-                              max: 200,
                             },
                             {
                               field: 'link_media_x',
                               label: 'X (Twitter) link',
-                              max: 200,
                             },
                             {
                               field: 'link_media_youtube',
                               label: 'YouTube link',
-                              max: 200,
                             },
                             {
                               field: 'link_media_linkedin',
                               label: 'LinkedIn link',
-                              max: 400,
                             },
                             {
                               field: 'link_media_website',
                               label: 'Website link',
-                              max: 400,
                             },
                           ] as const
-                        ).map(({ field, label, max }) => (
+                        ).map(({ field, label }) => (
                           <AdminEditableField
                             key={field}
                             enabled={canEdit}
@@ -2433,7 +2842,7 @@ function ContestDetailSections({
                             value={contest[field] ?? ''}
                             multiline={false}
                             shared
-                            maxLength={max}
+                            maxLength={CONTEST_CHAR_LIMITS[field]}
                             onSave={saveSocialLink(field)}
                           >
                             {contest[field] ? (

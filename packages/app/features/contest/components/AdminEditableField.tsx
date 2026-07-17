@@ -6,6 +6,15 @@ import { Text } from 'app/components/ui/text'
 import { Button } from 'app/components/ui/button'
 import { Input } from 'app/components/ui/input'
 import { Textarea } from 'app/components/ui/textarea'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from 'app/components/ui/alert-dialog'
 import { PencilOutline } from 'app/components/icons-svg/PencilOutline'
 import SingleDateTimePicker from 'app/components/SingleDateTimePicker'
 import SingleDateTimePickerMobile from 'app/components/SingleDateTimePickerMobile'
@@ -13,8 +22,12 @@ import { toast } from 'app/lib/sonner-universal'
 import {
   updateSupabaseContestFields,
   updateSupabaseTranslationField,
+  updateSupabaseContestHosts,
+  updateSupabaseContestCategories,
+  applySupabaseContestImageChanges,
   type ContestInlinePatch,
   type TranslationInlineField,
+  type ContestImageChanges,
 } from 'app/lib/supabase/admin'
 
 // ---------------------------------------------------------------------------
@@ -54,7 +67,35 @@ export function useAdminInlineContestSave(slug: string) {
     await invalidate()
   }
 
-  return { saveContestFields, saveTranslationField }
+  const saveContestHosts = async (contestId: string, hostIds: string[]) => {
+    await updateSupabaseContestHosts(contestId, hostIds)
+    await invalidate()
+  }
+
+  const saveContestCategories = async (
+    contestId: string,
+    categoryIds: string[],
+  ) => {
+    await updateSupabaseContestCategories(contestId, categoryIds)
+    await invalidate()
+  }
+
+  const saveContestImages = async (
+    contestId: string,
+    slugBase: string,
+    changes: ContestImageChanges,
+  ) => {
+    await applySupabaseContestImageChanges(contestId, slugBase, changes)
+    await invalidate()
+  }
+
+  return {
+    saveContestFields,
+    saveTranslationField,
+    saveContestHosts,
+    saveContestCategories,
+    saveContestImages,
+  }
 }
 
 type AdminEditableFieldProps = {
@@ -78,6 +119,20 @@ type AdminEditableFieldProps = {
    * flags in the editor that saving affects both EN and BM views.
    */
   shared?: boolean
+  /**
+   * Optional generator (e.g. auto-slug): renders a button in the editor that
+   * replaces the current draft with the computed value. Nothing is saved
+   * until the admin presses Save.
+   */
+  generateValue?: () => string
+  /** Label for the generate button (defaults to "Auto-generate"). */
+  generateLabel?: string
+  /**
+   * High-impact fields (e.g. slug — changing it moves the contest URL):
+   * pressing Save first opens a confirmation dialog with this title/message.
+   * Only shown when the draft actually differs from the current value.
+   */
+  confirmSave?: { title: string; message: string }
   /** Normal display rendering; a placeholder is shown when absent. */
   children?: React.ReactNode
 }
@@ -91,11 +146,15 @@ export function AdminEditableField({
   hint,
   maxLength,
   shared,
+  generateValue,
+  generateLabel = 'Auto-generate',
+  confirmSave,
   children,
 }: AdminEditableFieldProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [draft, setDraft] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   if (!enabled) return <>{children ?? null}</>
 
@@ -122,12 +181,8 @@ export function AdminEditableField({
 
   const isOverLimit = maxLength !== undefined && draft.length > maxLength
 
-  const handleSave = async () => {
+  const doSave = async () => {
     if (isSaving) return
-    if (isOverLimit) {
-      toast.error(`${label} exceeds the ${maxLength} character limit`)
-      return
-    }
     setIsSaving(true)
     try {
       await onSave(draft)
@@ -138,6 +193,20 @@ export function AdminEditableField({
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleSave = () => {
+    if (isSaving) return
+    if (isOverLimit) {
+      toast.error(`${label} exceeds the ${maxLength} character limit`)
+      return
+    }
+    // High-impact fields confirm first — but only when something changed.
+    if (confirmSave && draft.trim() !== (value ?? '').trim()) {
+      setConfirmOpen(true)
+      return
+    }
+    void doSave()
   }
 
   return (
@@ -183,28 +252,83 @@ export function AdminEditableField({
       {hint && (
         <Text className="text-xs text-gray-500 dark:text-gray-400">{hint}</Text>
       )}
-      <View className="flex-row justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onPress={() => setIsEditing(false)}
-          disabled={isSaving}
-        >
-          <Text>Cancel</Text>
-        </Button>
-        <Button size="sm" onPress={handleSave} disabled={isSaving || isOverLimit}>
-          {isSaving ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text>Save</Text>
-          )}
-        </Button>
+      <View
+        className={`flex-row items-center gap-2 ${
+          generateValue ? 'justify-between' : 'justify-end'
+        }`}
+      >
+        {generateValue && (
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={() => setDraft(generateValue())}
+            disabled={isSaving}
+          >
+            <Text>{generateLabel}</Text>
+          </Button>
+        )}
+        <View className="flex-row gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onPress={() => setIsEditing(false)}
+            disabled={isSaving}
+          >
+            <Text>Cancel</Text>
+          </Button>
+          <Button
+            size="sm"
+            onPress={handleSave}
+            disabled={isSaving || isOverLimit}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text>Save</Text>
+            )}
+          </Button>
+        </View>
       </View>
+
+      {confirmSave && (
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{confirmSave.title}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {confirmSave.message}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <View className="gap-1">
+              <Text className="text-xs text-gray-500 dark:text-gray-400">
+                Current: {value || '—'}
+              </Text>
+              <Text className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                New: {draft.trim() || '—'}
+              </Text>
+            </View>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSaving}>
+                <Text>Cancel</Text>
+              </AlertDialogCancel>
+              <Button
+                onPress={() => {
+                  setConfirmOpen(false)
+                  void doSave()
+                }}
+                disabled={isSaving}
+              >
+                <Text>Save anyway</Text>
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </View>
   )
 }
 
-function SharedBadge() {
+export function SharedBadge() {
   return (
     <Text className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40 px-1.5 py-0.5 rounded">
       Shared · applies to EN & BM
@@ -212,7 +336,7 @@ function SharedBadge() {
   )
 }
 
-function EditPencil({
+export function EditPencil({
   label,
   onPress,
 }: {

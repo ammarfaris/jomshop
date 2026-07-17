@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import {
   ActivityIndicator,
   ScrollView,
@@ -51,13 +51,6 @@ export default function AdminScreen() {
     } else if (slug) {
       setTabValue('edit')
     }
-  }, [])
-
-  // Drafts tab → Edit tab handoff: switch tabs and pre-fill the Edit tab's
-  // slug search so the admin can review/publish the draft in one motion.
-  const handleOpenInEditTab = useCallback((slug: string) => {
-    setInitialEditSlug(slug)
-    setTabValue('edit')
   }, [])
 
   if (isLoading || isLoadingAdmin) {
@@ -162,10 +155,7 @@ export default function AdminScreen() {
             className="flex-1"
             style={{ display: tabValue === 'drafts' ? 'flex' : 'none' }}
           >
-            <DraftsTabContent
-              containerMaxWidth={containerMaxWidth}
-              onOpenInEditTab={handleOpenInEditTab}
-            />
+            <DraftsTabContent containerMaxWidth={containerMaxWidth} />
           </View>
         </View>
       </Tabs>

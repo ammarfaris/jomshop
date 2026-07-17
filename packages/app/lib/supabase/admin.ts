@@ -3,6 +3,10 @@ import { getSupabase } from './client'
 import { archiveAllContestReceiptsAsAdminSupabase } from './receipts'
 import type { CreateContestFormData } from 'app/features/admin/createContestSchema'
 import {
+  CONTEST_CHAR_LIMITS,
+  TRANSLATION_CHAR_LIMITS,
+} from 'app/features/admin/contestFieldLimits'
+import {
   slugify,
   extFromName,
   contestCoreFromForm,
@@ -39,9 +43,11 @@ export type PickedImage =
   | File
   | {
       uri: string
-      fileName?: string
-      type?: string
-      mimeType?: string
+      // expo-image-picker assets report `fileName`/`type`/`mimeType` as
+      // possibly null; treat null like "absent" everywhere we read them.
+      fileName?: string | null
+      type?: string | null
+      mimeType?: string | null
     }
 
 /** Resolve a stored object path to a public URL (pass-through for absolute URLs). */
@@ -786,6 +792,38 @@ export async function updateSupabaseContest(
   await replaceContestRelations(contestId, opts.hostIds, opts.categoryIds)
   await upsertContestTranslations(contestId, form)
 
+  await applySupabaseContestImageChanges(
+    contestId,
+    opts.slugBase || form.slug || form.title,
+    {
+      imagesToDelete: opts.imagesToDelete,
+      newGalleryAssets: opts.newGalleryAssets,
+      mainImageId: opts.mainImageId,
+      newMainImageUri: opts.newMainImageUri,
+    },
+  )
+}
+
+/** Gallery changes applied by the inline image editor and the Edit tab. */
+export interface ContestImageChanges {
+  imagesToDelete: string[] // storage paths
+  newGalleryAssets: PickedImage[]
+  mainImageId: string | null // storage path of an existing image chosen as main
+  newMainImageUri: string | null // uri of a new asset chosen as main
+}
+
+/**
+ * Apply gallery changes to a contest: delete removed images -> upload new ones
+ * -> normalize ordering and the main image (main first, file_order 1, label
+ * 'main-gallery', contest.main_img_id pointing at it).
+ */
+export async function applySupabaseContestImageChanges(
+  contestId: string,
+  slugBase: string,
+  opts: ContestImageChanges,
+): Promise<void> {
+  const supabase = getSupabase()
+
   // Delete images marked for removal (rows + best-effort storage objects).
   for (const path of opts.imagesToDelete) {
     const { error: dErr } = await supabase
@@ -806,7 +844,6 @@ export async function updateSupabaseContest(
     .limit(1)
   let nextOrder = (current?.[0]?.file_order as number | undefined) ?? 0
 
-  const slugBase = opts.slugBase || form.slug || form.title
   const uploaded: { path: string; uri: string }[] = []
   for (const asset of opts.newGalleryAssets) {
     nextOrder += 1
@@ -885,9 +922,16 @@ export async function updateSupabaseContest(
 export type ContestInlinePatch = Partial<{
   title: string
   title_ms: string | null
+  summary: string
+  summary_ms: string | null
+  slug: string
+  visibility: 'any' | 'users' | 'admin'
   start_date: string
   end_date: string
   total_prizes_value_rm: number | null
+  link_aff_shopee: string | null
+  link_aff_lazada: string | null
+  link_aff_tiktok_shop: string | null
   link_media_instagram: string | null
   link_media_facebook: string | null
   link_media_tiktok: string | null
@@ -897,16 +941,116 @@ export type ContestInlinePatch = Partial<{
   link_media_website: string | null
 }>
 
+const INLINE_CONTEST_COLUMNS = Object.keys(
+  CONTEST_CHAR_LIMITS,
+) as Array<keyof typeof CONTEST_CHAR_LIMITS>
+const INLINE_TRANSLATION_COLUMNS = Object.keys(
+  TRANSLATION_CHAR_LIMITS,
+) as Array<keyof typeof TRANSLATION_CHAR_LIMITS>
+
+function listOverLimitFields(
+  row: Record<string, unknown>,
+  limits: Record<string, number>,
+): string[] {
+  const over: string[] = []
+  for (const [field, limit] of Object.entries(limits)) {
+    const value = row[field]
+    if (typeof value === 'string' && value.length > limit) {
+      over.push(`${field} (${value.length}/${limit})`)
+    }
+  }
+  return over
+}
+
 export async function updateSupabaseContestFields(
   contestId: string,
   patch: ContestInlinePatch,
 ): Promise<void> {
   const supabase = getSupabase()
+  const { data: existing, error: readError } = await supabase
+    .from('contests')
+    .select(INLINE_CONTEST_COLUMNS.join(','))
+    .eq('id', contestId)
+    .single()
+  if (readError) throw readError
+
+  const merged = {
+    ...(existing as Record<string, unknown>),
+    ...(patch as Record<string, unknown>),
+  }
+  const overLimit = listOverLimitFields(
+    merged,
+    CONTEST_CHAR_LIMITS as Record<string, number>,
+  )
+  if (overLimit.length) {
+    throw new Error(
+      `Cannot save while these fields exceed max length: ${overLimit.join(
+        ', ',
+      )}. Open Admin Edit to trim all over-limit fields in one update.`,
+    )
+  }
+
   const { error } = await supabase
     .from('contests')
     .update(patch)
     .eq('id', contestId)
   if (error) throw error
+}
+
+/** Replace a contest's hosts inline (junction delta sync, order preserved). */
+export async function updateSupabaseContestHosts(
+  contestId: string,
+  hostIds: string[],
+): Promise<void> {
+  await syncContestJunction('contest_hosts_map', 'host_id', contestId, hostIds)
+}
+
+/** Replace a contest's categories inline (junction delta sync). */
+export async function updateSupabaseContestCategories(
+  contestId: string,
+  categoryIds: string[],
+): Promise<void> {
+  await syncContestJunction(
+    'contest_categories_map',
+    'category_id',
+    contestId,
+    categoryIds,
+  )
+}
+
+/** A contest's gallery files with storage paths, for the inline image editor. */
+export interface AdminContestFileInfo {
+  id: string
+  storagePath: string
+  url: string
+  fileOrder: number
+  isMain: boolean
+}
+
+export async function listSupabaseContestFilesForEdit(
+  contestId: string,
+): Promise<AdminContestFileInfo[]> {
+  const supabase = getSupabase()
+  const [filesRes, contestRes] = await Promise.all([
+    supabase
+      .from('contest_files')
+      .select('id, storage_path, file_order')
+      .eq('contest_id', contestId)
+      .order('file_order', { ascending: true }),
+    supabase.from('contests').select('main_img_id').eq('id', contestId).single(),
+  ])
+  if (filesRes.error) throw filesRes.error
+  if (contestRes.error) throw contestRes.error
+
+  const mainId =
+    (contestRes.data as { main_img_id?: string | null })?.main_img_id ?? null
+  return (filesRes.data ?? []).map((f: any) => ({
+    id: f.id as string,
+    storagePath: f.storage_path as string,
+    url: contentPublicUrl(CONTESTS_BUCKET, f.storage_path),
+    fileOrder: (f.file_order as number) ?? 0,
+    isMain: f.storage_path === mainId,
+  }))
 }
 
 // Screen-facing translation field names (legacy Appwrite shape used by
@@ -940,11 +1084,36 @@ export async function updateSupabaseTranslationField(
 ): Promise<void> {
   const supabase = getSupabase()
   const trimmed = value.trim()
+  const column = TRANSLATION_INLINE_COLUMNS[field]
+  const { data: existing, error: readError } = await supabase
+    .from('contest_translations')
+    .select(INLINE_TRANSLATION_COLUMNS.join(','))
+    .eq('contest_id', contestId)
+    .eq('locale', locale)
+    .maybeSingle()
+  if (readError) throw readError
+
+  const merged = {
+    ...((existing as Record<string, unknown> | null) ?? {}),
+    [column]: trimmed || null,
+  }
+  const overLimit = listOverLimitFields(
+    merged,
+    TRANSLATION_CHAR_LIMITS as Record<string, number>,
+  )
+  if (overLimit.length) {
+    throw new Error(
+      `Cannot save ${locale.toUpperCase()} translation while these fields exceed max length: ${overLimit.join(
+        ', ',
+      )}. Open Admin Edit to trim all over-limit translation fields first.`,
+    )
+  }
+
   const { error } = await supabase.from('contest_translations').upsert(
     {
       contest_id: contestId,
       locale,
-      [TRANSLATION_INLINE_COLUMNS[field]]: trimmed || null,
+      [column]: trimmed || null,
     },
     { onConflict: 'contest_id,locale' },
   )

@@ -14,6 +14,10 @@
  */
 
 import type { CreateContestFormData } from './createContestSchema'
+import {
+  CONTEST_CHAR_LIMITS,
+  TRANSLATION_CHAR_LIMITS,
+} from './contestFieldLimits'
 
 // ---------- Field configuration ----------------------------------------------
 
@@ -59,46 +63,17 @@ const LINK_KEY_MAP: ReadonlyArray<readonly [string, readonly string[]]> = [
   ['link_media_website', ['link_media_website', 'website']],
 ] as const
 
-// Max lengths kept in sync with createContestSchema.ts. If you change a
-// maxLength in the schema, change it here too.
+// Max lengths derived from contestFieldLimits.ts (the single source of truth
+// shared with createContestSchema and the inline detail-page editors).
+// Translation limits are fanned out to the form's _en/_ms field names.
 export const FIELD_LIMITS: Record<string, number> = {
-  title: 100,
-  title_ms: 100,
-  summary: 200,
-  summary_ms: 200,
-  slug: 200,
-  eligible_participants_en: 1500,
-  eligible_participants_ms: 1500,
-  eligible_participants_exclusion_en: 1000,
-  eligible_participants_exclusion_ms: 1000,
-  eligible_products_en: 2400,
-  eligible_products_ms: 2400,
-  eligible_stores_en: 2000,
-  eligible_stores_ms: 2000,
-  prizes_en: 2000,
-  prizes_ms: 2000,
-  entry_method_en: 2000,
-  entry_method_ms: 2000,
-  winners_selection_method_en: 2000,
-  winners_selection_method_ms: 2000,
-  winners_comm_and_timeline_en: 1500,
-  winners_comm_and_timeline_ms: 1500,
-  winners_list_and_announcement_en: 1000,
-  winners_list_and_announcement_ms: 1000,
-  link_tnc_en: 300,
-  link_tnc_ms: 300,
-  link_faq_en: 300,
-  link_faq_ms: 300,
-  link_aff_shopee: 1000,
-  link_aff_lazada: 1000,
-  link_aff_tiktok_shop: 1000,
-  link_media_instagram: 400,
-  link_media_facebook: 400,
-  link_media_tiktok: 200,
-  link_media_x: 200,
-  link_media_youtube: 200,
-  link_media_linkedin: 400,
-  link_media_website: 400,
+  ...CONTEST_CHAR_LIMITS,
+  ...Object.fromEntries(
+    Object.entries(TRANSLATION_CHAR_LIMITS).flatMap(([field, limit]) => [
+      [`${field}_en`, limit],
+      [`${field}_ms`, limit],
+    ]),
+  ),
 }
 
 /**
